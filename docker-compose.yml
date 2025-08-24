@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+  api:
+    build: ./server
+    working_dir: /app
+    volumes:
+      - ./server:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_MOCK_DATA=false
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
