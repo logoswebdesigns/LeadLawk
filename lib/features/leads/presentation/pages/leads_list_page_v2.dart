@@ -526,7 +526,7 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
       case LeadStatus.converted:
         return AppTheme.successGreen;
       case LeadStatus.dnc:
-        return AppTheme.darkGray;
+        return AppTheme.errorRed;
     }
   }
 
@@ -747,8 +747,10 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
                     final convertedLeads = allLeads.where((l) => l.status == LeadStatus.converted).length;
                 
                 final contactedLeads = calledLeads + interestedLeads + convertedLeads;
-                final conversionRate = contactedLeads > 0 
-                    ? ((convertedLeads / contactedLeads) * 100).toStringAsFixed(1)
+                final dncLeads = allLeads.where((l) => l.status == LeadStatus.dnc).length;
+                final workedLeads = viewedLeads + calledLeads + interestedLeads + convertedLeads + dncLeads;
+                final conversionRate = workedLeads > 0 
+                    ? ((convertedLeads / workedLeads) * 100).toStringAsFixed(1)
                     : '0.0';
                 final contactRate = totalLeads > 0 
                     ? ((contactedLeads / totalLeads) * 100).toStringAsFixed(1)
@@ -950,9 +952,9 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
                                           _buildPipelineArrow(),
                                           _buildPipelineStep('Called', calledLeads, AppTheme.warningOrange),
                                           _buildPipelineArrow(),
-                                          _buildPipelineStep('Interested', interestedLeads, AppTheme.primaryBlue),
+                                          _buildPipelineStep('Hot', interestedLeads, AppTheme.primaryBlue),
                                           _buildPipelineArrow(),
-                                          _buildPipelineStep('Converted', convertedLeads, AppTheme.successGreen),
+                                          _buildPipelineStep('Won', convertedLeads, AppTheme.successGreen),
                                         ],
                                       ),
                                     ],
@@ -1890,14 +1892,10 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: isNew 
-                            ? AppTheme.primaryBlue.withOpacity(0.15)
-                            : _getStatusColor(lead.status).withOpacity(0.1),
+                        color: _getStatusColor(lead.status).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isNew 
-                              ? AppTheme.primaryBlue.withOpacity(0.5)
-                              : _getStatusColor(lead.status).withOpacity(0.3),
+                          color: _getStatusColor(lead.status).withOpacity(0.5),
                         ),
                         boxShadow: isNew ? [
                           BoxShadow(
@@ -1933,9 +1931,7 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: isNew 
-                                  ? AppTheme.primaryBlue
-                                  : _getStatusColor(lead.status),
+                              color: _getStatusColor(lead.status),
                             ),
                           ),
                         ],
@@ -2117,12 +2113,16 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: color,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              maxLines: 1,
             ),
           ),
           Text(
@@ -2175,6 +2175,8 @@ class _LeadsListPageV2State extends ConsumerState<LeadsListPageV2> {
                 color: count > 0 ? Colors.white : AppTheme.mediumGray,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

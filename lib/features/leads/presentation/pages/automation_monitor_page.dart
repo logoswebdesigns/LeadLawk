@@ -227,11 +227,14 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
               height: 24,
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Browser Automation Progress',
-              style: TextStyle(
-                color: AppTheme.darkGray,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                'Browser Automation Progress',
+                style: const TextStyle(
+                  color: AppTheme.darkGray,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const Spacer(),

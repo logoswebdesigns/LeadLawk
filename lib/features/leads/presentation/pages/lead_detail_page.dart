@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/job_provider.dart';
@@ -31,6 +32,20 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   final _notesController = TextEditingController();
   final _notesFocusNode = FocusNode();
   bool _isEditingNotes = false;
+  String _salesPitch = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSalesPitch();
+  }
+
+  Future<void> _loadSalesPitch() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _salesPitch = prefs.getString('sales_pitch') ?? _getDefaultSalesPitch();
+    });
+  }
 
   Color _getStatusColor(LeadStatus status) {
     switch (status) {
@@ -99,6 +114,20 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         return source.replaceAll('_', ' ').split(' ').map((word) => 
             word[0].toUpperCase() + word.substring(1).toLowerCase()).join(' ');
     }
+  }
+
+  String _getDefaultSalesPitch() {
+    return '''Hi there! I noticed your business online and wanted to reach out about something that could really help you stand out from your competition.
+
+I specialize in creating professional websites for local businesses like yours. A great website can help you:
+• Attract more customers online
+• Look more professional and trustworthy  
+• Show up better in Google searches
+• Give customers an easy way to contact you
+
+I'd love to show you some examples of websites I've built for other businesses in your area. Would you be interested in a quick 10-minute call to discuss how a professional website could help grow your business?
+
+Thanks for your time!''';
   }
 
   Future<void> _updateStatus(Lead lead, LeadStatus newStatus) async {
@@ -354,46 +383,64 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: _isEditingNotes ? null : _startEditingNotes,
-                          child: Container(
-                            width: double.infinity,
-                            constraints: const BoxConstraints(minHeight: 120),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _isEditingNotes 
-                                  ? Colors.white.withOpacity(0.05)
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: _isEditingNotes 
-                                    ? AppTheme.primaryGold.withOpacity(0.3)
-                                    : Colors.white.withOpacity(0.1),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: _isEditingNotes
-                                ? TextField(
-                                    controller: _notesController,
-                                    focusNode: _notesFocusNode,
-                                    maxLines: null,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
+                        _isEditingNotes
+                            ? TextField(
+                                controller: _notesController,
+                                focusNode: _notesFocusNode,
+                                maxLines: null,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Add your notes here...',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey.withOpacity(0.6),
+                                    fontSize: 15,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
                                     ),
-                                    decoration: const InputDecoration(
-                                      hintText: 'Tap to add notes...',
-                                      hintStyle: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 15,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
                                     ),
-                                    onSubmitted: (_) => _updateNotes(lead),
-                                    onTapOutside: (_) => _updateNotes(lead),
-                                  )
-                                : Text(
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(
+                                      color: AppTheme.primaryGold,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.all(12),
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.03),
+                                ),
+                                cursorColor: AppTheme.primaryGold,
+                                onSubmitted: (_) => _updateNotes(lead),
+                                onTapOutside: (_) => _updateNotes(lead),
+                              )
+                            : GestureDetector(
+                                onTap: _startEditingNotes,
+                                child: Container(
+                                  width: double.infinity,
+                                  constraints: const BoxConstraints(minHeight: 120),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.1),
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
                                     lead.notes?.isNotEmpty == true
                                         ? lead.notes!
                                         : 'Tap to add notes...',
@@ -405,6 +452,60 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                                       height: 1.4,
                                     ),
                                   ),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Sales Pitch',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                              onPressed: () {
+                                context.go('/account');
+                              },
+                              icon: const Icon(Icons.edit, size: 16),
+                              label: const Text('Edit'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.primaryGold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          constraints: const BoxConstraints(minHeight: 100),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.1),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _salesPitch,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 15,
+                              height: 1.4,
+                            ),
                           ),
                         ),
                       ],

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/automation_form_provider.dart';
 import '../providers/job_provider.dart';
+import '../providers/server_status_provider.dart';
 
 class BrowserAutomationPage extends ConsumerStatefulWidget {
   const BrowserAutomationPage({super.key});
@@ -57,52 +58,43 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
-      appBar: AppBar(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Refresh job data
+          ref.invalidate(jobsListProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        color: AppTheme.primaryGold,
         backgroundColor: AppTheme.backgroundDark,
-        title: Text(
-          'Find New Leads',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Header Section
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryGold.withOpacity(0.1),
-                    AppTheme.primaryGold.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.primaryGold.withOpacity(0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        child: CustomScrollView(
+          slivers: [
+            // App Bar
+            SliverToBoxAdapter(
+              child: SafeArea(
+                bottom: false,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          'Find New Leads',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGold.withOpacity(0.15),
+                          color: AppTheme.primaryGold.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppTheme.primaryGold.withOpacity(0.3),
+                          ),
                         ),
                         child: const Icon(
                           Icons.search,
@@ -110,408 +102,717 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                           size: 20,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Define Your Search',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Select your target industry and specify search parameters',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(height: 24),
             
-            // Industry Selection Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.business,
-                          color: AppTheme.primaryGold,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Industry Type',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _industries.map((industry) {
-                        final isSelected = industry == 'Custom...'
-                            ? formState.isCustomIndustry
-                            : formState.industry.toLowerCase() ==
-                                industry.toLowerCase();
-                        return ChoiceChip(
-                          label: Text(
-                            industry,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : AppTheme.primaryGold,
-                              fontWeight: FontWeight.w600,
+            // Recent Jobs Section
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final jobsAsync = ref.watch(jobsListProvider);
+                    return jobsAsync.when(
+                      data: (jobs) {
+                        if (jobs.isEmpty) return const SizedBox.shrink();
+                        
+                        // Show only recent 3 jobs
+                        final recentJobs = jobs.take(3).toList();
+                        
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryBlue.withOpacity(0.1),
+                                AppTheme.primaryBlue.withOpacity(0.05),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppTheme.primaryBlue.withOpacity(0.2),
+                              width: 1,
                             ),
                           ),
-                          selected: isSelected,
-                          selectedColor: AppTheme.primaryGold,
-                          backgroundColor: AppTheme.lightGray,
-                          checkmarkColor: Colors.white,
-                          side: BorderSide(
-                            color: isSelected
-                                ? AppTheme.primaryGold
-                                : AppTheme.primaryGold.withOpacity(0.3),
-                          ),
-                          onSelected: (selected) {
-                            if (selected) {
-                              if (industry == 'Custom...') {
-                                formNotifier.setIndustry('custom');
-                              } else {
-                                formNotifier.setIndustry(industry);
-                              }
-                            }
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    if (formState.isCustomIndustry) ...[
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _customIndustryController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          labelText: 'Custom Industry',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                          hintText: 'e.g., HVAC Contractor, Auto Repair Shop',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                          prefixIcon: const Icon(Icons.edit, color: AppTheme.primaryGold),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                          ),
-                          filled: true,
-                          fillColor: AppTheme.primaryGold.withOpacity(0.05),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (formState.isCustomIndustry &&
-                              (value == null || value.isEmpty || value.trim().isEmpty)) {
-                            return 'Please enter a custom industry';
-                          }
-                          return null;
-                        },
-                        onChanged: (value) {
-                          if (value.trim().isNotEmpty) {
-                            formNotifier.setIndustry(value.trim());
-                          }
-                        },
-                        autofocus: true,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Search Parameters Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.tune,
-                          color: AppTheme.primaryGold,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Search Parameters',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _locationController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Target Location',
-                        labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                        hintText: 'e.g., Austin, TX or New York City',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                        prefixIcon: const Icon(Icons.location_on, color: AppTheme.primaryGold),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        filled: true,
-                        fillColor: AppTheme.primaryGold.withOpacity(0.05),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a location';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        formNotifier.setLocation(value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _limitController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: 'Maximum Results',
-                        labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                        hintText: 'How many leads to find (1-200)',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                        prefixIcon: const Icon(Icons.format_list_numbered, color: AppTheme.primaryGold),
-                        suffixText: 'leads',
-                        suffixStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        filled: true,
-                        fillColor: AppTheme.primaryGold.withOpacity(0.05),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
-                        ),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a limit';
-                        }
-                        final limit = int.tryParse(value);
-                        if (limit == null || limit < 1 || limit > 200) {
-                          return 'Limit must be between 1 and 200';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        final limit = int.tryParse(value);
-                        if (limit != null) {
-                          formNotifier.setLimit(limit);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              elevation: 1,
-              child: SwitchListTile(
-                title: const Text('Use Mock Data'),
-                subtitle: Text(
-                  formState.useMockData 
-                    ? 'Test mode - Using simulated Google Places data'
-                    : 'Real mode - Using actual API data',
-                  style: TextStyle(
-                    color: formState.useMockData ? Colors.orange : Colors.green,
-                  ),
-                ),
-                value: formState.useMockData,
-                onChanged: (_) => formNotifier.toggleMockData(),
-                secondary: Icon(
-                  formState.useMockData ? Icons.science : Icons.public,
-                  color: formState.useMockData ? Colors.orange : AppTheme.primaryGold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              elevation: 1,
-              color: AppTheme.elevatedSurface,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.web_outlined, color: AppTheme.primaryGold, size: 24),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Lead Generation',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              'Intelligent lead discovery system',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Extracts real business data directly from Google Maps',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              elevation: 1,
-              color: AppTheme.elevatedSurface,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.tune, color: AppTheme.primaryGold, size: 24),
-                        SizedBox(width: 12),
-                        Text(
-                          'Business Search Criteria',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Min Rating: ${formState.minRating.toStringAsFixed(1)}',
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Slider(
-                              value: formState.minRating,
-                              min: 0,
-                              max: 5,
-                              divisions: 50,
-                              label: formState.minRating.toStringAsFixed(1),
-                              onChanged: (value) {
-                                formNotifier.setMinRating(value);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Min Reviews: ${formState.minReviews}',
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Slider(
-                              value: formState.minReviews.toDouble(),
-                              min: 0,
-                              max: 100,
-                              divisions: 100,
-                              label: formState.minReviews.toString(),
-                              onChanged: (value) {
-                                formNotifier.setMinReviews(value.toInt());
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
+                          child: Column(
                             children: [
-                              Icon(Icons.web_outlined, size: 18, color: AppTheme.primaryGold),
-                              SizedBox(width: 8),
-                              Text(
-                                'Website Filter',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                              // Header
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () => context.go('/server'),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primaryBlue.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.history,
+                                            color: AppTheme.primaryBlue,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Recent Lead Jobs',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              Text(
+                                                'View your automation history',
+                                                style: TextStyle(
+                                                  color: Colors.white.withOpacity(0.6),
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Text(
+                                          'View All',
+                                          style: TextStyle(
+                                            color: AppTheme.primaryBlue,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.chevron_right,
+                                          color: AppTheme.primaryBlue,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
+                              
+                              // Job Cards
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                                child: Column(
+                                  children: [
+                                    const Divider(color: AppTheme.backgroundDark),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      height: 140,
+                                      child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: recentJobs.length,
+                                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                                        itemBuilder: (context, index) {
+                                          final job = recentJobs[index];
+                                          final status = job['status']?.toString() ?? 'unknown';
+                                          final jobId = job['job_id']?.toString() ?? '';
+                                          final processed = job['processed'] ?? 0;
+                                          final total = job['total'] ?? 0;
+                                          final color = _getJobStatusColor(status);
+                                          
+                                          return Container(
+                                            width: 200,
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.elevatedSurface,
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: color.withOpacity(0.3),
+                                              ),
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(12),
+                                                onTap: () => context.go('/browser/monitor/$jobId'),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(16),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            status == 'running' 
+                                                                ? Icons.sync 
+                                                                : status == 'done' 
+                                                                    ? Icons.check_circle
+                                                                    : Icons.error,
+                                                            color: color,
+                                                            size: 16,
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          Expanded(
+                                                            child: Text(
+                                                              jobId.length > 15 
+                                                                  ? '${jobId.substring(0, 15)}...'
+                                                                  : jobId,
+                                                              style: const TextStyle(
+                                                                color: Colors.white,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                        decoration: BoxDecoration(
+                                                          color: color.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: Text(
+                                                          status.toUpperCase(),
+                                                          style: TextStyle(
+                                                            color: color,
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const Spacer(),
+                                                      if (total > 0) ...[
+                                                        LinearProgressIndicator(
+                                                          value: (processed / total).toDouble(),
+                                                          minHeight: 4,
+                                                          backgroundColor: color.withOpacity(0.15),
+                                                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          '$processed / $total leads',
+                                                          style: const TextStyle(
+                                                            fontSize: 10,
+                                                            color: Colors.white70,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+              ),
+            ),
+            
+            // Form Content
+            SliverToBoxAdapter(
+              child: Form(
+                key: _formKey,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Header Section
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryGold.withOpacity(0.1),
+                              AppTheme.primaryGold.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.primaryGold.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGold.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.search,
+                                  color: AppTheme.primaryGold,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Define Your Search',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Configure parameters for lead generation',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.6),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Industry Selection Card
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryBlue.withOpacity(0.1),
+                              AppTheme.primaryBlue.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.primaryBlue.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryBlue.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.business,
+                                      color: AppTheme.primaryBlue,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Industry Type',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _industries.map((industry) {
+                                  final isSelected = industry == 'Custom...'
+                                      ? formState.isCustomIndustry
+                                      : formState.industry.toLowerCase() ==
+                                          industry.toLowerCase();
+                                  return ChoiceChip(
+                                    label: Text(
+                                      industry,
+                                      style: TextStyle(
+                                        color: isSelected ? Colors.white : AppTheme.primaryBlue,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    selected: isSelected,
+                                    selectedColor: AppTheme.primaryBlue,
+                                    backgroundColor: AppTheme.lightGray,
+                                    checkmarkColor: Colors.white,
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? AppTheme.primaryBlue
+                                          : AppTheme.primaryBlue.withOpacity(0.3),
+                                    ),
+                                    onSelected: (selected) {
+                                      if (selected) {
+                                        if (industry == 'Custom...') {
+                                          formNotifier.setIndustry('custom');
+                                        } else {
+                                          formNotifier.setIndustry(industry);
+                                        }
+                                      }
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              if (formState.isCustomIndustry) ...[
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _customIndustryController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    labelText: 'Custom Industry',
+                                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                    hintText: 'e.g., HVAC Contractor, Auto Repair Shop',
+                                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                    prefixIcon: const Icon(Icons.edit, color: AppTheme.primaryGold),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                    ),
+                                    filled: true,
+                                    fillColor: AppTheme.primaryGold.withOpacity(0.05),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (formState.isCustomIndustry &&
+                                        (value == null || value.isEmpty || value.trim().isEmpty)) {
+                                      return 'Please enter a custom industry';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) {
+                                    if (value.trim().isNotEmpty) {
+                                      formNotifier.setIndustry(value.trim());
+                                    }
+                                  },
+                                  autofocus: true,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Search Parameters Card
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryGold.withOpacity(0.1),
+                              AppTheme.primaryGold.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.primaryGold.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryGold.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.tune,
+                                      color: AppTheme.primaryGold,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Search Parameters',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _locationController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: 'Target Location',
+                                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                  hintText: 'e.g., Austin, TX or New York City',
+                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                  prefixIcon: const Icon(Icons.location_on, color: AppTheme.primaryGold),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.primaryGold.withOpacity(0.05),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a location';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  formNotifier.setLocation(value);
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                controller: _limitController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: 'Maximum Results',
+                                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                  hintText: 'How many leads to find (1-200)',
+                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                                  prefixIcon: const Icon(Icons.format_list_numbered, color: AppTheme.primaryGold),
+                                  suffixText: 'leads',
+                                  suffixStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  filled: true,
+                                  fillColor: AppTheme.primaryGold.withOpacity(0.05),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a limit';
+                                  }
+                                  final limit = int.tryParse(value);
+                                  if (limit == null || limit < 1 || limit > 200) {
+                                    return 'Limit must be between 1 and 200';
+                                  }
+                                  return null;
+                                },
+                                onChanged: (value) {
+                                  final limit = int.tryParse(value);
+                                  if (limit != null) {
+                                    formNotifier.setLimit(limit);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Card(
+                        elevation: 1,
+                        child: SwitchListTile(
+                          title: const Text('Use Mock Data'),
+                          subtitle: Text(
+                            formState.useMockData 
+                              ? 'Test mode - Using simulated Google Places data'
+                              : 'Real mode - Using actual API data',
+                            style: TextStyle(
+                              color: formState.useMockData ? Colors.orange : Colors.green,
+                            ),
+                          ),
+                          value: formState.useMockData,
+                          onChanged: (_) => formNotifier.toggleMockData(),
+                          secondary: Icon(
+                            formState.useMockData ? Icons.science : Icons.public,
+                            color: formState.useMockData ? Colors.orange : AppTheme.primaryGold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Card(
+                        elevation: 1,
+                        color: AppTheme.elevatedSurface,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.web_outlined, color: AppTheme.primaryGold, size: 24),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Lead Generation',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Intelligent lead discovery system',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Extracts real business data directly from Google Maps',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Card(
+                        elevation: 1,
+                        color: AppTheme.elevatedSurface,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.tune, color: AppTheme.primaryGold, size: 24),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Business Search Criteria',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Min Rating: ${formState.minRating.toStringAsFixed(1)}',
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Slider(
+                                      value: formState.minRating,
+                                      min: 0,
+                                      max: 5,
+                                      divisions: 50,
+                                      label: formState.minRating.toStringAsFixed(1),
+                                      onChanged: (value) {
+                                        formNotifier.setMinRating(value);
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Min Reviews: ${formState.minReviews}',
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Slider(
+                                      value: formState.minReviews.toDouble(),
+                                      min: 0,
+                                      max: 100,
+                                      divisions: 100,
+                                      label: formState.minReviews.toString(),
+                                      onChanged: (value) {
+                                        formNotifier.setMinReviews(value.toInt());
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.web_outlined, size: 18, color: AppTheme.primaryGold),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Website Filter',
+                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                      ),
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -852,9 +1153,27 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
               ),
               child: Text(jobState.isRunning ? 'Generating Leads...' : 'Start Lead Generation'),
             ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+  
+  Color _getJobStatusColor(String status) {
+    switch (status) {
+      case 'running':
+        return AppTheme.primaryBlue;
+      case 'done':
+        return AppTheme.successGreen;
+      case 'error':
+        return AppTheme.errorRed;
+      default:
+        return AppTheme.mediumGray;
+    }
   }
 }
