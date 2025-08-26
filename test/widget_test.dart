@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:leadloq/features/leads/presentation/providers/automation_form_provider.dart';
+import 'package:leadloq/features/leads/presentation/pages/browser_automation_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:leadlawk/features/leads/presentation/pages/run_scrape_page.dart';
-import 'package:leadlawk/features/leads/presentation/providers/scrape_form_provider.dart';
 
 void main() {
-  group('RunScrapePage Widget Tests', () {
+  group('BrowserAutomationPage Widget Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -17,12 +17,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            scrapeFormProvider.overrideWith(
-              (ref) => ScrapeFormNotifier(prefs),
+            automationFormProvider.overrideWith(
+              (ref) => AutomationFormNotifier(prefs),
             ),
           ],
           child: const MaterialApp(
-            home: RunScrapePage(),
+            home: BrowserAutomationPage(),
           ),
         ),
       );
@@ -40,12 +40,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            scrapeFormProvider.overrideWith(
-              (ref) => ScrapeFormNotifier(prefs),
+            automationFormProvider.overrideWith(
+              (ref) => AutomationFormNotifier(prefs),
             ),
           ],
           child: const MaterialApp(
-            home: RunScrapePage(),
+            home: BrowserAutomationPage(),
           ),
         ),
       );
@@ -66,12 +66,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            scrapeFormProvider.overrideWith(
-              (ref) => ScrapeFormNotifier(prefs),
+            automationFormProvider.overrideWith(
+              (ref) => AutomationFormNotifier(prefs),
             ),
           ],
           child: const MaterialApp(
-            home: RunScrapePage(),
+            home: BrowserAutomationPage(),
           ),
         ),
       );
@@ -90,12 +90,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            scrapeFormProvider.overrideWith(
-              (ref) => ScrapeFormNotifier(prefs),
+            automationFormProvider.overrideWith(
+              (ref) => AutomationFormNotifier(prefs),
             ),
           ],
           child: const MaterialApp(
-            home: RunScrapePage(),
+            home: BrowserAutomationPage(),
           ),
         ),
       );
@@ -114,12 +114,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            scrapeFormProvider.overrideWith(
-              (ref) => ScrapeFormNotifier(prefs),
+            automationFormProvider.overrideWith(
+              (ref) => AutomationFormNotifier(prefs),
             ),
           ],
           child: const MaterialApp(
-            home: RunScrapePage(),
+            home: BrowserAutomationPage(),
           ),
         ),
       );

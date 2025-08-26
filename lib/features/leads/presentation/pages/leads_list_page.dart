@@ -64,6 +64,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> {
     switch (status) {
       case LeadStatus.new_:
         return Colors.grey;
+      case LeadStatus.viewed:
+        return Colors.blueGrey;
       case LeadStatus.called:
         return Colors.orange;
       case LeadStatus.interested:
@@ -79,6 +81,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> {
     switch (status) {
       case LeadStatus.new_:
         return 'NEW';
+      case LeadStatus.viewed:
+        return 'VIEWED';
       case LeadStatus.called:
         return 'CALLED';
       case LeadStatus.interested:
@@ -101,7 +105,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('LeadLawk'),
+        title: const Text('LeadLoq'),
         elevation: 2,
         actions: [
           const ServerStatusIndicator(),

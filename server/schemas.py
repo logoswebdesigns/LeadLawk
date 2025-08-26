@@ -10,6 +10,16 @@ class ScrapeRequest(BaseModel):
     min_rating: float = 4.0
     min_reviews: int = 3
     recent_days: int = 365
+    mock: bool = False
+    use_mock_data: bool = False  # Use mock data for testing
+    # Browser automation options
+    use_browser_automation: bool = True  # Use browser automation (Selenium)
+    headless: bool = False  # Run browser in background (False = visible browser)
+    use_profile: bool = False  # Use your existing Chrome profile with saved logins
+    requires_website: Optional[bool] = None  # Website filter: None = any, False = no website, True = has website
+    recent_review_months: Optional[int] = None  # Reviews within X months: None = any, int = within X months
+    min_photos: Optional[int] = None  # Minimum photos: None = any, int = minimum photo count
+    min_description_length: Optional[int] = None  # Minimum description length: None = any, int = minimum chars
 
 
 class JobResponse(BaseModel):

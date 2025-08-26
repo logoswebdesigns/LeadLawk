@@ -4,7 +4,7 @@ import '../../data/datasources/leads_remote_datasource.dart';
 import '../../data/repositories/leads_repository_impl.dart';
 import '../../domain/entities/job.dart';
 import '../../domain/repositories/leads_repository.dart';
-import '../../domain/usecases/run_scrape_usecase.dart';
+import '../../domain/usecases/browser_automation_usecase.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   return Dio();
@@ -20,9 +20,9 @@ final leadsRepositoryProvider = Provider<LeadsRepository>((ref) {
   return LeadsRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
-final runScrapeUseCaseProvider = Provider<RunScrapeUseCase>((ref) {
+final browserAutomationUseCaseProvider = Provider<BrowserAutomationUseCase>((ref) {
   final repository = ref.watch(leadsRepositoryProvider);
-  return RunScrapeUseCase(repository);
+  return BrowserAutomationUseCase(repository);
 });
 
 class JobState {
@@ -63,10 +63,10 @@ class JobNotifier extends StateNotifier<JobState> {
     state = JobState();
   }
 
-  Future<void> startScrape(RunScrapeParams params) async {
+  Future<void> startAutomation(BrowserAutomationParams params) async {
     state = state.copyWith(isRunning: true, error: null);
 
-    final result = await repository.startScrape(params);
+    final result = await repository.startAutomation(params);
 
     result.fold(
       (failure) {

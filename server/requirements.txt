@@ -1,16 +1,10 @@
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 sqlalchemy==2.0.25
-scrapy==2.11.0
 pydantic==2.5.3
 python-multipart==0.0.6
 httpx==0.26.0
 websockets==12.0
 
-# Real scraper dependencies
+# Browser automation dependencies  
 selenium==4.22.0
-webdriver-manager==4.0.1
-
-# Optional: For real Google Maps scraping (uncomment if needed)
-# selenium==4.16.0
-# webdriver-manager==4.0.1

@@ -67,7 +67,7 @@ class _EmptyStateState extends State<EmptyState>
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           AppTheme.lightGray,
                           Colors.white,

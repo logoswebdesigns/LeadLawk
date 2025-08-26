@@ -1,40 +1,55 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
+import 'core/navigation/main_scaffold.dart';
 import 'features/leads/presentation/pages/leads_list_page_v2.dart';
 import 'features/leads/presentation/pages/lead_detail_page.dart';
-import 'features/leads/presentation/pages/run_scrape_page.dart';
-import 'features/leads/presentation/pages/scrape_monitor_page.dart';
+import 'features/leads/presentation/pages/browser_automation_page.dart';
+import 'features/leads/presentation/pages/automation_monitor_page.dart';
 import 'features/leads/presentation/pages/server_diagnostics_page.dart';
-import 'features/leads/presentation/providers/scrape_form_provider.dart';
+import 'features/leads/presentation/pages/account_page.dart';
+import 'features/leads/presentation/providers/automation_form_provider.dart';
 import 'features/leads/presentation/providers/server_status_provider.dart';
 
+String _envForPlatform() {
+  if (kIsWeb) return '.env.web';
+  if (Platform.isMacOS) return '.env.macos';
+  if (Platform.isAndroid) return '.env.android';
+  return '.env';
+}
+
 void main() async {
+  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
   final prefs = await SharedPreferences.getInstance();
   
   runApp(
     ProviderScope(
       overrides: [
-        scrapeFormProvider.overrideWith(
-          (ref) => ScrapeFormNotifier(prefs),
+        automationFormProvider.overrideWith(
+          (ref) => AutomationFormNotifier(prefs),
         ),
       ],
-      child: const LeadLawkApp(),
+      child: const LeadLoqApp(),
     ),
   );
 }
 
-class LeadLawkApp extends ConsumerStatefulWidget {
-  const LeadLawkApp({super.key});
+class LeadLoqApp extends ConsumerStatefulWidget {
+  const LeadLoqApp({super.key});
 
   @override
-  ConsumerState<LeadLawkApp> createState() => _LeadLawkAppState();
+  ConsumerState<LeadLoqApp> createState() => _LeadLoqAppState();
 }
 
-class _LeadLawkAppState extends ConsumerState<LeadLawkApp> {
+class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
   late final GoRouter _router;
 
   @override
@@ -45,38 +60,47 @@ class _LeadLawkAppState extends ConsumerState<LeadLawkApp> {
     _router = GoRouter(
       initialLocation: '/',
       routes: [
-        GoRoute(
-          path: '/',
-          redirect: (context, state) => '/leads',
-        ),
-        GoRoute(
-          path: '/leads',
-          builder: (context, state) {
-            final filter = state.uri.queryParameters['filter'];
-            return LeadsListPageV2(initialFilter: filter);
-          },
-        ),
-        GoRoute(
-          path: '/leads/:id',
-          builder: (context, state) {
-            final leadId = state.pathParameters['id']!;
-            return LeadDetailPage(leadId: leadId);
-          },
-        ),
-        GoRoute(
-          path: '/scrape',
-          builder: (context, state) => const RunScrapePage(),
-        ),
-        GoRoute(
-          path: '/scrape/monitor/:jobId',
-          builder: (context, state) {
-            final jobId = state.pathParameters['jobId']!;
-            return ScrapeMonitorPage(jobId: jobId);
-          },
-        ),
-        GoRoute(
-          path: '/server',
-          builder: (context, state) => const ServerDiagnosticsPage(),
+        ShellRoute(
+          builder: (context, state, child) => MainScaffold(child: child),
+          routes: [
+            GoRoute(
+              path: '/',
+              redirect: (context, state) => '/leads',
+            ),
+            GoRoute(
+              path: '/leads',
+              builder: (context, state) {
+                final filter = state.uri.queryParameters['filter'];
+                return LeadsListPageV2(initialFilter: filter);
+              },
+            ),
+            GoRoute(
+              path: '/leads/:id',
+              builder: (context, state) {
+                final leadId = state.pathParameters['id']!;
+                return LeadDetailPage(leadId: leadId);
+              },
+            ),
+            GoRoute(
+              path: '/browser',
+              builder: (context, state) => const BrowserAutomationPage(),
+            ),
+            GoRoute(
+              path: '/browser/monitor/:jobId',
+              builder: (context, state) {
+                final jobId = state.pathParameters['jobId']!;
+                return AutomationMonitorPage(jobId: jobId);
+              },
+            ),
+            GoRoute(
+              path: '/account',
+              builder: (context, state) => const AccountPage(),
+            ),
+            GoRoute(
+              path: '/server',
+              builder: (context, state) => const ServerDiagnosticsPage(),
+            ),
+          ],
         ),
       ],
     );
@@ -87,7 +111,7 @@ class _LeadLawkAppState extends ConsumerState<LeadLawkApp> {
     // Listen without rebuilding the app on status polls.
     ref.listen(serverStatusProvider, (_, __) {});
     return MaterialApp.router(
-      title: 'LeadLawk',
+      title: 'LeadLoq',
       theme: AppTheme.lightTheme(),
       debugShowCheckedModeBanner: false,
       routerConfig: _router,

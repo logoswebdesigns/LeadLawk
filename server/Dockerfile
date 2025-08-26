@@ -1,24 +1,26 @@
+# Python FastAPI server - simplified without browser automation
+# Browser automation will run on host machine
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
+# Set working directory
 WORKDIR /app
 
-# System deps: chromium + chromedriver for Selenium
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        chromium chromium-driver \
-        curl ca-certificates gcc && \
-    rm -rf /var/lib/apt/lists/*
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Copy application code
+COPY . .
 
-COPY . /app
+# Create directory for database
+RUN mkdir -p /app/data
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV USE_DOCKER=1
+
+# Expose port
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/job_provider.dart';
 
@@ -26,12 +29,15 @@ class LeadDetailPage extends ConsumerStatefulWidget {
 
 class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   final _notesController = TextEditingController();
+  final _notesFocusNode = FocusNode();
   bool _isEditingNotes = false;
 
   Color _getStatusColor(LeadStatus status) {
     switch (status) {
       case LeadStatus.new_:
         return Colors.grey;
+      case LeadStatus.viewed:
+        return Colors.blueGrey;
       case LeadStatus.called:
         return Colors.orange;
       case LeadStatus.interested:
@@ -47,6 +53,8 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     switch (status) {
       case LeadStatus.new_:
         return 'NEW';
+      case LeadStatus.viewed:
+        return 'VIEWED';
       case LeadStatus.called:
         return 'CALLED';
       case LeadStatus.interested:
@@ -55,6 +63,41 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         return 'CONVERTED';
       case LeadStatus.dnc:
         return 'DNC';
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+    
+    if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Yesterday';
+    } else if (difference < 7) {
+      return '$difference days ago';
+    } else if (difference < 30) {
+      final weeks = (difference / 7).round();
+      return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
+    } else if (difference < 365) {
+      final months = (difference / 30).round();
+      return months == 1 ? '1 month ago' : '$months months ago';
+    } else {
+      return DateFormat('MMM d, yyyy').format(date);
+    }
+  }
+
+  String _formatSource(String source) {
+    switch (source.toLowerCase()) {
+      case 'browser_automation':
+        return 'Google Maps (Browser Automation)';
+      case 'google_maps':
+        return 'Google Maps';
+      case 'manual':
+        return 'Manual Entry';
+      default:
+        return source.replaceAll('_', ' ').split(' ').map((word) => 
+            word[0].toUpperCase() + word.substring(1).toLowerCase()).join(' ');
     }
   }
 
@@ -70,7 +113,15 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     final updatedLead = lead.copyWith(notes: _notesController.text);
     await repository.updateLead(updatedLead);
     setState(() => _isEditingNotes = false);
+    _notesFocusNode.unfocus();
     ref.invalidate(leadDetailProvider(widget.leadId));
+  }
+
+  void _startEditingNotes() {
+    setState(() => _isEditingNotes = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notesFocusNode.requestFocus();
+    });
   }
 
   Future<void> _launchPhone(String phone) async {
@@ -87,9 +138,55 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     }
   }
 
+  Future<void> _deleteLead(Lead lead) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Lead?'),
+        content: Text('Are you sure you want to delete "${lead.businessName}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        // Direct API call to delete the lead
+        final dio = ref.read(dioProvider);
+        await dio.delete('http://localhost:8000/leads/${lead.id}');
+        
+        // Invalidate the lead detail cache
+        ref.invalidate(leadDetailProvider);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${lead.businessName} deleted')),
+          );
+          context.go('/leads');
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
     _notesController.dispose();
+    _notesFocusNode.dispose();
     super.dispose();
   }
 
@@ -99,6 +196,18 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              // Fallback to leads list if no route to pop
+              context.go('/leads');
+            }
+          },
+          tooltip: 'Back',
+        ),
         title: const Text('Lead Details'),
         elevation: 2,
       ),
@@ -152,8 +261,19 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                             Icons.star,
                             '${lead.rating!.toStringAsFixed(1)} stars (${lead.reviewCount ?? 0} reviews)',
                           ),
+                        if (lead.lastReviewDate != null)
+                          _buildInfoRow(
+                            Icons.schedule,
+                            'Last Review: ${_formatDate(lead.lastReviewDate!)}',
+                          )
+                        else if (lead.reviewCount != null && lead.reviewCount! > 0)
+                          _buildInfoRow(
+                            Icons.schedule,
+                            'Last Review: Date not available',
+                          ),
                         if (lead.platformHint != null)
                           _buildInfoRow(Icons.info_outline, 'Platform: ${lead.platformHint}'),
+                        _buildInfoRow(Icons.source, 'Source: ${_formatSource(lead.source)}'),
                       ],
                     ),
                   ),
@@ -167,24 +287,53 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                       children: [
                         Text(
                           'Quick Actions',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: LeadStatus.values.map((status) {
-                            return ElevatedButton(
-                              onPressed: lead.status == status
-                                  ? null
-                                  : () => _updateStatus(lead, status),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _getStatusColor(status),
-                                foregroundColor: Colors.white,
+                          children: [
+                            ...LeadStatus.values.map((status) {
+                              final label = _getStatusLabel(status);
+                              final isCurrentStatus = lead.status == status;
+                              return Semantics(
+                                label: isCurrentStatus 
+                                    ? '$label (current status)' 
+                                    : 'Mark as $label',
+                                button: true,
+                                enabled: !isCurrentStatus,
+                                child: ElevatedButton(
+                                  onPressed: isCurrentStatus
+                                      ? null
+                                      : () => _updateStatus(lead, status),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _getStatusColor(status),
+                                    foregroundColor: Colors.white,
+                                    disabledBackgroundColor: _getStatusColor(status).withOpacity(0.6),
+                                  ),
+                                  child: Text(label),
+                                ),
+                              );
+                            }).toList(),
+                            if (lead.status != LeadStatus.new_)
+                              Semantics(
+                                label: 'Mark as unread',
+                                button: true,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _updateStatus(lead, LeadStatus.new_),
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: Colors.grey),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  icon: Icon(Icons.mark_as_unread, size: 16),
+                                  label: Text('Mark Unread'),
+                                ),
                               ),
-                              child: Text(_getStatusLabel(status)),
-                            );
-                          }).toList(),
+                          ],
                         ),
                       ],
                     ),
@@ -197,47 +346,67 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Notes',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(_isEditingNotes ? Icons.check : Icons.edit),
-                              onPressed: () {
-                                if (_isEditingNotes) {
-                                  _updateNotes(lead);
-                                } else {
-                                  setState(() => _isEditingNotes = true);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        if (_isEditingNotes)
-                          TextField(
-                            controller: _notesController,
-                            maxLines: 5,
-                            decoration: const InputDecoration(
-                              hintText: 'Add notes...',
-                              border: OutlineInputBorder(),
-                            ),
-                          )
-                        else
-                          Text(
-                            lead.notes?.isNotEmpty == true
-                                ? lead.notes!
-                                : 'No notes yet',
-                            style: TextStyle(
-                              color: lead.notes?.isNotEmpty == true
-                                  ? null
-                                  : Colors.grey,
-                            ),
+                        Text(
+                          'Notes',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w600,
                           ),
+                        ),
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: _isEditingNotes ? null : _startEditingNotes,
+                          child: Container(
+                            width: double.infinity,
+                            constraints: const BoxConstraints(minHeight: 120),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _isEditingNotes 
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: _isEditingNotes 
+                                    ? AppTheme.primaryGold.withOpacity(0.3)
+                                    : Colors.white.withOpacity(0.1),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _isEditingNotes
+                                ? TextField(
+                                    controller: _notesController,
+                                    focusNode: _notesFocusNode,
+                                    maxLines: null,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      hintText: 'Tap to add notes...',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 15,
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                    ),
+                                    onSubmitted: (_) => _updateNotes(lead),
+                                    onTapOutside: (_) => _updateNotes(lead),
+                                  )
+                                : Text(
+                                    lead.notes?.isNotEmpty == true
+                                        ? lead.notes!
+                                        : 'Tap to add notes...',
+                                    style: TextStyle(
+                                      color: lead.notes?.isNotEmpty == true
+                                          ? Colors.white.withOpacity(0.9)
+                                          : Colors.grey,
+                                      fontSize: 15,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -251,17 +420,49 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                       children: [
                         Text(
                           'Qualification Flags',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        _buildFlagRow('Has Website', lead.hasWebsite),
-                        _buildFlagRow('Meets Rating Threshold', lead.meetsRatingThreshold),
-                        _buildFlagRow('Has Recent Reviews', lead.hasRecentReviews),
-                        _buildFlagRow('Is Candidate', lead.isCandidate),
+                        _buildFlagRow('Has Website', lead.hasWebsite, 
+                            lead.hasWebsite ? 'Business has existing website' : 'Prime prospect for web design services'),
+                        _buildFlagRow('Meets Rating Threshold', lead.meetsRatingThreshold,
+                            lead.meetsRatingThreshold ? 'Rating meets minimum criteria' : 'Below minimum rating threshold'),
+                        _buildFlagRow('Has Recent Reviews', lead.hasRecentReviews,
+                            lead.hasRecentReviews 
+                                ? (lead.lastReviewDate != null 
+                                    ? 'Last review: ${_formatDate(lead.lastReviewDate!)}' 
+                                    : 'Recent customer engagement')
+                                : (lead.lastReviewDate != null
+                                    ? 'Last review: ${_formatDate(lead.lastReviewDate!)} (too old)'
+                                    : 'Low recent review activity')),
+                        _buildFlagRow('Is Candidate', lead.isCandidate,
+                            lead.isCandidate ? 'Qualified lead candidate' : 'May not meet all criteria'),
                       ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 24),
+                // Delete Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _deleteLead(lead),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    icon: const Icon(Icons.delete),
+                    label: const Text(
+                      'Delete Lead',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           );
@@ -275,42 +476,98 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   }
 
   Widget _buildInfoRow(IconData icon, String text, [VoidCallback? onTap]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: Colors.grey),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  decoration: onTap != null ? TextDecoration.underline : null,
-                  color: onTap != null ? Colors.blue : null,
+    final isClickable = onTap != null;
+    return Semantics(
+      button: isClickable,
+      label: isClickable ? 'Open $text' : text,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            child: Row(
+              children: [
+                Icon(
+                  icon, 
+                  size: 20, 
+                  color: AppTheme.mediumGray,
+                  semanticLabel: null, // Icon is decorative, label is on parent
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      decoration: isClickable ? TextDecoration.underline : null,
+                      color: isClickable 
+                          ? AppTheme.primaryGold 
+                          : Colors.white.withOpacity(0.9),
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+                if (isClickable)
+                  Icon(
+                    Icons.open_in_new,
+                    size: 16,
+                    color: AppTheme.primaryGold.withOpacity(0.7),
+                    semanticLabel: null,
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFlagRow(String label, bool value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            value ? Icons.check_circle : Icons.cancel,
-            size: 20,
-            color: value ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
+  Widget _buildFlagRow(String label, bool value, [String? description]) {
+    return Semantics(
+      label: '$label: ${value ? "Yes" : "No"}${description != null ? " - $description" : ""}',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  value ? Icons.check_circle : Icons.cancel,
+                  size: 20,
+                  color: value ? AppTheme.successGreen : AppTheme.errorRed.withOpacity(0.8),
+                  semanticLabel: null, // Semantic label is on parent
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (description != null) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 32),
+                child: Text(
+                  description,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

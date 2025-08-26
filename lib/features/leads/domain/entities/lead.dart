@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum LeadStatus { new_, called, interested, converted, dnc }
+enum LeadStatus { new_, viewed, called, interested, converted, dnc }
 
 class Lead extends Equatable {
   final String id;

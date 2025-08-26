@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    build: .
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./leadloq.db:/app/leadloq.db
+      - ./server.log:/app/server.log
+      - ./screenshots:/app/screenshots
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444/wd/hub
+    restart: unless-stopped
+    depends_on:
+      - selenium-chrome
+    networks:
+      - leadloq-network
+
+  selenium-chrome:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC port for debugging
+    volumes:
+      - ./screenshots:/screenshots
+    environment:
+      - SE_NODE_MAX_SESSIONS=3
+      - SE_NODE_SESSION_TIMEOUT=120
+      - SE_VNC_PASSWORD=secret
+    shm_size: '2gb'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+networks:
+  leadloq-network:
+    driver: bridge

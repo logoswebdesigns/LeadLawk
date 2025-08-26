@@ -2,22 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/datasources/websocket_service.dart';
-// Removed job_provider import to avoid dioProvider name clash
 import '../providers/server_status_provider.dart';
-import 'package:dio/dio.dart';
 
-class ScrapeMonitorPage extends ConsumerStatefulWidget {
+class AutomationMonitorPage extends ConsumerStatefulWidget {
   final String jobId;
   
-  const ScrapeMonitorPage({super.key, required this.jobId});
+  const AutomationMonitorPage({super.key, required this.jobId});
   
   @override
-  ConsumerState<ScrapeMonitorPage> createState() => _ScrapeMonitorPageState();
+  ConsumerState<AutomationMonitorPage> createState() => _AutomationMonitorPageState();
 }
 
-class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
+class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   final WebSocketService _wsService = WebSocketService();
   final List<String> _logs = [];
   Map<String, dynamic>? _jobStatus;
@@ -106,11 +105,11 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.check_circle, color: AppTheme.successGreen),
-            const SizedBox(width: 12),
-            const Text('Scrape Complete!'),
+            SizedBox(width: 12),
+            Text('Automation Complete!'),
           ],
         ),
         content: Text(
@@ -137,11 +136,11 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.error, color: AppTheme.errorRed),
-            const SizedBox(width: 12),
-            const Text('Scrape Failed'),
+            SizedBox(width: 12),
+            Text('Automation Failed'),
           ],
         ),
         content: SizedBox(
@@ -218,23 +217,66 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppTheme.darkGray),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.darkGray),
           onPressed: () => context.go('/'),
         ),
         title: Row(
           children: [
             Image.asset(
-              'assets/images/leadlawk-logo.png',
+              'assets/images/LeadLoq-logo.png',
               height: 24,
             ),
             const SizedBox(width: 8),
-            Text(
-              'Scraping Progress',
+            const Text(
+              'Browser Automation Progress',
               style: TextStyle(
                 color: AppTheme.darkGray,
                 fontWeight: FontWeight.w600,
               ),
             ),
+            const Spacer(),
+            if (_jobStatus?['status'] == 'running')
+              IconButton(
+                icon: const Icon(Icons.cancel, color: Colors.red),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Cancel Job?'),
+                      content: const Text('Are you sure you want to cancel this browser automation job?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('No'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+                        ),
+                      ],
+                    ),
+                  );
+                  
+                  if (confirmed == true) {
+                    try {
+                      final dio = ref.read(dioProvider);
+                      await dio.post('http://localhost:8000/jobs/${widget.jobId}/cancel');
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Job cancellation requested')),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to cancel: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+                tooltip: 'Cancel Job',
+              ),
           ],
         ),
       ),
@@ -248,12 +290,12 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.error, color: AppTheme.errorRed),
+                  const Icon(Icons.error, color: AppTheme.errorRed),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _jobStatus?['message'] ?? 'Unknown error',
-                      style: TextStyle(color: AppTheme.errorRed),
+                      style: const TextStyle(color: AppTheme.errorRed),
                     ),
                   ),
                 ],
@@ -279,7 +321,7 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
                     ),
                     Text(
                       '${_jobStatus?['processed'] ?? 0} / ${_jobStatus?['total'] ?? 0}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppTheme.mediumGray,
                       ),
@@ -298,7 +340,7 @@ class _ScrapeMonitorPageState extends ConsumerState<ScrapeMonitorPage> {
                 const SizedBox(height: 8),
                 Text(
                   '${(progress * 100).toStringAsFixed(1)}% Complete',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.mediumGray,
                   ),

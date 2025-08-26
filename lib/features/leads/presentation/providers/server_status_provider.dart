@@ -71,7 +71,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
       if (response.statusCode == 200) {
         state = ServerState(
           status: ServerStatus.online,
-          message: 'Connected to LeadLawk API',
+          message: 'Connected to LeadLoq API',
           lastCheck: DateTime.now(),
           logs: state.logs,
         );
@@ -147,7 +147,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
         },
       );
       
-      void _appendLog(String line) {
+      void appendLog(String line) {
         final List<String> updated = List<String>.from(state.logs)..add(line);
         // Keep last 500 lines
         final trimmed = updated.length > 500 ? updated.sublist(updated.length - 500) : updated;
@@ -158,7 +158,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
         final output = String.fromCharCodes(data);
         for (final line in output.split('\n')) {
           if (line.trim().isEmpty) continue;
-          _appendLog('[OUT] ' + line.trim());
+          appendLog('[OUT] ${line.trim()}');
         }
         if (output.contains('Uvicorn running on')) {
           Future.delayed(const Duration(seconds: 2), () {
@@ -171,7 +171,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
         final error = String.fromCharCodes(data);
         for (final line in error.split('\n')) {
           if (line.trim().isEmpty) continue;
-          _appendLog('[ERR] ' + line.trim());
+          appendLog('[ERR] ${line.trim()}');
         }
       });
       

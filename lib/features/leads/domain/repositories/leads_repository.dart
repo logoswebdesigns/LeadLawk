@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/job.dart';
 import '../entities/lead.dart';
-import '../usecases/run_scrape_usecase.dart';
+import '../usecases/browser_automation_usecase.dart';
 
 abstract class LeadsRepository {
   Future<Either<Failure, List<Lead>>> getLeads({
@@ -15,7 +15,9 @@ abstract class LeadsRepository {
   
   Future<Either<Failure, Lead>> updateLead(Lead lead);
   
-  Future<Either<Failure, String>> startScrape(RunScrapeParams params);
+  Future<Either<Failure, String>> startAutomation(BrowserAutomationParams params);
   
   Stream<Job> watchJob(String jobId);
+  
+  Future<Either<Failure, int>> deleteMockLeads();
 }

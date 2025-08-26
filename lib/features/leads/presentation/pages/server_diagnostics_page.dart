@@ -1,11 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as ws_status;
 import '../providers/server_status_provider.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:convert';
 
 class ServerDiagnosticsPage extends ConsumerStatefulWidget {
@@ -22,20 +25,56 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
   @override
   void initState() {
     super.initState();
-    // Connect to WS logs; ignore failures, page will fallback to HTTP fetch
-    try {
-      _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:8000/ws/logs'));
-      _channel!.stream.listen((event) {
-        try {
-          // Expect server to send JSON strings {type, message}
-          if (event is String) {
-            final line = _extractMessage(event);
-            if (line != null) setState(() => _live.add(line));
-          }
-        } catch (_) {}
-      }, onError: (_) {}, onDone: () {});
-    } catch (_) {}
+    _connectLogsWs(); // async helper
   }
+
+
+  String sanitizeBaseUrl(String raw) {
+    var s = raw;
+
+    // Remove BOM/zero-width and control chars
+    s = s.replaceAll(RegExp(r'[\u200B-\u200D\uFEFF\u0000-\u001F\u007F]'), '');
+
+    // Remove fragment or query (anything after # or ?)
+    s = s.replaceFirst(RegExp(r'[#\?].*$'), '');
+
+    // Trim whitespace and trailing slashes
+    s = s.trim().replaceFirst(RegExp(r'/+$'), '');
+
+    return s;
+  }
+
+  Future<void> _connectLogsWs() async {
+    try {
+      final rawBase = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+      final base    = sanitizeBaseUrl(rawBase);
+      final u       = Uri.parse(base);
+
+      final wsUri = u.replace(
+        scheme: u.scheme == 'https' ? 'wss' : 'ws',
+        // keep any base path, append /ws/logs
+        path: '${u.path.isEmpty ? '' : u.path.replaceFirst(RegExp(r'/+$'), '')}/ws/logs',
+        query: null,
+        fragment: null,
+      );
+
+      final socket = await WebSocket.connect(wsUri.toString());
+      setState(() => _channel = IOWebSocketChannel(socket));
+
+      _channel!.stream.listen((event) {
+        final line = _extractMessage(event is String ? event : event.toString());
+        if (line != null) setState(() => _live.add(line));
+      }, onError: (e) {
+        debugPrint('WS error: $e');
+      }, onDone: () {
+        debugPrint('WS closed');
+      });
+    } catch (e) {
+      debugPrint('WS connect failed (using HTTP fallback): $e');
+      // Page already shows logs via HTTP fallback provider.
+    }
+  }
+
 
   String? _extractMessage(String raw) {
     try {
@@ -111,8 +150,10 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           IconButton(
             onPressed: () async {
               try {
+                final base = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+                final baseHttp = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
                 final dio = ref.read(dioProvider);
-                final resp = await dio.get('http://localhost:8000/diagnostics');
+                final resp = await dio.get('$baseHttp/diagnostics');
                 final data = resp.data as Map<String, dynamic>;
                 if (!context.mounted) return;
                 showDialog(
@@ -195,6 +236,55 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               ),
             ),
           const SizedBox(height: 8),
+          // Setup Instructions
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Server Setup',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'To start the backend server:',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: const Text(
+                        'cd server && docker-compose up -d',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'This starts both the API server and browser automation containers.\nFor production deployment, use container orchestration or Docker Compose.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           const Divider(height: 1),
           const Padding(
             padding: EdgeInsets.all(16),
@@ -212,10 +302,10 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                   return logsAsync.when(
                     data: (lines) {
                       // Merge: server file logs + live WS lines + in-app captured logs
-                      final merged = <String>[]
-                        ..addAll(lines)
-                        ..addAll(_live)
-                        ..addAll(server.logs);
+                      final merged = <String>[...lines, ..._live, ...server.logs]
+                        
+                        
+                        ;
                       return ListView.builder(
                         reverse: true,
                         itemCount: merged.length,
@@ -270,7 +360,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              'Scrape Jobs',
+              'Browser Automation Jobs',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
@@ -337,14 +427,18 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                                 const Spacer(),
                                 Row(
                                   children: [
-                                    TextButton(
-                                      onPressed: () => _showJobLogsSheet(context, ref, jobId),
-                                      child: const Text('View Logs'),
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: () => _showJobLogsSheet(context, ref, jobId),
+                                        child: const Text('Logs'),
+                                      ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    OutlinedButton(
-                                      onPressed: () => context.go('/scrape/monitor/$jobId'),
-                                      child: const Text('Open Monitor'),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        onPressed: () => context.go('/browser/monitor/$jobId'),
+                                        child: const Text('Monitor'),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -384,92 +478,414 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.list_alt),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text('Job $jobId', style: const TextStyle(fontWeight: FontWeight.w600))),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.go('/scrape/monitor/$jobId');
-                      },
-                      child: const Text('Open Monitor'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: FutureBuilder(
-                    future: ref.read(dioProvider).get('http://localhost:8000/jobs/$jobId/logs', queryParameters: {'tail': 500}),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                      }
-                      if (snapshot.hasError || snapshot.data == null) {
-                        return const Center(child: Text('Failed to load job logs'));
-                      }
-                      final resp = snapshot.data as dynamic;
-                      final lines = (resp.data['lines'] as List).cast<String>();
-                      if (lines.isEmpty) return const Center(child: Text('No logs'));
-                      return Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () async {
-                                final text = lines.join('\n');
-                                await Clipboard.setData(ClipboardData(text: text));
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Job logs copied to clipboard')),
-                                );
-                              },
-                              icon: const Icon(Icons.copy, size: 16),
-                              label: const Text('Copy Logs'),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              color: Colors.black,
-                              child: ListView.builder(
-                                itemCount: lines.length,
-                                itemBuilder: (context, index) {
-                                  final line = lines[index];
-                                  final isErr = line.contains('ERROR') || line.contains('Traceback');
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    child: Text(
-                                      line,
-                                      style: TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontSize: 12,
-                                        color: isErr ? Colors.redAccent : Colors.greenAccent,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+        return DefaultTabController(
+          length: 2,
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.analytics),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text('Job $jobId', style: const TextStyle(fontWeight: FontWeight.w600))),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.go('/browser/monitor/$jobId');
+                        },
+                        child: const Text('Open Monitor'),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  const TabBar(
+                    tabs: [
+                      Tab(icon: Icon(Icons.list_alt), text: 'Logs'),
+                      Tab(icon: Icon(Icons.camera_alt), text: 'Screenshots'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _buildLogsTab(ref, jobId),
+                        _buildScreenshotsTab(ref, jobId),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  Widget _buildLogsTab(WidgetRef ref, String jobId) {
+    return FutureBuilder(
+      future: (() {
+        final base = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+        final baseHttp = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+        return ref.read(dioProvider).get(
+          '$baseHttp/jobs/$jobId/logs',
+          queryParameters: {'tail': 500},
+        );
+      })(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          return const Center(child: Text('Failed to load job logs'));
+        }
+        final resp = snapshot.data as dynamic;
+        final lines = (resp.data['lines'] as List).cast<String>();
+        if (lines.isEmpty) return const Center(child: Text('No logs'));
+        return Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final text = lines.join('\n');
+                  await Clipboard.setData(ClipboardData(text: text));
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Job logs copied to clipboard')),
+                  );
+                },
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('Copy Logs'),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                color: Colors.black,
+                child: ListView.builder(
+                  itemCount: lines.length,
+                  itemBuilder: (context, index) {
+                    final line = lines[index];
+                    final isErr = line.contains('ERROR') || line.contains('Traceback');
+                    final isScreenshot = line.contains('📸 Screenshot captured');
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      child: Text(
+                        line,
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: isErr 
+                              ? Colors.redAccent 
+                              : isScreenshot 
+                                  ? Colors.cyanAccent 
+                                  : Colors.greenAccent,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildScreenshotsTab(WidgetRef ref, String jobId) {
+    return FutureBuilder(
+      future: (() {
+        final base = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+        final baseHttp = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+        return ref.read(dioProvider).get('$baseHttp/jobs/$jobId/screenshots');
+      })(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        }
+        if (snapshot.hasError || snapshot.data == null) {
+          return const Center(child: Text('Failed to load screenshots'));
+        }
+        final resp = snapshot.data as dynamic;
+        final screenshots = (resp.data['screenshots'] as List).cast<Map<String, dynamic>>();
+        if (screenshots.isEmpty) {
+          return const Center(child: Text('No screenshots captured'));
+        }
+        return GridView.builder(
+          padding: const EdgeInsets.all(8),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.5,
+          ),
+          itemCount: screenshots.length,
+          itemBuilder: (context, index) {
+            final screenshot = screenshots[index];
+            final filename = screenshot['filename'] as String;
+            final base = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+            final baseHttp = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+            final imageUrl = '$baseHttp/screenshots/$filename';
+            
+            // Extract description from filename
+            final description = _extractScreenshotDescription(filename);
+            
+            return GestureDetector(
+              onTap: () => _showFullScreenshot(context, screenshots, index),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.broken_image, color: Colors.grey),
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                      ),
+                      child: Text(
+                        description,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _extractScreenshotDescription(String filename) {
+    // Extract description from filename pattern: job_{jobId}_{count}_{timestamp}_{description}.png
+    final parts = filename.split('_');
+    if (parts.length >= 5) {
+      final description = parts.sublist(4).join('_').replaceAll('.png', '');
+      return description.replaceAll('_', ' ').split(' ').map((word) {
+        return word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1);
+      }).join(' ');
+    }
+    return 'Screenshot';
+  }
+
+  void _showFullScreenshot(BuildContext context, List<Map<String, dynamic>> screenshots, int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (context) => _ScreenshotGalleryDialog(
+        screenshots: screenshots,
+        initialIndex: initialIndex,
+      ),
+    );
+  }
+}
+
+class _ScreenshotGalleryDialog extends StatefulWidget {
+  final List<Map<String, dynamic>> screenshots;
+  final int initialIndex;
+
+  const _ScreenshotGalleryDialog({
+    required this.screenshots,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ScreenshotGalleryDialog> createState() => _ScreenshotGalleryDialogState();
+}
+
+class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
+  late int currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+  }
+
+  void _previousImage() {
+    setState(() {
+      currentIndex = (currentIndex - 1 + widget.screenshots.length) % widget.screenshots.length;
+    });
+  }
+
+  void _nextImage() {
+    setState(() {
+      currentIndex = (currentIndex + 1) % widget.screenshots.length;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentScreenshot = widget.screenshots[currentIndex];
+    final filename = currentScreenshot['filename'] as String;
+    final base = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+    final baseHttp = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final imageUrl = '$baseHttp/screenshots/$filename';
+    final description = _extractScreenshotDescription(filename);
+    
+    return Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Icon(Icons.camera_alt),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '$description (${currentIndex + 1} of ${widget.screenshots.length})',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  Center(
+                    child: InteractiveViewer(
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Failed to load screenshot'),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  if (widget.screenshots.length > 1) ...[
+                    Positioned(
+                      left: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: IconButton(
+                          onPressed: _previousImage,
+                          icon: const Icon(Icons.arrow_back_ios, size: 32),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: IconButton(
+                          onPressed: _nextImage,
+                          icon: const Icon(Icons.arrow_forward_ios, size: 32),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (widget.screenshots.length > 1)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: widget.screenshots.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index == currentIndex ? Colors.blue : Colors.grey,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  String _extractScreenshotDescription(String filename) {
+    // Extract description from filename pattern: job_{jobId}_{count}_{timestamp}_{description}.png
+    final parts = filename.split('_');
+    if (parts.length >= 5) {
+      final description = parts.sublist(4).join('_').replaceAll('.png', '');
+      return description.replaceAll('_', ' ').split(' ').map((word) {
+        return word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1);
+      }).join(' ');
+    }
+    return 'Screenshot';
   }
 }
 

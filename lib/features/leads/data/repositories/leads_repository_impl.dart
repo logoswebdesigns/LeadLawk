@@ -3,7 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/job.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/repositories/leads_repository.dart';
-import '../../domain/usecases/run_scrape_usecase.dart';
+import '../../domain/usecases/browser_automation_usecase.dart';
 import '../datasources/leads_remote_datasource.dart';
 import '../models/lead_model.dart';
 
@@ -53,9 +53,9 @@ class LeadsRepositoryImpl implements LeadsRepository {
   }
 
   @override
-  Future<Either<Failure, String>> startScrape(RunScrapeParams params) async {
+  Future<Either<Failure, String>> startAutomation(BrowserAutomationParams params) async {
     try {
-      final jobId = await remoteDataSource.startScrape(params);
+      final jobId = await remoteDataSource.startAutomation(params);
       return Right(jobId);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -105,6 +105,16 @@ class LeadsRepositoryImpl implements LeadsRepository {
         return JobStatus.error;
       default:
         return JobStatus.running;
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> deleteMockLeads() async {
+    try {
+      final count = await remoteDataSource.deleteMockLeads();
+      return Right(count);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

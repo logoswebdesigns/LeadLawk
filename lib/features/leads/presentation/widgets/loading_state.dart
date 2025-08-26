@@ -72,7 +72,7 @@ class _LoadingStateState extends State<LoadingState>
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
                         AppTheme.primaryIndigo,
                         AppTheme.accentPurple,
@@ -127,7 +127,7 @@ class _LoadingStateState extends State<LoadingState>
                       child: LinearProgressIndicator(
                         value: widget.progress,
                         backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
+                        valueColor: const AlwaysStoppedAnimation<Color>(
                           AppTheme.primaryIndigo,
                         ),
                       ),

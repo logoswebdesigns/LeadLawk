@@ -120,6 +120,8 @@ class LeadModel {
     switch (status) {
       case 'new':
         return LeadStatus.new_;
+      case 'viewed':
+        return LeadStatus.viewed;
       case 'called':
         return LeadStatus.called;
       case 'interested':
@@ -137,6 +139,8 @@ class LeadModel {
     switch (status) {
       case LeadStatus.new_:
         return 'new';
+      case LeadStatus.viewed:
+        return 'viewed';
       case LeadStatus.called:
         return 'called';
       case LeadStatus.interested:

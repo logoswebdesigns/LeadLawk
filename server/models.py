@@ -9,6 +9,7 @@ from database import Base
 
 class LeadStatus(str, enum.Enum):
     NEW = "new"
+    VIEWED = "viewed"
     CALLED = "called"
     INTERESTED = "interested"
     CONVERTED = "converted"
