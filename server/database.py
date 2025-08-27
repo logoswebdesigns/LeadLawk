@@ -17,5 +17,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def init_db():
-    from models import Lead, CallLog
+    from models import Lead, CallLog, LeadTimelineEntry
     Base.metadata.create_all(bind=engine)

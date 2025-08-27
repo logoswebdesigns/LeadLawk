@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 import uuid
@@ -17,8 +18,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from database import SessionLocal, init_db
-from models import Lead, LeadStatus
-from schemas import LeadResponse, LeadUpdate, ScrapeRequest, JobResponse
+from models import Lead, LeadStatus, LeadTimelineEntry, TimelineEntryType
+from schemas import LeadResponse, LeadUpdate, ScrapeRequest, JobResponse, LeadTimelineEntryCreate, LeadTimelineEntryUpdate
+from sqlalchemy.orm import selectinload
 
 app = FastAPI(title="LeadLoq API")
 
@@ -86,6 +88,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve screenshots as static files
+app.mount("/screenshots", StaticFiles(directory="screenshots"), name="screenshots")
 
 jobs: Dict[str, Dict[str, Any]] = {}
 job_lock = threading.Lock()
@@ -602,7 +607,11 @@ async def start_browser_automation(request: ScrapeRequest, background_tasks: Bac
                 cleanup_old_jobs(max_jobs=3)
             finally:
                 db.close()
-                automation.close()
+                try:
+                    automation.close()
+                except Exception as close_error:
+                    # Browser session may already be closed by cancellation handler
+                    add_job_log(job_id, f"Note: Browser session already closed ({type(close_error).__name__})")
                 # Clean up automation tracking
                 if job_id in job_automations:
                     del job_automations[job_id]
@@ -720,7 +729,7 @@ async def get_leads(
 ):
     db = SessionLocal()
     try:
-        query = db.query(Lead)
+        query = db.query(Lead).options(selectinload(Lead.timeline_entries))
         
         if status:
             query = query.filter(Lead.status == status)
@@ -916,7 +925,7 @@ async def websocket_logs(websocket: WebSocket):
 async def get_lead(lead_id: str):
     db = SessionLocal()
     try:
-        lead = db.query(Lead).filter(Lead.id == lead_id).first()
+        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         return LeadResponse.from_orm(lead)
@@ -928,13 +937,45 @@ async def get_lead(lead_id: str):
 async def update_lead(lead_id: str, update: LeadUpdate):
     db = SessionLocal()
     try:
-        lead = db.query(Lead).filter(Lead.id == lead_id).first()
+        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
         update_data = update.dict(exclude_unset=True)
+        
+        # Handle timeline entries separately
+        timeline_entries = update_data.pop('timeline', None)
+        
+        # Update lead fields
         for key, value in update_data.items():
             setattr(lead, key, value)
+        
+        # Handle timeline entries
+        if timeline_entries is not None:
+            # Add new timeline entries
+            for entry_data in timeline_entries:
+                # Check if entry already exists
+                existing_entry = db.query(LeadTimelineEntry).filter(
+                    LeadTimelineEntry.id == entry_data['id']
+                ).first()
+                
+                if not existing_entry:
+                    # Create new timeline entry
+                    timeline_entry = LeadTimelineEntry(
+                        id=entry_data['id'],
+                        lead_id=lead_id,
+                        type=TimelineEntryType(entry_data['type']),
+                        title=entry_data['title'],
+                        description=entry_data.get('description'),
+                        previous_status=LeadStatus(entry_data['previous_status']) if entry_data.get('previous_status') else None,
+                        new_status=LeadStatus(entry_data['new_status']) if entry_data.get('new_status') else None,
+                        created_at=datetime.fromisoformat(entry_data.get('created_at', datetime.utcnow().isoformat())) if isinstance(entry_data.get('created_at'), str) else entry_data.get('created_at', datetime.utcnow()),
+                        follow_up_date=datetime.fromisoformat(entry_data['follow_up_date']) if isinstance(entry_data.get('follow_up_date'), str) else entry_data.get('follow_up_date'),
+                        is_completed=entry_data.get('is_completed', False),
+                        completed_by=entry_data.get('completed_by'),
+                        completed_at=datetime.fromisoformat(entry_data['completed_at']) if isinstance(entry_data.get('completed_at'), str) else entry_data.get('completed_at')
+                    )
+                    db.add(timeline_entry)
         
         lead.updated_at = datetime.utcnow()
         db.commit()
@@ -943,6 +984,157 @@ async def update_lead(lead_id: str, update: LeadUpdate):
         return LeadResponse.from_orm(lead)
     finally:
         db.close()
+
+
+@app.put("/leads/{lead_id}/timeline/{entry_id}", response_model=LeadResponse)
+async def update_timeline_entry(lead_id: str, entry_id: str, update: LeadTimelineEntryUpdate):
+    db = SessionLocal()
+    try:
+        # Find the lead and timeline entry
+        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        timeline_entry = db.query(LeadTimelineEntry).filter(
+            LeadTimelineEntry.id == entry_id,
+            LeadTimelineEntry.lead_id == lead_id
+        ).first()
+        if not timeline_entry:
+            raise HTTPException(status_code=404, detail="Timeline entry not found")
+        
+        # Update timeline entry fields based on what was explicitly provided
+        if hasattr(update, '__fields_set__'):
+            fields_sent = update.__fields_set__
+        else:
+            # Fallback if __fields_set__ is not available
+            fields_sent = {k for k, v in update.dict().items() if v is not None}
+        
+        for field in fields_sent:
+            value = getattr(update, field)
+            setattr(timeline_entry, field, value)
+            
+            # Special case: if follow_up_date is being updated, also update the lead's follow_up_date
+            if field == 'follow_up_date':
+                lead.follow_up_date = value
+        
+        # Update lead's updated_at timestamp
+        lead.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(lead)
+        
+        return LeadResponse.from_orm(lead)
+    finally:
+        db.close()
+
+
+@app.post("/jobs/multi-industry", response_model=Dict[str, Any])
+async def start_multi_industry_automation(request: ScrapeRequest, background_tasks: BackgroundTasks):
+    """Start concurrent browser automation for multiple industries"""
+    
+    # Extract industries from the request - expect them in the industry field as comma-separated or in industries list
+    industries = []
+    if hasattr(request, 'industries') and request.industries:
+        industries = request.industries
+    elif ',' in request.industry:
+        industries = [i.strip() for i in request.industry.split(',')]
+    else:
+        industries = [request.industry]
+    
+    if len(industries) <= 1:
+        # Fall back to single industry job
+        return await start_browser_automation(request, background_tasks)
+    
+    logger.info(f"Starting multi-industry job for {len(industries)} industries: {industries}")
+    
+    # Use simple sequential processor (bulletproof fallback)
+    from simple_multi_industry import simple_multi_industry_processor
+    parent_job_id = simple_multi_industry_processor.create_multi_industry_job(industries, request)
+    
+    # Create entry in main jobs dict for compatibility
+    with job_lock:
+        jobs[parent_job_id] = {
+            "job_id": parent_job_id,
+            "status": "running",
+            "processed": 0,
+            "total": request.limit,
+            "message": f"Processing {len(industries)} industries sequentially...",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            "scraper_type": "multi-industry",
+            "industries": industries,
+            "location": request.location
+        }
+    
+    # Start the sequential execution
+    background_tasks.add_task(
+        simple_multi_industry_processor.execute_multi_industry_job_sequential,
+        parent_job_id
+    )
+    
+    add_job_log(parent_job_id, f"🚀 Starting sequential automation for {len(industries)} industries")
+    add_job_log(parent_job_id, f"Industries: {', '.join(industries)}")
+    add_job_log(parent_job_id, f"Location: {request.location}")
+    add_job_log(parent_job_id, f"Target leads per industry: {request.limit // len(industries)}")
+    add_job_log(parent_job_id, f"Processing mode: Sequential (bulletproof)")
+    
+    return {"job_id": parent_job_id, "type": "multi-industry", "industries": industries}
+
+
+@app.get("/jobs/{job_id}/multi-status")
+async def get_multi_industry_job_status(job_id: str):
+    """Get detailed status of a multi-industry job"""
+    from simple_multi_industry import simple_multi_industry_processor
+    
+    status = simple_multi_industry_processor.get_job_status(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Multi-industry job not found")
+    
+    return status
+
+
+@app.get("/containers/status")
+async def get_container_status():
+    """Get status of Selenium containers"""
+    # Simple fallback - just return info about the single container
+    return {
+        "total_containers": 1,
+        "mode": "single-container",
+        "containers": [
+            {
+                "name": "selenium-chrome",
+                "status": "running",
+                "hub_url": "http://selenium-chrome:4444/wd/hub",
+                "note": "Using single Selenium container (Docker orchestration disabled)"
+            }
+        ]
+    }
+
+
+@app.post("/containers/scale")
+async def scale_containers(target_instances: int):
+    """Container scaling not available in single-container mode"""
+    return {
+        "action": "not_available",
+        "message": "Container scaling not available in single-container mode",
+        "current_instances": 1,
+        "mode": "single-container"
+    }
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the application on startup"""
+    global event_loop
+    event_loop = asyncio.get_running_loop()
+    
+    # Initialize database
+    init_db()
+    
+    # Log startup mode
+    logger.info("✅ LeadLawk API started in single-container mode")
+    logger.info("📋 Multi-industry jobs will process sequentially")
+    logger.info("🔧 Using existing Selenium container: selenium-chrome:4444")
 
 
 if __name__ == "__main__":

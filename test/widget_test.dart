@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:leadloq/features/leads/presentation/providers/automation_form_provider.dart';
-import 'package:leadloq/features/leads/presentation/pages/browser_automation_page.dart';
+import 'package:leadloq/features/leads/presentation/pages/lead_search_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  group('BrowserAutomationPage Widget Tests', () {
+  group('LeadSearchPage Widget Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
@@ -22,7 +22,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
-            home: BrowserAutomationPage(),
+            home: LeadSearchPage(),
           ),
         ),
       );
@@ -45,7 +45,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
-            home: BrowserAutomationPage(),
+            home: LeadSearchPage(),
           ),
         ),
       );
@@ -71,7 +71,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
-            home: BrowserAutomationPage(),
+            home: LeadSearchPage(),
           ),
         ),
       );
@@ -95,7 +95,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
-            home: BrowserAutomationPage(),
+            home: LeadSearchPage(),
           ),
         ),
       );
@@ -119,7 +119,7 @@ void main() {
             ),
           ],
           child: const MaterialApp(
-            home: BrowserAutomationPage(),
+            home: LeadSearchPage(),
           ),
         ),
       );

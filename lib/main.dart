@@ -10,7 +10,7 @@ import 'core/theme/app_theme.dart';
 import 'core/navigation/main_scaffold.dart';
 import 'features/leads/presentation/pages/leads_list_page_v2.dart';
 import 'features/leads/presentation/pages/lead_detail_page.dart';
-import 'features/leads/presentation/pages/browser_automation_page.dart';
+import 'features/leads/presentation/pages/lead_search_page.dart';
 import 'features/leads/presentation/pages/automation_monitor_page.dart';
 import 'features/leads/presentation/pages/server_diagnostics_page.dart';
 import 'features/leads/presentation/pages/account_page.dart';
@@ -83,7 +83,7 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
             ),
             GoRoute(
               path: '/browser',
-              builder: (context, state) => const BrowserAutomationPage(),
+              builder: (context, state) => const LeadSearchPage(),
             ),
             GoRoute(
               path: '/browser/monitor/:jobId',

@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./leadloq.db:/app/leadloq.db
+      - ./db:/app/db
       - ./server.log:/app/server.log
       - ./screenshots:/app/screenshots
     environment:

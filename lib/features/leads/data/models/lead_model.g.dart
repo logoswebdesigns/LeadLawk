@@ -27,8 +27,16 @@ LeadModel _$LeadModelFromJson(Map<String, dynamic> json) => LeadModel(
       isCandidate: json['is_candidate'] as bool,
       status: json['status'] as String,
       notes: json['notes'] as String?,
+      screenshotPath: json['screenshot_path'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      followUpDate: json['follow_up_date'] == null
+          ? null
+          : DateTime.parse(json['follow_up_date'] as String),
+      timeline: (json['timeline'] as List<dynamic>?)
+          ?.map(
+              (e) => LeadTimelineEntryModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$LeadModelToJson(LeadModel instance) => <String, dynamic>{
@@ -50,6 +58,9 @@ Map<String, dynamic> _$LeadModelToJson(LeadModel instance) => <String, dynamic>{
       'is_candidate': instance.isCandidate,
       'status': instance.status,
       'notes': instance.notes,
+      'screenshot_path': instance.screenshotPath,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
+      'follow_up_date': instance.followUpDate?.toIso8601String(),
+      'timeline': instance.timeline,
     };

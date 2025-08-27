@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/job.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/entities/lead_timeline_entry.dart';
 import '../../domain/repositories/leads_repository.dart';
 import '../../domain/usecases/browser_automation_usecase.dart';
 import '../datasources/leads_remote_datasource.dart';
@@ -46,6 +47,27 @@ class LeadsRepositoryImpl implements LeadsRepository {
     try {
       final leadModel = LeadModel.fromEntity(lead);
       final updatedModel = await remoteDataSource.updateLead(leadModel);
+      return Right(updatedModel.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Lead>> updateTimelineEntry(String leadId, LeadTimelineEntry entry) async {
+    try {
+      final updates = <String, dynamic>{};
+      if (entry.title.isNotEmpty) updates['title'] = entry.title;
+      if (entry.description != null) updates['description'] = entry.description;
+      
+      // Always include follow_up_date, even if null (to clear it)
+      updates['follow_up_date'] = entry.followUpDate?.toIso8601String();
+      
+      updates['is_completed'] = entry.isCompleted;
+      if (entry.completedBy != null) updates['completed_by'] = entry.completedBy;
+      if (entry.completedAt != null) updates['completed_at'] = entry.completedAt!.toIso8601String();
+
+      final updatedModel = await remoteDataSource.updateTimelineEntry(leadId, entry.id, updates);
       return Right(updatedModel.toEntity());
     } catch (e) {
       return Left(ServerFailure(e.toString()));

@@ -6,25 +6,53 @@ import '../providers/automation_form_provider.dart';
 import '../providers/job_provider.dart';
 import '../providers/server_status_provider.dart';
 
-class BrowserAutomationPage extends ConsumerStatefulWidget {
-  const BrowserAutomationPage({super.key});
+class LeadSearchPage extends ConsumerStatefulWidget {
+  const LeadSearchPage({super.key});
 
   @override
-  ConsumerState<BrowserAutomationPage> createState() => _BrowserAutomationPageState();
+  ConsumerState<LeadSearchPage> createState() => _LeadSearchPageState();
 }
 
-class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
+class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
   final _formKey = GlobalKey<FormState>();
   final _customIndustryController = TextEditingController();
   final _locationController = TextEditingController();
   final _limitController = TextEditingController();
 
   final List<String> _industries = [
-    'Painter',
-    'Landscaper',
-    'Roofer',
+    'Restaurant',
+    'Retail Store',
+    'Auto Repair Shop',
+    'Hair Salon',
+    'Barbershop',
+    'Nail Salon',
+    'Spa',
+    'Dentist',
+    'Lawyer',
+    'Real Estate Agent',
+    'Insurance Agent',
+    'Accountant',
+    'Chiropractor',
+    'Veterinarian',
+    'Contractor',
     'Plumber',
     'Electrician',
+    'HVAC Contractor',
+    'Landscaper',
+    'Painter',
+    'Roofer',
+    'Flooring Contractor',
+    'Home Remodeling',
+    'Cleaning Service',
+    'Photographer',
+    'Wedding Planner',
+    'Catering',
+    'Bakery',
+    'Florist',
+    'Gym/Fitness Center',
+    'Personal Trainer',
+    'Massage Therapist',
+    'Physical Therapist',
     'Custom...',
   ];
 
@@ -124,17 +152,10 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                         
                         return Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.primaryBlue.withOpacity(0.1),
-                                AppTheme.primaryBlue.withOpacity(0.05),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
+                            color: AppTheme.elevatedSurface,
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppTheme.primaryBlue.withOpacity(0.2),
+                              color: Colors.white.withOpacity(0.1),
                               width: 1,
                             ),
                           ),
@@ -226,6 +247,14 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                                           final total = job['total'] ?? 0;
                                           final color = _getJobStatusColor(status);
                                           
+                                          // Extract user-friendly title from job parameters
+                                          final params = job['params'] as Map<String, dynamic>?;
+                                          final industry = params?['industry']?.toString() ?? 
+                                                         job['industry']?.toString() ?? 'Business';
+                                          final location = params?['location']?.toString() ?? 
+                                                         job['location']?.toString() ?? 'Unknown';
+                                          final jobTitle = '$industry in $location';
+                                          
                                           return Container(
                                             width: 200,
                                             decoration: BoxDecoration(
@@ -258,14 +287,17 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                                                           ),
                                                           const SizedBox(width: 8),
                                                           Expanded(
-                                                            child: Text(
-                                                              jobId.length > 15 
-                                                                  ? '${jobId.substring(0, 15)}...'
-                                                                  : jobId,
-                                                              style: const TextStyle(
-                                                                color: Colors.white,
-                                                                fontWeight: FontWeight.w600,
-                                                                fontSize: 12,
+                                                            child: FittedBox(
+                                                              fit: BoxFit.scaleDown,
+                                                              alignment: Alignment.centerLeft,
+                                                              child: Text(
+                                                                jobTitle,
+                                                                style: const TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontWeight: FontWeight.w600,
+                                                                  fontSize: 12,
+                                                                ),
+                                                                maxLines: 1,
                                                               ),
                                                             ),
                                                           ),
@@ -444,42 +476,117 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                                 ],
                               ),
                               const SizedBox(height: 16),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: _industries.map((industry) {
-                                  final isSelected = industry == 'Custom...'
-                                      ? formState.isCustomIndustry
-                                      : formState.industry.toLowerCase() ==
-                                          industry.toLowerCase();
-                                  return ChoiceChip(
-                                    label: Text(
-                                      industry,
-                                      style: TextStyle(
-                                        color: isSelected ? Colors.white : AppTheme.primaryBlue,
-                                        fontWeight: FontWeight.w600,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            'Select Multiple Industries:',
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.8),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          if (formState.selectedIndustries.isEmpty && !formState.isCustomIndustry)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(4),
+                                                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                                              ),
+                                              child: const Text(
+                                                'Required',
+                                                style: TextStyle(
+                                                  color: Colors.orange,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                    ),
-                                    selected: isSelected,
-                                    selectedColor: AppTheme.primaryBlue,
-                                    backgroundColor: AppTheme.lightGray,
-                                    checkmarkColor: Colors.white,
-                                    side: BorderSide(
-                                      color: isSelected
-                                          ? AppTheme.primaryBlue
-                                          : AppTheme.primaryBlue.withOpacity(0.3),
-                                    ),
-                                    onSelected: (selected) {
-                                      if (selected) {
-                                        if (industry == 'Custom...') {
-                                          formNotifier.setIndustry('custom');
-                                        } else {
-                                          formNotifier.setIndustry(industry);
-                                        }
-                                      }
-                                    },
-                                  );
-                                }).toList(),
+                                      Row(
+                                        children: [
+                                          TextButton(
+                                            onPressed: () {
+                                              // Select all industries except Custom
+                                              final nonCustomIndustries = _industries.where((i) => i != 'Custom...').toList();
+                                              formNotifier.setSelectedIndustries(nonCustomIndustries);
+                                            },
+                                            child: const Text(
+                                              'Select All',
+                                              style: TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              formNotifier.clearSelectedIndustries();
+                                            },
+                                            child: const Text(
+                                              'Clear All',
+                                              style: TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _industries.map((industry) {
+                                      final isSelected = industry == 'Custom...'
+                                          ? formState.isCustomIndustry
+                                          : formState.selectedIndustries.any((selected) => selected.toLowerCase() == industry.toLowerCase());
+                                      return FilterChip(
+                                        label: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            industry,
+                                            style: TextStyle(
+                                              color: isSelected ? Colors.white : AppTheme.primaryBlue,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                            ),
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                        selected: isSelected,
+                                        selectedColor: AppTheme.primaryBlue,
+                                        backgroundColor: AppTheme.lightGray,
+                                        checkmarkColor: Colors.white,
+                                        side: BorderSide(
+                                          color: isSelected
+                                              ? AppTheme.primaryBlue
+                                              : AppTheme.primaryBlue.withOpacity(0.3),
+                                        ),
+                                        onSelected: (selected) {
+                                          if (industry == 'Custom...') {
+                                            if (selected) {
+                                              formNotifier.setIndustry('custom');
+                                            } else {
+                                              formNotifier.clearCustomIndustry();
+                                            }
+                                          } else {
+                                            if (selected) {
+                                              formNotifier.addIndustry(industry);
+                                            } else {
+                                              formNotifier.removeIndustry(industry);
+                                            }
+                                          }
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
                               ),
                               if (formState.isCustomIndustry) ...[
                                 const SizedBox(height: 16),
@@ -1123,13 +1230,22 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
                   ? null
                   : () async {
                       if (_formKey.currentState!.validate()) {
-                        // Check if industry is properly set
-                        if (formState.industry.isEmpty || formState.industry == 'custom') {
+                        // Check if at least one industry is selected
+                        if (formState.selectedIndustries.isEmpty && !formState.isCustomIndustry) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(formState.isCustomIndustry 
-                                ? 'Please enter a custom industry name'
-                                : 'Please select an industry'),
+                            const SnackBar(
+                              content: Text('Please select at least one industry from the list above'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 4),
+                            ),
+                          );
+                          return;
+                        }
+                        
+                        if (formState.isCustomIndustry && (formState.industry.isEmpty || formState.industry == 'custom')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter a custom industry name'),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -1151,7 +1267,13 @@ class _BrowserAutomationPageState extends ConsumerState<BrowserAutomationPage> {
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Text(jobState.isRunning ? 'Generating Leads...' : 'Start Lead Generation'),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  jobState.isRunning ? 'Generating Leads...' : 'Start Lead Generation',
+                  maxLines: 1,
+                ),
+              ),
             ),
                     ],
                   ),

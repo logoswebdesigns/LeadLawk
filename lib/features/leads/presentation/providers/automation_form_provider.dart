@@ -4,6 +4,7 @@ import '../../domain/usecases/browser_automation_usecase.dart';
 
 class AutomationFormState {
   final String industry;
+  final List<String> selectedIndustries;
   final String location;
   final int limit;
   final double minRating;
@@ -22,6 +23,7 @@ class AutomationFormState {
 
   AutomationFormState({
     this.industry = '',
+    this.selectedIndustries = const [],
     this.location = '',
     this.limit = 50,
     this.minRating = 4.0,
@@ -41,6 +43,7 @@ class AutomationFormState {
 
   AutomationFormState copyWith({
     String? industry,
+    List<String>? selectedIndustries,
     String? location,
     int? limit,
     double? minRating,
@@ -59,6 +62,7 @@ class AutomationFormState {
   }) {
     return AutomationFormState(
       industry: industry ?? this.industry,
+      selectedIndustries: selectedIndustries ?? this.selectedIndustries,
       location: location ?? this.location,
       limit: limit ?? this.limit,
       minRating: minRating ?? this.minRating,
@@ -78,8 +82,16 @@ class AutomationFormState {
   }
 
   BrowserAutomationParams toParams() {
+    // Use custom industry if set, otherwise use first selected industry as fallback
+    final primaryIndustry = isCustomIndustry 
+        ? industry.toLowerCase()
+        : selectedIndustries.isNotEmpty
+            ? selectedIndustries.first.toLowerCase()
+            : '';
+    
     return BrowserAutomationParams(
-      industry: industry.toLowerCase(),
+      industry: primaryIndustry,
+      industries: selectedIndustries.map((i) => i.toLowerCase()).toList(),
       location: location,
       limit: limit,
       minRating: minRating,
@@ -105,8 +117,10 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
   }
 
   void _loadPreferences() {
+    final savedIndustries = prefs.getStringList('selected_industries') ?? [];
     state = state.copyWith(
       industry: prefs.getString('last_industry') ?? '',
+      selectedIndustries: savedIndustries,
       location: prefs.getString('last_location') ?? '',
       limit: prefs.getInt('last_limit') ?? 50,
       minRating: prefs.getDouble('last_min_rating') ?? 4.0,
@@ -117,6 +131,7 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
 
   Future<void> _savePreferences() async {
     await prefs.setString('last_industry', state.industry);
+    await prefs.setStringList('selected_industries', state.selectedIndustries);
     await prefs.setString('last_location', state.location);
     await prefs.setInt('last_limit', state.limit);
     await prefs.setDouble('last_min_rating', state.minRating);
@@ -201,6 +216,44 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
 
   void setMinDescriptionLength(int? value) {
     state = state.copyWith(minDescriptionLength: value);
+  }
+
+  void addIndustry(String industry) {
+    final updatedIndustries = List<String>.from(state.selectedIndustries);
+    if (!updatedIndustries.contains(industry)) {
+      updatedIndustries.add(industry);
+      state = state.copyWith(selectedIndustries: updatedIndustries);
+      _savePreferences();
+    }
+  }
+
+  void removeIndustry(String industry) {
+    final updatedIndustries = List<String>.from(state.selectedIndustries);
+    updatedIndustries.remove(industry);
+    state = state.copyWith(selectedIndustries: updatedIndustries);
+    _savePreferences();
+  }
+
+  void setSelectedIndustries(List<String> industries) {
+    state = state.copyWith(selectedIndustries: industries);
+    _savePreferences();
+  }
+
+  void clearSelectedIndustries() {
+    state = state.copyWith(
+      selectedIndustries: [],
+      isCustomIndustry: false,
+      industry: '',
+    );
+    _savePreferences();
+  }
+
+  void clearCustomIndustry() {
+    state = state.copyWith(
+      isCustomIndustry: false,
+      industry: '',
+    );
+    _savePreferences();
   }
 }
 

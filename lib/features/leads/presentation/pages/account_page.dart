@@ -34,17 +34,43 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   String _getDefaultSalesPitch() {
-    return '''Hi there! I noticed your business online and wanted to reach out about something that could really help you stand out from your competition.
+    return '''Hey, is this [BUSINESS NAME]?
 
-I specialize in creating professional websites for local businesses like yours. A great website can help you:
-• Attract more customers online
-• Look more professional and trustworthy  
-• Show up better in Google searches
-• Give customers an easy way to contact you
+Awesome! My name is [YOUR NAME] and I'm actually a [YOUR BACKGROUND - e.g., stay-at-home parent, freelance] web developer. I found you on Google and took a look at your site - it's a pretty standard WordPress site that could use some work, and I wanted to call and see if I can help make you something better.
 
-I'd love to show you some examples of websites I've built for other businesses in your area. Would you be interested in a quick 10-minute call to discuss how a professional website could help grow your business?
+[If they don't have a website: "I found you on Google but didn't see a website anywhere, so I wanted to call and see if you needed any help with one."]
 
-Thanks for your time!''';
+When they ask about cost:
+
+I do things a little different - I charge \$0 down and \$150 a month. That includes hosting, unlimited edits, 24/7 support, lifetime updates, analytics, help with your Google Profile, the works. I do everything for you so you never have to worry about it. 6 month minimum contract and month-to-month after that, cancel anytime.
+
+What makes my work different:
+
+I custom code everything line by line - no page builders. This makes your site load instantly and makes Google happy. Google's core vitals update heavily favors mobile performance and speed in search rankings. Right now, your site scores around 30-40 out of 100 - that's terrible for ranking. My sites score 98-100 and are literally as fast as they can be.
+
+Page builders have bloated code, are prone to hacking, and have very messy code. My sites are custom-built to convert traffic into customers by satisfying Google's metrics and making the best performing mobile site possible with keyword-rich content.
+
+For every second of load time, you lose customers who didn't want to wait. When it loads instantly, people stay and convert instead of leaving.
+
+I also use website conversion funnels - there's a specific order you place content and how you write it that guides visitors into a sale. You can't just throw whatever up and expect it to work. It's all calculated, purposeful, and deliberate. I even hire a copywriter to write all your content with keyword research designed to get picked up in search engines and get people to contact you.
+
+When they ask about the monthly fee:
+
+Think about it this way - if the website brings in just one new customer a month, it more than pays for itself. If it brings in 10 or more, imagine that return. The website becomes an asset to your business. That \$150 isn't just the site cost - it's access to me. It's a retainer to call me with any questions and make all your edits. It's peace of mind - I'm here for you so you don't waste time figuring this stuff out when you could be making money instead.
+
+When you cancel, you keep your domain, but the design and code stay with me. You'd have to start over with someone else, which means you'll be 6 months behind where you could have been. It takes 6-12 months for Google to properly rank your site, so after six months you'll start seeing results and want to stick around.
+
+I'm looking for people who understand websites are a long-term investment, not a turnkey product. If you don't see yourself sticking around long-term or aren't 100% committed to improving your online presence, I might not be the right fit. I don't want to waste your time and money if you aren't 100% committed.
+
+The Process:
+1. I send a contract to get signed electronically
+2. First invoice for this month's work, then \$150 auto-bills on the 1st each month
+3. I email you questions about your business and send design examples
+4. My designer creates something unique based on your preferences
+5. We review the design together and make any changes
+6. I code it, optimize everything to score 98-100, add analytics, and set it live
+
+What questions do you have about any of this?''';
   }
 
   @override

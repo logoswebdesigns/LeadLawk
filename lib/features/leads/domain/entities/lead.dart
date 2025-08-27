@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'lead_timeline_entry.dart';
 
 enum LeadStatus { new_, viewed, called, interested, converted, dnc }
 
@@ -21,8 +22,11 @@ class Lead extends Equatable {
   final bool isCandidate;
   final LeadStatus status;
   final String? notes;
+  final String? screenshotPath;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? followUpDate;
+  final List<LeadTimelineEntry> timeline;
 
   const Lead({
     required this.id,
@@ -43,8 +47,11 @@ class Lead extends Equatable {
     required this.isCandidate,
     required this.status,
     this.notes,
+    this.screenshotPath,
     required this.createdAt,
     required this.updatedAt,
+    this.followUpDate,
+    this.timeline = const [],
   });
 
   Lead copyWith({
@@ -66,8 +73,11 @@ class Lead extends Equatable {
     bool? isCandidate,
     LeadStatus? status,
     String? notes,
+    String? screenshotPath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? followUpDate,
+    List<LeadTimelineEntry>? timeline,
   }) {
     return Lead(
       id: id ?? this.id,
@@ -88,8 +98,11 @@ class Lead extends Equatable {
       isCandidate: isCandidate ?? this.isCandidate,
       status: status ?? this.status,
       notes: notes ?? this.notes,
+      screenshotPath: screenshotPath ?? this.screenshotPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      followUpDate: followUpDate ?? this.followUpDate,
+      timeline: timeline ?? this.timeline,
     );
   }
 
@@ -113,7 +126,49 @@ class Lead extends Equatable {
         isCandidate,
         status,
         notes,
+        screenshotPath,
         createdAt,
         updatedAt,
+        followUpDate,
+        timeline,
       ];
+
+  // Helper methods
+  bool get hasUpcomingFollowUp => 
+      followUpDate != null && followUpDate!.isAfter(DateTime.now());
+  
+  bool get hasOverdueFollowUp => 
+      followUpDate != null && followUpDate!.isBefore(DateTime.now());
+  
+  List<LeadTimelineEntry> get upcomingFollowUps => 
+      timeline.where((entry) => 
+          entry.followUpDate != null && 
+          entry.followUpDate!.isAfter(DateTime.now()) && 
+          !entry.isCompleted
+      ).toList()..sort((a, b) => a.followUpDate!.compareTo(b.followUpDate!));
+  
+  List<LeadTimelineEntry> get overdueFollowUps => 
+      timeline.where((entry) => 
+          entry.followUpDate != null && 
+          entry.followUpDate!.isBefore(DateTime.now()) && 
+          !entry.isCompleted
+      ).toList()..sort((a, b) => a.followUpDate!.compareTo(b.followUpDate!));
+
+  Lead addTimelineEntry(LeadTimelineEntry entry) {
+    final newTimeline = List<LeadTimelineEntry>.from(timeline)..add(entry);
+    return copyWith(
+      timeline: newTimeline,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  Lead updateTimelineEntry(LeadTimelineEntry updatedEntry) {
+    final newTimeline = timeline.map((entry) => 
+        entry.id == updatedEntry.id ? updatedEntry : entry
+    ).toList();
+    return copyWith(
+      timeline: newTimeline,
+      updatedAt: DateTime.now(),
+    );
+  }
 }

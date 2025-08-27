@@ -5,7 +5,8 @@ import '../entities/automation_source.dart';
 import '../repositories/leads_repository.dart';
 
 class BrowserAutomationParams extends Equatable {
-  final String industry;
+  final String industry;  // For backward compatibility and custom industry
+  final List<String> industries;  // Multiple industries for concurrent jobs
   final String location;
   final int limit;
   final double minRating;
@@ -23,6 +24,7 @@ class BrowserAutomationParams extends Equatable {
 
   const BrowserAutomationParams({
     required this.industry,
+    this.industries = const [],
     required this.location,
     required this.limit,
     required this.minRating,
@@ -42,6 +44,7 @@ class BrowserAutomationParams extends Equatable {
   @override
   List<Object?> get props => [
         industry,
+        industries,
         location,
         limit,
         minRating,

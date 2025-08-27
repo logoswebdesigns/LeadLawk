@@ -11,6 +11,7 @@ abstract class LeadsRemoteDataSource {
   });
   Future<LeadModel> getLead(String id);
   Future<LeadModel> updateLead(LeadModel lead);
+  Future<LeadModel> updateTimelineEntry(String leadId, String entryId, Map<String, dynamic> updates);
   Future<String> startAutomation(BrowserAutomationParams params);
   Future<Map<String, dynamic>> getJobStatus(String jobId);
   Future<int> deleteMockLeads();
@@ -76,32 +77,54 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   @override
   Future<String> startAutomation(BrowserAutomationParams params) async {
     try {
-      // Always use browser automation endpoint
-      final endpoint = '$baseUrl/jobs/browser';
+      // Determine if this is a multi-industry job
+      final hasMultipleIndustries = params.industries.length > 1;
+      final endpoint = hasMultipleIndustries 
+          ? '$baseUrl/jobs/multi-industry'
+          : '$baseUrl/jobs/browser';
       
-      final response = await dio.post(
-        endpoint,
-        data: {
-          'industry': params.industry,
-          'location': params.location,
-          'limit': params.limit,
-          'min_rating': params.minRating,
-          'min_reviews': params.minReviews,
-          'recent_days': params.recentDays,
-          'mock': params.mock,
-          'use_mock_data': params.mock,  // Use mock data toggle
-          'use_browser_automation': params.useBrowserAutomation ?? true,
-          'headless': params.headless,  // User can toggle this in UI
-          'use_profile': params.useProfile,
-          'requires_website': params.requiresWebsite,  // Website filter
-          'recent_review_months': params.recentReviewMonths,  // Recent review filter
-          'min_photos': params.minPhotos,  // Photo count filter  
-          'min_description_length': params.minDescriptionLength,  // Description quality filter
-        },
-      );
+      print('🔧 CLIENT DEBUG: Starting automation with ${params.industries.length} industries');
+      print('🔧 CLIENT DEBUG: Industries: ${params.industries}');
+      print('🔧 CLIENT DEBUG: Using endpoint: $endpoint');
+      
+      final requestData = {
+        'industry': params.industry, // Primary industry for backward compatibility
+        'industries': params.industries.isNotEmpty ? params.industries : null,
+        'location': params.location,
+        'limit': params.limit,
+        'min_rating': params.minRating,
+        'min_reviews': params.minReviews,
+        'recent_days': params.recentDays,
+        'mock': params.mock,
+        'use_mock_data': params.mock,  // Use mock data toggle
+        'use_browser_automation': params.useBrowserAutomation ?? true,
+        'headless': params.headless,  // User can toggle this in UI
+        'use_profile': params.useProfile,
+        'requires_website': params.requiresWebsite,  // Website filter
+        'recent_review_months': params.recentReviewMonths,  // Recent review filter
+        'min_photos': params.minPhotos,  // Photo count filter  
+        'min_description_length': params.minDescriptionLength,  // Description quality filter
+      };
+      
+      print('🔧 CLIENT DEBUG: Request data: $requestData');
+      
+      final response = await dio.post(endpoint, data: requestData);
       return response.data['job_id'];
     } on DioException catch (e) {
       throw Exception('Failed to start browser automation: ${e.message}');
+    }
+  }
+
+  @override
+  Future<LeadModel> updateTimelineEntry(String leadId, String entryId, Map<String, dynamic> updates) async {
+    try {
+      final response = await dio.put(
+        '$baseUrl/leads/$leadId/timeline/$entryId',
+        data: updates,
+      );
+      return LeadModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Failed to update timeline entry: ${e.message}');
     }
   }
 

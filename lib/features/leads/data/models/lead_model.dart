@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/lead.dart';
+import 'lead_timeline_entry_model.dart';
 
 part 'lead_model.g.dart';
 
@@ -33,10 +34,15 @@ class LeadModel {
   final bool isCandidate;
   final String status;
   final String? notes;
+  @JsonKey(name: 'screenshot_path')
+  final String? screenshotPath;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
+  @JsonKey(name: 'follow_up_date')
+  final DateTime? followUpDate;
+  final List<LeadTimelineEntryModel>? timeline;
 
   LeadModel({
     required this.id,
@@ -57,8 +63,11 @@ class LeadModel {
     required this.isCandidate,
     required this.status,
     this.notes,
+    this.screenshotPath,
     required this.createdAt,
     required this.updatedAt,
+    this.followUpDate,
+    this.timeline,
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) =>
@@ -86,8 +95,11 @@ class LeadModel {
       isCandidate: isCandidate,
       status: _statusFromString(status),
       notes: notes,
+      screenshotPath: screenshotPath,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      followUpDate: followUpDate,
+      timeline: timeline?.map((entry) => entry.toEntity()).toList() ?? [],
     );
   }
 
@@ -111,8 +123,11 @@ class LeadModel {
       isCandidate: lead.isCandidate,
       status: _statusToString(lead.status),
       notes: lead.notes,
+      screenshotPath: lead.screenshotPath,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
+      followUpDate: lead.followUpDate,
+      timeline: lead.timeline.map((entry) => LeadTimelineEntryModel.fromEntity(entry)).toList(),
     );
   }
 

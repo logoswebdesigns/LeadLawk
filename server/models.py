@@ -16,6 +16,17 @@ class LeadStatus(str, enum.Enum):
     DNC = "dnc"
 
 
+class TimelineEntryType(str, enum.Enum):
+    LEAD_CREATED = "lead_created"
+    STATUS_CHANGE = "status_change"
+    NOTE = "note"
+    FOLLOW_UP = "follow_up"
+    REMINDER = "reminder"
+    PHONE_CALL = "phone_call"
+    EMAIL = "email"
+    MEETING = "meeting"
+
+
 class Lead(Base):
     __tablename__ = "leads"
 
@@ -37,10 +48,13 @@ class Lead(Base):
     is_candidate = Column(Boolean, default=False)
     status = Column(SQLEnum(LeadStatus), default=LeadStatus.NEW)
     notes = Column(Text, nullable=True)
+    screenshot_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    follow_up_date = Column(DateTime, nullable=True)
     
     call_logs = relationship("CallLog", back_populates="lead", cascade="all, delete-orphan")
+    timeline_entries = relationship("LeadTimelineEntry", back_populates="lead", cascade="all, delete-orphan", order_by="desc(LeadTimelineEntry.created_at)")
 
 
 class CallLog(Base):
@@ -54,3 +68,22 @@ class CallLog(Base):
     duration_seconds = Column(Integer, nullable=True)
     
     lead = relationship("Lead", back_populates="call_logs")
+
+
+class LeadTimelineEntry(Base):
+    __tablename__ = "lead_timeline_entries"
+
+    id = Column(String, primary_key=True)
+    lead_id = Column(String, ForeignKey("leads.id"), nullable=False)
+    type = Column(SQLEnum(TimelineEntryType), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    previous_status = Column(SQLEnum(LeadStatus), nullable=True)
+    new_status = Column(SQLEnum(LeadStatus), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    follow_up_date = Column(DateTime, nullable=True)
+    is_completed = Column(Boolean, default=False)
+    completed_by = Column(String, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    
+    lead = relationship("Lead", back_populates="timeline_entries")

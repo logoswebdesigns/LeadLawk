@@ -9,6 +9,7 @@ import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as ws_status;
 import '../providers/server_status_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'dart:convert';
 
 class ServerDiagnosticsPage extends ConsumerStatefulWidget {
@@ -125,9 +126,11 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
     }
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundDark,
       appBar: AppBar(
+        backgroundColor: AppTheme.surfaceDark,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -137,7 +140,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           },
           tooltip: 'Back',
         ),
-        title: const Text('Server Diagnostics'),
+        title: const Text('Server Diagnostics', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             onPressed: () {
@@ -145,7 +148,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               ref.invalidate(serverLogsProvider);
             },
             tooltip: 'Recheck',
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
           ),
           IconButton(
             onPressed: () async {
@@ -190,13 +193,14 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               } catch (_) {}
             },
             tooltip: 'Diagnostics',
-            icon: const Icon(Icons.science),
+            icon: const Icon(Icons.science, color: Colors.white),
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -220,9 +224,13 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                 ),
                 const Spacer(),
                 if (server.lastCheck != null)
-                  Text(
-                    'Last check: ${server.lastCheck}',
-                    style: const TextStyle(color: Colors.grey),
+                  Expanded(
+                    child: Text(
+                      'Last check: ${server.lastCheck}',
+                      style: const TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
             ),
@@ -232,7 +240,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 server.message!,
-                style: const TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14, color: Colors.white),
               ),
             ),
           const SizedBox(height: 8),
@@ -247,12 +255,12 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                   children: [
                     const Text(
                       'Server Setup',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                     ),
                     const SizedBox(height: 12),
                     const Text(
                       'To start the backend server:',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -277,7 +285,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       'This starts both the API server and browser automation containers.\nFor production deployment, use container orchestration or Docker Compose.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Colors.white.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -290,70 +298,66 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             padding: EdgeInsets.all(16),
             child: Text(
               'Server Logs',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ),
-          Expanded(
-            child: Container(
-              color: Colors.black,
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final logsAsync = ref.watch(serverLogsProvider);
-                  return logsAsync.when(
-                    data: (lines) {
-                      // Merge: server file logs + live WS lines + in-app captured logs
-                      final merged = <String>[...lines, ..._live, ...server.logs]
-                        
-                        
-                        ;
-                      return ListView.builder(
-                        reverse: true,
-                        itemCount: merged.length,
-                        itemBuilder: (context, index) {
-                          final line = merged[merged.length - 1 - index];
-                          final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            child: Text(
-                              line,
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                                color: isErr ? Colors.redAccent : Colors.greenAccent,
-                              ),
+          Container(
+            height: 300,
+            color: Colors.black,
+            child: Consumer(
+              builder: (context, ref, _) {
+                final logsAsync = ref.watch(serverLogsProvider);
+                return logsAsync.when(
+                  data: (lines) {
+                    // Merge: server file logs + live WS lines + in-app captured logs
+                    final merged = <String>[...lines, ..._live, ...server.logs];
+                    return ListView.builder(
+                      reverse: true,
+                      itemCount: merged.length,
+                      itemBuilder: (context, index) {
+                        final line = merged[merged.length - 1 - index];
+                        final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          child: Text(
+                            line,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              color: isErr ? Colors.redAccent : Colors.greenAccent,
                             ),
-                          );
-                        },
-                      );
-                    },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    error: (_, __) {
-                      final fallback = server.logs;
-                      return ListView.builder(
-                        reverse: true,
-                        itemCount: fallback.length,
-                        itemBuilder: (context, index) {
-                          final line = fallback[fallback.length - 1 - index];
-                          final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            child: Text(
-                              line,
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                                color: isErr ? Colors.redAccent : Colors.greenAccent,
-                              ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  error: (_, __) {
+                    final fallback = server.logs;
+                    return ListView.builder(
+                      reverse: true,
+                      itemCount: fallback.length,
+                      itemBuilder: (context, index) {
+                        final line = fallback[fallback.length - 1 - index];
+                        final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          child: Text(
+                            line,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              color: isErr ? Colors.redAccent : Colors.greenAccent,
                             ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
             ),
           ),
           const Divider(height: 1),
@@ -361,7 +365,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             padding: EdgeInsets.all(16),
             child: Text(
               'Browser Automation Jobs',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ),
           SizedBox(
@@ -372,7 +376,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                 return jobsAsync.when(
                   data: (jobs) {
                     if (jobs.isEmpty) {
-                      return const Center(child: Text('No jobs yet'));
+                      return const Center(child: Text('No jobs yet', style: TextStyle(color: Colors.white)));
                     }
                     return ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -450,12 +454,13 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     );
                   },
                   loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  error: (_, __) => const Center(child: Text('Failed to load jobs')),
+                  error: (_, __) => const Center(child: Text('Failed to load jobs', style: TextStyle(color: Colors.white))),
                 );
               },
             ),
           ),
         ],
+        ),
       ),
     );
   }

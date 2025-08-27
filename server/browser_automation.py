@@ -16,6 +16,50 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.action_chains import ActionChains
+from business_extractor import extract_business_details
+
+
+def save_lead_to_database(business_details, job_id=None):
+    """Immediately save a lead to the database as it's found"""
+    try:
+        from database import SessionLocal
+        from models import Lead, LeadStatus
+        from datetime import datetime
+        
+        db = SessionLocal()
+        try:
+            # Create the lead record
+            lead = Lead(
+                business_name=business_details.get('name', 'Unknown Business'),
+                industry=business_details.get('industry', 'Unknown'),
+                rating=float(business_details.get('rating', 0.0)),
+                review_count=int(business_details.get('reviews', 0)),
+                website_url=business_details.get('website'),
+                has_website=business_details.get('has_website', False),
+                phone=business_details.get('phone') or 'No phone',
+                profile_url=business_details.get('url'),  # Google Maps URL
+                location=business_details.get('location', 'Unknown'),
+                status=LeadStatus.NEW,
+                has_recent_reviews=business_details.get('has_recent_reviews', True),
+                screenshot_path=business_details.get('screenshot_filename')
+            )
+            
+            db.add(lead)
+            db.commit()
+            
+            print(f"    💾 Saved lead to database: {lead.business_name} (ID: {lead.id})")
+            return lead.id
+            
+        except Exception as e:
+            print(f"    ❌ Failed to save lead to database: {e}")
+            db.rollback()
+            return None
+        finally:
+            db.close()
+            
+    except Exception as e:
+        print(f"    ❌ Database connection error: {e}")
+        return None
 
 
 class BrowserAutomation:
@@ -27,6 +71,7 @@ class BrowserAutomation:
         self.wait = None
         self.job_id = job_id
         self._cancelled = False
+        self._closed = False
         self.screenshot_count = 0
         self.setup_browser()
     
@@ -146,11 +191,12 @@ class BrowserAutomation:
                 print(f"❌ Failed to initialize local Chrome: {e}")
                 raise
     
-    def search_google_maps(self, query, limit=20, min_rating=0.0, min_reviews=0, requires_website=None, recent_review_months=None, min_photos=None, min_description_length=None):
+    def search_google_maps(self, query, limit=20, min_rating=0.0, min_reviews=0, requires_website=None, recent_review_months=None, min_photos=None, min_description_length=None, enable_click_through=True):
         """Enhanced Google Maps search with proper iteration and scrolling
         
         Args:
             requires_website: None = any, False = no website required, True = website required
+            enable_click_through: If True, will click into compact listings to check for websites
             recent_review_months: None = any, int = must have reviews within X months
             min_photos: None = any, int = minimum number of photos required
             min_description_length: None = any, int = minimum description character length
@@ -290,8 +336,8 @@ class BrowserAutomation:
                     try:
                         print(f"    🔍 About to extract from business element...")
                         
-                        # Extract ALL info directly from the list view - no need to click!
-                        details = self._extract_business_from_list(business)
+                        # Extract ALL info directly from the list view - with click-through for compact listings
+                        details = extract_business_details(business, self.driver, enable_click_through=enable_click_through)
                         
                         print(f"    📋 Extracted details: {details}")
                         
@@ -302,9 +348,26 @@ class BrowserAutomation:
                         name = details['name']
                         
                         # Skip if already evaluated (either passed or failed in previous zoom levels)
+                        # But allow re-processing if the business is in DB but missing screenshot
                         if name in evaluated_businesses:
-                            print(f"    ⏭️ Skipping {name} - already evaluated in previous area")
-                            continue
+                            # Check if this business is in database but missing screenshot
+                            try:
+                                from database import SessionLocal
+                                from models import Lead
+                                db = SessionLocal()
+                                existing_lead = db.query(Lead).filter(Lead.business_name == name).first()
+                                db.close()
+                                
+                                if existing_lead and not existing_lead.screenshot_path:
+                                    print(f"    🔄 Re-processing {name} - found in DB but missing screenshot")
+                                    # Don't skip, allow screenshot capture
+                                else:
+                                    print(f"    ⏭️ Skipping {name} - already evaluated in previous area")
+                                    continue
+                            except Exception as e:
+                                print(f"    ⚠️ Error checking DB for {name}: {e}")
+                                print(f"    ⏭️ Skipping {name} - already evaluated in previous area")
+                                continue
                         
                         # Mark as evaluated (regardless of whether it passes filters)
                         evaluated_businesses.add(name)
@@ -365,12 +428,59 @@ class BrowserAutomation:
                                         details['has_recent_reviews'] = True  # Default to true when not filtering
                                     
                                     if recent_review_filter_passed:
-                                        processed_names.add(name)
-                                        results.append(details)
-                                        website_status = "🌐 Has website" if has_website else "❌ No website"
-                                        photo_status = f"📸 {photo_count} photos"
-                                        desc_status = f"📝 {desc_length}ch desc" if desc_length > 0 else "📝 No desc"
-                                        print(f"    ✅ Added: {details['name']} - ⭐ {rating_val} ({reviews_val} reviews) - {website_status} - {photo_status} - {desc_status}")
+                                        # Check if this lead already exists in database
+                                        existing_lead = None
+                                        try:
+                                            from database import SessionLocal
+                                            from models import Lead
+                                            db = SessionLocal()
+                                            existing_lead = db.query(Lead).filter(Lead.business_name == name).first()
+                                            db.close()
+                                        except Exception as e:
+                                            print(f"    ⚠️ Error checking existing lead for {name}: {e}")
+                                        
+                                        # If lead doesn't exist, add to results and process normally
+                                        if not existing_lead:
+                                            processed_names.add(name)
+                                            results.append(details)
+                                            # Set industry and location based on query if available
+                                            details['industry'] = self._extract_industry_from_query(query)
+                                            details['location'] = self._extract_location_from_query(query)
+                                        
+                                        # Always take screenshot if lead is new OR existing lead has no screenshot
+                                        take_screenshot = not existing_lead or (existing_lead and not existing_lead.screenshot_path)
+                                        print(f"    🔍 Screenshot decision: existing_lead={existing_lead is not None}, take_screenshot={take_screenshot}")
+                                        
+                                        
+                                        if take_screenshot:
+                                            print(f"    📸 About to take business screenshot for {'new' if not existing_lead else 'existing'} lead: {details['name']}")
+                                            screenshot_filename = self._take_business_screenshot(details['name'], business)
+                                            if screenshot_filename:
+                                                details['screenshot_filename'] = screenshot_filename
+                                                print(f"    ✅ Screenshot filename captured: {screenshot_filename}")
+                                            else:
+                                                print(f"    ❌ No screenshot filename returned for {details['name']}")
+                                        
+                                        # Save to database (create new or update existing)
+                                        if not existing_lead:
+                                            lead_id = save_lead_to_database(details, job_id=self.job_id)
+                                            website_status = "🌐 Has website" if has_website else "❌ No website"
+                                            photo_status = f"📸 {photo_count} photos"
+                                            desc_status = f"📝 {desc_length}ch desc" if desc_length > 0 else "📝 No desc"
+                                            print(f"    ✅ Added: {details['name']} - ⭐ {rating_val} ({reviews_val} reviews) - {website_status} - {photo_status} - {desc_status}")
+                                        else:
+                                            # Update existing lead with screenshot
+                                            if take_screenshot and screenshot_filename:
+                                                try:
+                                                    db = SessionLocal()
+                                                    existing_lead.screenshot_path = screenshot_filename
+                                                    db.commit()
+                                                    db.close()
+                                                    print(f"    ✅ Updated existing lead {details['name']} with screenshot: {screenshot_filename}")
+                                                except Exception as e:
+                                                    print(f"    ❌ Error updating lead {details['name']} with screenshot: {e}")
+                                            else:
+                                                print(f"    ⏭️ Existing lead {details['name']} already has screenshot or screenshot capture failed")
                                 else:
                                     print(f"    ⏭️ Skipped: Failed fast filters (website/photos/description)")
                             else:
@@ -557,6 +667,9 @@ class BrowserAutomation:
     
     def _take_screenshot(self, description="screenshot", log_to_job=True):
         """Take a screenshot and save it with job ID and description"""
+        import os
+        import time
+        
         try:
             if not self.driver:
                 return None
@@ -573,12 +686,25 @@ class BrowserAutomation:
             success = self.driver.save_screenshot(filepath)
             
             if success:
-                print(f"    📸 Screenshot saved: {filename}")
-                if log_to_job and self.job_id:
-                    # Import here to avoid circular imports
-                    from main import add_job_log
-                    add_job_log(self.job_id, f"📸 Screenshot captured: {description} ({filename})")
-                return filename
+                # Wait briefly for file system to complete write, then verify
+                
+                # Retry verification up to 3 times with increasing delays
+                for attempt in range(3):
+                    time.sleep(0.2 * (attempt + 1))  # 0.2s, 0.4s, 0.6s delays
+                    
+                    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                        print(f"    📸 Screenshot saved and verified: {filename} (attempt {attempt + 1})")
+                        if log_to_job and self.job_id:
+                            # Import here to avoid circular imports
+                            from main import add_job_log
+                            add_job_log(self.job_id, f"📸 Screenshot captured: {description} ({filename})")
+                        return filename
+                    
+                    if attempt < 2:  # Don't log on final attempt (will be handled below)
+                        print(f"    ⏳ Screenshot file not ready yet, retrying... (attempt {attempt + 1}/3)")
+                
+                print(f"    ❌ Screenshot file not found or empty after save_screenshot returned True: {filename}")
+                return None
             else:
                 print(f"    ❌ Failed to save screenshot: {filename}")
                 return None
@@ -1150,11 +1276,136 @@ class BrowserAutomation:
             print(f"        ❌ Failed to check recent reviews: {e}")
             return False, None
     
+    def _extract_industry_from_query(self, query):
+        """Extract industry from search query"""
+        try:
+            # Simple industry extraction from query
+            query_lower = query.lower()
+            
+            # Common industry patterns
+            if 'barber' in query_lower:
+                return 'Barber Shops'
+            elif 'paint' in query_lower:
+                return 'Painters'  
+            elif 'restaurant' in query_lower:
+                return 'Restaurants'
+            elif 'salon' in query_lower or 'hair' in query_lower:
+                return 'Hair Salons'
+            elif 'auto' in query_lower or 'car' in query_lower:
+                return 'Automotive'
+            elif 'dentist' in query_lower or 'dental' in query_lower:
+                return 'Dental'
+            elif 'lawyer' in query_lower or 'attorney' in query_lower:
+                return 'Legal Services'
+            elif 'plumb' in query_lower:
+                return 'Plumbing'
+            elif 'electric' in query_lower:
+                return 'Electrical'
+            elif 'clean' in query_lower:
+                return 'Cleaning Services'
+            else:
+                # Extract first word before "near" if present
+                if ' near ' in query_lower:
+                    industry_part = query_lower.split(' near ')[0].strip()
+                    return industry_part.title()
+                else:
+                    # Use whole query as industry
+                    return query.strip().title()
+        except:
+            return "Unknown"
+    
+    def _extract_location_from_query(self, query):
+        """Extract location from search query"""
+        try:
+            query_lower = query.lower()
+            
+            # Look for "near [location]" pattern
+            if ' near ' in query_lower:
+                location_part = query_lower.split(' near ')[1].strip()
+                return location_part.title()
+            else:
+                # No location specified
+                return "Unknown"
+        except:
+            return "Unknown"
+    
+    def _take_business_screenshot(self, business_name, business_element=None):
+        """Take a screenshot focusing on the specific business in the search results"""
+        try:
+            print(f"    📸 Taking business screenshot for: {business_name}")
+            
+            # Clean business name for filename
+            clean_name = "".join(c for c in business_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            clean_name = clean_name.replace(' ', '_')[:20]  # Limit length
+            
+            print(f"    📁 Clean filename: business_{clean_name}")
+            
+            # If we have the business element, scroll it into view and highlight it
+            if business_element:
+                try:
+                    print(f"    🎯 Focusing on business element for screenshot")
+                    
+                    # Scroll the business element into view
+                    self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", business_element)
+                    time.sleep(1)  # Wait for smooth scroll to complete
+                    
+                    # Add a temporary highlight to make the business more visible
+                    original_style = business_element.get_attribute('style')
+                    self.driver.execute_script("""
+                        arguments[0].style.border = '3px solid #ff6b35';
+                        arguments[0].style.borderRadius = '8px';
+                        arguments[0].style.boxShadow = '0 0 15px rgba(255, 107, 53, 0.5)';
+                        arguments[0].style.backgroundColor = 'rgba(255, 107, 53, 0.1)';
+                    """, business_element)
+                    
+                    time.sleep(0.5)  # Brief pause to ensure highlight is applied
+                    
+                    # Take the screenshot
+                    screenshot_filename = self._take_screenshot(f"business_{clean_name}")
+                    
+                    # Remove the highlight
+                    if original_style:
+                        self.driver.execute_script("arguments[0].setAttribute('style', arguments[1]);", business_element, original_style)
+                    else:
+                        self.driver.execute_script("arguments[0].removeAttribute('style');", business_element)
+                        
+                except Exception as highlight_error:
+                    print(f"    ⚠️ Could not highlight business element: {highlight_error}")
+                    # Fall back to regular screenshot
+                    screenshot_filename = self._take_screenshot(f"business_{clean_name}")
+            else:
+                # No business element provided, take regular screenshot
+                print(f"    📷 Taking regular screenshot (no business element provided)")
+                screenshot_filename = self._take_screenshot(f"business_{clean_name}")
+            
+            if screenshot_filename:
+                print(f"    ✅ Business screenshot saved successfully: {screenshot_filename}")
+            else:
+                print(f"    ❌ Business screenshot save returned None")
+                
+            return screenshot_filename
+            
+        except Exception as e:
+            print(f"    ❌ Business screenshot failed for {business_name}: {e}")
+            import traceback
+            print(f"    📋 Traceback: {traceback.format_exc()}")
+            return None
+    
     def close(self):
         """Close the browser"""
+        if self._closed:
+            print("\n⚠️ Browser already closed, skipping")
+            return
+            
         if self.driver:
-            self.driver.quit()
-            print("\n✅ Browser closed")
+            try:
+                self.driver.quit()
+                print("\n✅ Browser closed")
+            except Exception as e:
+                # Silently handle case where session is already closed/invalid
+                print(f"\n⚠️ Browser session already closed: {type(e).__name__}")
+            finally:
+                self._closed = True
 
 
 # Update the main.py import to use this enhanced version

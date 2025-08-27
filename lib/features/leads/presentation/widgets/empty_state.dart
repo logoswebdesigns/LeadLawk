@@ -52,20 +52,21 @@ class _EmptyStateState extends State<EmptyState>
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: SingleChildScrollView(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             AnimatedBuilder(
               animation: _bounceAnimation,
               builder: (context, child) {
                 return Transform.translate(
                   offset: Offset(0, -_bounceAnimation.value),
                   child: Container(
-                    width: 120,
-                    height: 120,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
@@ -86,14 +87,14 @@ class _EmptyStateState extends State<EmptyState>
                     ),
                     child: Icon(
                       widget.icon,
-                      size: 60,
+                      size: 50,
                       color: AppTheme.mediumGray,
                     ),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Text(
               widget.title,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -112,7 +113,7 @@ class _EmptyStateState extends State<EmptyState>
               textAlign: TextAlign.center,
             ),
             if (widget.buttonText != null && widget.onButtonPressed != null) ...[
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: widget.onButtonPressed,
                 icon: const Icon(Icons.add),
@@ -127,7 +128,8 @@ class _EmptyStateState extends State<EmptyState>
                 ),
               ),
             ],
-          ],
+            ],
+          ),
         ),
       ),
     );
