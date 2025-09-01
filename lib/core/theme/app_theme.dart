@@ -29,6 +29,10 @@ class AppTheme {
   static const Color lightGray = Color(0xFF374151);      // Darker for dark theme
   static const Color backgroundGray = backgroundDark;     // Map to dark background
   
+  // Additional theme constants for filter bar
+  static const Color surfaceColor = surfaceDark;
+  static const Color borderColor = Color(0xFF404040);
+  
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,

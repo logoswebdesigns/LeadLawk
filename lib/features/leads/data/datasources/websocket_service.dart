@@ -46,26 +46,26 @@ class WebSocketService {
       _channel = IOWebSocketChannel(socket);
 
       _channel!.stream.listen((data) {
-        print('📡 Raw WebSocket message received: $data');
+        // DEBUG: print('📡 Raw WebSocket message received: $data');
         final msg = jsonDecode(data);
-        print('📡 Parsed WebSocket message: $msg');
+        // DEBUG: print('📡 Parsed WebSocket message: $msg');
         
         if (msg['type'] == 'log') {
-          print('📝 Log message: ${msg['message']}');
+          // DEBUG: print('📝 Log message: ${msg['message']}');
           _logController.add(msg['message']);
         } else if (msg['type'] == 'status') {
-          print('📊 Status update: ${msg['data']}');
+          // DEBUG: print('📊 Status update: ${msg['data']}');
           _statusController.add(msg['data']);
         } else {
-          print('❓ Unknown message type: ${msg['type']}');
+          // DEBUG: print('❓ Unknown message type: ${msg['type']}');
         }
       }, onError: (e) {
-        print('WebSocket error: $e');
+        // DEBUG: print('WebSocket error: $e');
       }, onDone: () {
-        print('WebSocket connection closed');
+        // DEBUG: print('WebSocket connection closed');
       });
     } catch (e) {
-      print('WS connect failed (using HTTP fallback): $e');
+      // DEBUG: print('WS connect failed (using HTTP fallback): $e');
     }
   }
   

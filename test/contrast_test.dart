@@ -15,7 +15,7 @@ void main() {
         elevatedSurface
       );
       
-      print('Old contrast (darkGray on elevatedSurface): ${badContrast.toStringAsFixed(2)}:1');
+      // Old contrast (darkGray on elevatedSurface): ${badContrast.toStringAsFixed(2)}:1
       
       // Test the new improved combination
       final Color whiteOpacity = Colors.white.withOpacity(0.9);
@@ -25,7 +25,7 @@ void main() {
         elevatedSurface
       );
       
-      print('New contrast (white 0.9 on elevatedSurface): ${goodContrast.toStringAsFixed(2)}:1');
+      // New contrast (white 0.9 on elevatedSurface): ${goodContrast.toStringAsFixed(2)}:1
       
       // WCAG AA requires 4.5:1 for normal text
       expect(goodContrast, greaterThanOrEqualTo(4.5),
@@ -41,7 +41,7 @@ void main() {
         elevatedSurface
       );
       
-      print('Link contrast (primaryGold on elevatedSurface): ${linkContrast.toStringAsFixed(2)}:1');
+      // Link contrast (primaryGold on elevatedSurface): ${linkContrast.toStringAsFixed(2)}:1
       
       // Links should meet at least 3:1 for large text or 4.5:1 for normal text
       expect(linkContrast, greaterThanOrEqualTo(3.0),
@@ -58,7 +58,7 @@ void main() {
         elevatedSurface
       );
       
-      print('Success indicator contrast: ${successContrast.toStringAsFixed(2)}:1');
+      // Success indicator contrast: ${successContrast.toStringAsFixed(2)}:1
       
       // Test error red
       final Color errorRed = AppTheme.errorRed.withOpacity(0.8);
@@ -68,7 +68,7 @@ void main() {
         elevatedSurface
       );
       
-      print('Error indicator contrast: ${errorContrast.toStringAsFixed(2)}:1');
+      // Error indicator contrast: ${errorContrast.toStringAsFixed(2)}:1
       
       // Icons with text should meet 3:1 minimum
       expect(successContrast, greaterThanOrEqualTo(3.0),
@@ -84,9 +84,9 @@ double calculateContrastRatio(Color foreground, Color background) {
   // Calculate relative luminance for a color
   double getLuminance(Color color) {
     final List<double> rgb = [
-      color.red / 255.0,
-      color.green / 255.0,
-      color.blue / 255.0,
+      (color.r * 255.0).round() / 255.0,
+      (color.g * 255.0).round() / 255.0,
+      (color.b * 255.0).round() / 255.0,
     ];
     
     // Apply gamma correction

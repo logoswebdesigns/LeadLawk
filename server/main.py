@@ -1,86 +1,96 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
+#!/usr/bin/env python3
+"""
+Refactored FastAPI main application - orchestrates all components
+"""
+
+import os
+import json
+import asyncio
+import logging
+import subprocess
+import time
+import uuid
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
-import uuid
-import threading
-from datetime import datetime
-import subprocess
-import sys
-import json
-import os
-from pathlib import Path
-import shutil
-import asyncio
-from collections import defaultdict
-import logging
+from fastapi.responses import StreamingResponse, FileResponse
 from logging.handlers import RotatingFileHandler
+from sqlalchemy import func
 
+# Local imports
 from database import SessionLocal, init_db
-from models import Lead, LeadStatus, LeadTimelineEntry, TimelineEntryType
-from schemas import LeadResponse, LeadUpdate, ScrapeRequest, JobResponse, LeadTimelineEntryCreate, LeadTimelineEntryUpdate
 from sqlalchemy.orm import selectinload
+from models import Lead, LeadStatus, SalesPitch, LeadTimelineEntry, TimelineEntryType
+from schemas import (BrowserAutomationRequest, JobResponse, LeadResponse, LeadUpdate, 
+                    LeadTimelineEntryUpdate, ConversionModelResponse, ConversionScoringResponse,
+                    SalesPitchResponse, SalesPitchCreate, SalesPitchUpdate, LeadUpdateRequest)
 
+# Import our refactored modules
+from job_management import (
+    create_job, get_job_by_id, get_all_jobs, cancel_job, cleanup_old_jobs,
+    get_job_screenshots, job_statuses
+)
+from lead_management import (
+    get_all_leads, get_lead_by_id, delete_lead_by_id, delete_all_leads,
+    delete_mock_leads, update_lead, update_lead_timeline_entry
+)
+from scraper_runner import run_scraper, _scrape_prerequisites
+from websocket_manager import job_websocket_manager, log_websocket_manager, pagespeed_websocket_manager
+from analytics_engine import AnalyticsEngine
+from parallel_job_executor import parallel_executor
+
+
+# Initialize FastAPI app
 app = FastAPI(title="LeadLoq API")
 
-# Custom robust rotating file handler that handles rotation errors gracefully
+# Initialize logger
+logger = logging.getLogger(__name__)
+
+# Custom robust rotating file handler
 class RobustRotatingFileHandler(RotatingFileHandler):
     def doRollover(self):
-        """Override rollover to handle file busy errors gracefully"""
         try:
             super().doRollover()
-        except (OSError, IOError) as e:
-            # If rotation fails, just continue logging to the current file
-            # This prevents the entire logging system from failing
+        except (OSError, IOError):
             pass
     
     def emit(self, record):
-        """Override emit to handle any logging errors gracefully"""
         try:
             super().emit(record)
         except (OSError, IOError, ValueError):
-            # Silently ignore logging errors to prevent stack trace spam
             pass
 
-# Configure logging to a rotating file
+
+# Configure logging
 LOG_PATH = Path(__file__).resolve().parent / "server.log"
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-# Create a simple file handler instead of rotating for Docker environments
 try:
-    logger = logging.getLogger("leadlawk")
-    logger.setLevel(logging.INFO)
+    file_handler = RobustRotatingFileHandler(
+        LOG_PATH, maxBytes=50*1024*1024, backupCount=3
+    )
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
     
-    # Use our robust handler
-    _handler = RobustRotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=3)
-    _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    _handler.setFormatter(_formatter)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(file_handler)
     
-    if not any(isinstance(h, (RotatingFileHandler, RobustRotatingFileHandler)) for h in logger.handlers):
-        logger.addHandler(_handler)
-
-    # Suppress uvicorn access logs to reduce noise
-    uvicorn_access = logging.getLogger("uvicorn.access")
-    uvicorn_access.handlers.clear()
-    uvicorn_access.propagate = False
-    
-    # Only forward error logs from uvicorn
-    for _name in ("uvicorn", "uvicorn.error"):
-        _uv = logging.getLogger(_name)
-        if not any(isinstance(h, (RotatingFileHandler, RobustRotatingFileHandler)) for h in _uv.handlers):
-            _robust_handler = RobustRotatingFileHandler(LOG_PATH, maxBytes=1_000_000, backupCount=3)
-            _robust_handler.setFormatter(_formatter)
-            _uv.addHandler(_robust_handler)
-
-except Exception:
-    # If logging setup fails completely, create a minimal console handler
-    logger = logging.getLogger("leadlawk")
-    logger.setLevel(logging.INFO)
     console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(console_handler)
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+    
+except Exception as e:
+    print(f"Failed to setup logging: {e}")
 
+
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -89,1052 +99,1069 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve screenshots as static files
+# Mount static files for screenshots
 app.mount("/screenshots", StaticFiles(directory="screenshots"), name="screenshots")
-
-jobs: Dict[str, Dict[str, Any]] = {}
-job_lock = threading.Lock()
-job_logs: Dict[str, List[str]] = defaultdict(list)
-active_connections: Dict[str, List[WebSocket]] = defaultdict(list)
-logs_connections: List[WebSocket] = []
-event_loop: asyncio.AbstractEventLoop | None = None
-job_threads: Dict[str, threading.Thread] = {}  # Track running threads for cancellation
-job_automations: Dict[str, Any] = {}  # Track automation objects for cancellation
+app.mount("/website_screenshots", StaticFiles(directory="website_screenshots"), name="website_screenshots")
 
 
-def update_job_status(job_id: str, status: str, processed: int = 0, total: int = 0, message: Optional[str] = None):
-    with job_lock:
-        if job_id in jobs:
-            jobs[job_id].update({
-                "status": status,
-                "processed": processed,
-                "total": total,
-                "message": message,
-                "updated_at": datetime.utcnow().isoformat()
-            })
-            
-def cleanup_old_jobs(max_jobs=3):
-    """Keep only the most recent jobs and their associated files"""
-    try:
-        with job_lock:
-            if len(jobs) <= max_jobs:
-                return
-            
-            # Sort jobs by creation time (oldest first)
-            job_items = list(jobs.items())
-            job_items.sort(key=lambda x: x[1].get("created_at", ""))
-            
-            # Identify jobs to remove (all but the most recent max_jobs)
-            jobs_to_remove = job_items[:-max_jobs]
-            
-            for job_id, job_data in jobs_to_remove:
-                logger.info(f"🧹 Cleaning up old job: {job_id}")
-                
-                # Remove job from memory
-                del jobs[job_id]
-                if job_id in job_logs:
-                    del job_logs[job_id]
-                if job_id in active_connections:
-                    del active_connections[job_id]
-                
-                # Clean up screenshots for this job
-                try:
-                    import os
-                    screenshots_dir = Path("/app/screenshots")
-                    if screenshots_dir.exists():
-                        deleted_count = 0
-                        for filename in os.listdir(screenshots_dir):
-                            if filename.startswith(f"job_{job_id}_") and filename.endswith(".png"):
-                                screenshot_path = screenshots_dir / filename
-                                os.remove(screenshot_path)
-                                deleted_count += 1
-                        if deleted_count > 0:
-                            logger.info(f"🗑️ Deleted {deleted_count} screenshots for job {job_id}")
-                except Exception as e:
-                    logger.error(f"⚠️ Error cleaning screenshots for job {job_id}: {e}")
-    except Exception as e:
-        logger.error(f"Error in cleanup_old_jobs: {e}")
-
-def add_job_log(job_id: str, log_message: str):
-    timestamp = datetime.utcnow().isoformat()
-    formatted_log = f"[{timestamp}] {log_message}"
-    job_logs[job_id].append(formatted_log)
-    # Persist to server log as well - suppress logging errors
-    try:
-      logger.info(f"JOB {job_id}: {log_message}")
-    except Exception:
-      # Silently ignore logging errors to prevent stack trace spam
-      pass
-    # Send to connected WebSocket clients
-    try:
-        # If we're on the event loop thread
-        loop = asyncio.get_running_loop()
-        asyncio.create_task(broadcast_log(job_id, formatted_log))
-    except RuntimeError:
-        # Called from a background thread: submit to main loop
-        if event_loop is not None:
-            try:
-                asyncio.run_coroutine_threadsafe(broadcast_log(job_id, formatted_log), event_loop)
-            except Exception as e:
-                # Log the error but don't crash the scraper
-                logger.error(f"Failed to broadcast log: {e}")
-    
-async def broadcast_log(job_id: str, log_message: str):
-    for websocket in active_connections.get(job_id, []):
-        try:
-            await websocket.send_json({
-                "type": "log",
-                "message": log_message
-            })
-        except Exception:
-            pass
-
-
-def run_scraper(job_id: str, params: ScrapeRequest):
-    """Run the lead fetcher using the compliant maps proxy service"""
-    try:
-        update_job_status(job_id, "running", 0, params.limit)
-        add_job_log(job_id, f"Starting lead fetch for {params.industry} in {params.location}")
-        add_job_log(job_id, f"Search parameters: {params.limit} leads, min rating {params.min_rating}, min reviews {params.min_reviews}")
-        add_job_log(job_id, f"Using compliant maps proxy service at http://maps-proxy:8001")
-        
-        # Check if mock mode is requested
-        if params.mock or os.environ.get("USE_MOCK_DATA", "").lower() in ("true", "1", "yes"):
-            add_job_log(job_id, "Mock mode enabled - simulating Google Places API data")
-            # Generate realistic mock data that simulates Google Places API responses
-            from database import SessionLocal
-            from models import Lead, LeadStatus
-            import random
-            
-            # Realistic business data based on industry
-            mock_templates = {
-                "restaurants": [
-                    {"name": "Franklin Barbecue", "phone": "(512) 653-1187", "website": "https://franklinbbq.com", "rating": 4.7, "reviews": 8453},
-                    {"name": "Uchi Austin", "phone": "(512) 916-4808", "website": "https://uchiaustin.com", "rating": 4.6, "reviews": 3421},
-                    {"name": "Matt's El Rancho", "phone": "(512) 462-9333", "website": "https://mattselrancho.com", "rating": 4.4, "reviews": 2156},
-                    {"name": "La Condesa", "phone": "(512) 499-0300", "website": "https://lacondesa.com", "rating": 4.3, "reviews": 1876},
-                    {"name": "Torchy's Tacos", "phone": "(512) 366-0537", "website": "https://torchystacos.com", "rating": 4.2, "reviews": 4532}
-                ],
-                "dentist": [
-                    {"name": "Austin Dental Care", "phone": "(512) 454-6936", "website": "https://austindentalcare.com", "rating": 4.8, "reviews": 542},
-                    {"name": "Westlake Dental Associates", "phone": "(512) 328-0505", "website": "https://westlakedental.com", "rating": 4.9, "reviews": 387},
-                    {"name": "South Austin Dental", "phone": "(512) 444-0021", "website": None, "rating": 4.5, "reviews": 198},
-                    {"name": "Castle Dental", "phone": "(512) 442-4204", "website": "https://castledental.com", "rating": 4.1, "reviews": 876},
-                    {"name": "Bright Smile Family Dentistry", "phone": "(512) 458-6222", "website": None, "rating": 4.6, "reviews": 234}
-                ],
-                "coffee shops": [
-                    {"name": "Houndstooth Coffee", "phone": "(512) 394-6051", "website": "https://houndstoothcoffee.com", "rating": 4.5, "reviews": 876},
-                    {"name": "Mozart's Coffee Roasters", "phone": "(512) 477-2900", "website": "https://mozartscoffee.com", "rating": 4.4, "reviews": 3234},
-                    {"name": "Epoch Coffee", "phone": "(512) 454-3762", "website": None, "rating": 4.3, "reviews": 1543},
-                    {"name": "Radio Coffee & Beer", "phone": "(512) 394-7844", "website": "https://radiocoffeeandbeer.com", "rating": 4.6, "reviews": 2109},
-                    {"name": "Merit Coffee", "phone": "(512) 987-2132", "website": "https://meritcoffee.com", "rating": 4.7, "reviews": 654}
-                ]
-            }
-            
-            # Default template for any industry
-            default_template = [
-                {"name": f"Premier {params.industry.title()}", "phone": "(512) 555-0100", "website": f"https://premier{params.industry.replace(' ', '')}.com", "rating": 4.6, "reviews": 432},
-                {"name": f"{params.location.split(',')[0]} {params.industry.title()}", "phone": "(512) 555-0200", "website": None, "rating": 4.3, "reviews": 287},
-                {"name": f"Elite {params.industry.title()} Services", "phone": "(512) 555-0300", "website": f"https://elite{params.industry.replace(' ', '')}.com", "rating": 4.8, "reviews": 765},
-                {"name": f"Quality {params.industry.title()} Co", "phone": "(512) 555-0400", "website": None, "rating": 4.1, "reviews": 123},
-                {"name": f"Top Rated {params.industry.title()}", "phone": "(512) 555-0500", "website": f"https://toprated{params.industry.replace(' ', '')}.com", "rating": 4.9, "reviews": 1432}
-            ]
-            
-            # Select appropriate template
-            templates = mock_templates.get(params.industry.lower(), default_template)
-            
-            db = SessionLocal()
-            try:
-                count = min(len(templates), params.limit)
-                saved_count = 0
-                duplicate_count = 0
-                for i in range(count):
-                    template = templates[i]
-                    
-                    # Check for duplicates
-                    existing_lead = db.query(Lead).filter(
-                        Lead.business_name == template["name"],
-                        Lead.phone == template["phone"]
-                    ).first()
-                    
-                    if existing_lead:
-                        duplicate_count += 1
-                        add_job_log(job_id, f"Duplicate: {template['name']} (mock) - skipped")
-                        continue
-                    
-                    # Add some variation to ratings and reviews
-                    rating = template["rating"] + random.uniform(-0.2, 0.2)
-                    rating = max(3.5, min(5.0, round(rating, 1)))
-                    review_count = int(template["reviews"] * random.uniform(0.8, 1.2))
-                    
-                    lead = Lead(
-                        business_name=template["name"],
-                        phone=template["phone"],
-                        website_url=template["website"],
-                        profile_url=f"https://maps.google.com/maps/place/{template['name'].replace(' ', '+')}",
-                        rating=rating,
-                        review_count=review_count,
-                        location=params.location,
-                        industry=params.industry,
-                        source="google_maps_mock",
-                        status=LeadStatus.NEW,
-                        has_website=template["website"] is not None,
-                        is_candidate=template["website"] is None,  # Candidate if no website
-                        meets_rating_threshold=rating >= params.min_rating,
-                        has_recent_reviews=review_count >= params.min_reviews,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(lead)
-                    saved_count += 1
-                    update_job_status(job_id, "running", saved_count, count)
-                    add_job_log(job_id, f"Found: {lead.business_name} - ⭐ {rating} ({review_count} reviews)")
-                
-                db.commit()
-                update_job_status(job_id, "done", saved_count, params.limit)
-                if duplicate_count > 0:
-                    add_job_log(job_id, f"Mock simulation complete: {saved_count} new leads, {duplicate_count} duplicates skipped")
-                else:
-                    add_job_log(job_id, f"Mock Google Places API simulation complete: {saved_count} leads")
-                
-                # Cleanup old jobs after successful completion
-                cleanup_old_jobs(max_jobs=3)
-            finally:
-                db.close()
-        else:
-            # Use the compliant lead fetcher with maps proxy
-            import asyncio
-            from lead_fetcher import LeadFetcher
-            
-            # Run the async lead fetcher
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            try:
-                fetcher = LeadFetcher(maps_proxy_url="http://maps-proxy:8001")
-                leads = loop.run_until_complete(
-                    fetcher.fetch_leads(
-                        industry=params.industry,
-                        location=params.location,
-                        limit=params.limit,
-                        min_rating=params.min_rating,
-                        min_reviews=params.min_reviews
-                    )
-                )
-                
-                # Update progress as leads are saved
-                for i, lead in enumerate(leads):
-                    update_job_status(job_id, "running", i+1, params.limit)
-                    add_job_log(job_id, f"Found lead: {lead.get('business_name', 'Unknown')}")
-                
-                add_job_log(job_id, f"Successfully fetched {len(leads)} leads from APIs")
-                update_job_status(job_id, "done", len(leads), params.limit)
-            finally:
-                loop.close()
-            
-    except Exception as e:
-        add_job_log(job_id, f"Error: {str(e)}")
-        update_job_status(job_id, "error", 0, params.limit, str(e))
-
-
+# Startup event
 @app.on_event("startup")
 async def startup_event():
-    global event_loop
-    event_loop = asyncio.get_running_loop()
+    """Initialize database and clean up old jobs"""
     init_db()
+    
+    # Run conversion scoring migration if needed
+    try:
+        import sqlite3
+        conn = sqlite3.connect('/app/db/leadloq.db')
+        cursor = conn.cursor()
+        
+        # Check if leads table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='leads'")
+        if cursor.fetchone():
+            # Check if conversion score columns exist
+            cursor.execute("PRAGMA table_info(leads)")
+            columns = [col[1] for col in cursor.fetchall()]
+            
+            logger.info(f"Checking columns: found {len(columns)} columns in leads table")
+            
+            if 'conversion_score' not in columns:
+                logger.info("Running conversion scoring migration...")
+                
+                # Add conversion scoring fields
+                cursor.execute("ALTER TABLE leads ADD COLUMN conversion_score REAL")
+                cursor.execute("ALTER TABLE leads ADD COLUMN conversion_score_calculated_at TIMESTAMP")
+                cursor.execute("ALTER TABLE leads ADD COLUMN conversion_score_factors TEXT")
+                
+                # Create index
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_leads_conversion_score ON leads(conversion_score)")
+                
+                # Create conversion_model table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS conversion_model (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        model_version VARCHAR NOT NULL,
+                        feature_weights TEXT NOT NULL,
+                        feature_importance TEXT,
+                        model_accuracy REAL,
+                        training_samples INTEGER,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT 1,
+                        total_conversions INTEGER DEFAULT 0,
+                        total_leads INTEGER DEFAULT 0,
+                        baseline_conversion_rate REAL,
+                        precision_score REAL,
+                        recall_score REAL,
+                        f1_score REAL
+                    )
+                """)
+                
+                conn.commit()
+                logger.info("✅ Conversion scoring migration completed")
+            else:
+                logger.info("Conversion score columns already exist")
+        else:
+            logger.info("No leads table found, skipping conversion migration")
+        
+        conn.close()
+    except Exception as e:
+        logger.error(f"Migration error (non-fatal): {e}")
+    
+    cleanup_old_jobs()
 
 
+# Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "service": "LeadLawk API",
-        "timestamp": datetime.utcnow().isoformat()
-    }
-
-
-
-
-@app.get("/diagnostics")
-async def diagnostics():
-    """Run environment diagnostics for scraping and API health."""
-    ok, messages = _scrape_prerequisites()
-    # DB check
-    db_ok = True
-    leads_count = None
+    """Health check endpoint"""
     try:
         db = SessionLocal()
-        leads_count = db.query(Lead).count()
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
         db.close()
+        return {"status": "healthy", "database": "connected"}
     except Exception as e:
-        db_ok = False
-        messages.append(f"DB error: {e}")
-    # Log path check
-    log_ok = True
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
+
+# Diagnostics endpoint
+@app.get("/diagnostics")
+async def get_diagnostics():
+    """Get system diagnostics"""
     try:
-        LOG_PATH.touch(exist_ok=True)
-    except Exception as e:
-        log_ok = False
-        messages.append(f"Log path error: {e}")
-
-    return {
-        "scraper_ready": ok,
-        "db_ok": db_ok,
-        "log_ok": log_ok,
-        "python": sys.executable,
-        "cwd": str(Path.cwd()),
-        "use_mock_data": os.environ.get("USE_MOCK_DATA"),
-        "leads_count": leads_count,
-        "messages": messages,
-    }
-
-
-@app.post("/jobs/scrape", response_model=Dict[str, str])
-async def start_scrape(request: ScrapeRequest, background_tasks: BackgroundTasks):
-    job_id = str(uuid.uuid4())
-    
-    with job_lock:
-        jobs[job_id] = {
-            "job_id": job_id,
-            "status": "running",
-            "processed": 0,
-            "total": request.limit,
-            "message": None,
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
+        db = SessionLocal()
+        
+        # Database stats
+        lead_count = db.query(Lead).count()
+        job_count = len(job_statuses)  # Use in-memory job tracking
+        
+        # File system stats
+        screenshots_dir = Path("screenshots")
+        screenshot_count = len(list(screenshots_dir.glob("*.png"))) if screenshots_dir.exists() else 0
+        
+        # Memory stats
+        active_jobs = len([s for s in job_statuses.values() if s.get("status") == "running"])
+        
+        db.close()
+        
+        return {
+            "database": {
+                "leads": lead_count,
+                "jobs": job_count
+            },
+            "filesystem": {
+                "screenshots": screenshot_count
+            },
+            "runtime": {
+                "active_jobs": active_jobs,
+                "job_statuses": len(job_statuses)
+            }
         }
-    
-    # Preflight checks to provide actionable errors before launching
-    ok, messages = _scrape_prerequisites()
-    for m in messages:
-        add_job_log(job_id, m)
-    if not ok:
-        update_job_status(job_id, "error", 0, request.limit, "; ".join(messages))
-    else:
-        thread = threading.Thread(target=run_scraper, args=(job_id, request))
-        thread.start()
-    
-    return {"job_id": job_id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Diagnostics failed: {str(e)}")
 
 
+# Job Management Endpoints
 @app.post("/jobs/browser", response_model=Dict[str, Any])
-async def start_browser_automation(request: ScrapeRequest, background_tasks: BackgroundTasks):
-    """Start a browser-based scrape using Selenium automation"""
-    # DEBUG: Print what we received from the API request
-    print(f"🔧 API DEBUG: request.recent_review_months = {getattr(request, 'recent_review_months', 'MISSING')}")
-    print(f"🔧 API DEBUG: request fields = {[attr for attr in dir(request) if not attr.startswith('_')]}")
-    
-    job_id = str(uuid.uuid4())
-    
-    with job_lock:
-        jobs[job_id] = {
-            "job_id": job_id,
+async def start_browser_automation(params: BrowserAutomationRequest, background_tasks: BackgroundTasks):
+    """Start browser automation job (backward compatibility with Flutter app)"""
+    try:
+        # Check prerequisites
+        ready, errors = _scrape_prerequisites()
+        if not ready:
+            raise HTTPException(status_code=500, detail=f"Prerequisites not met: {', '.join(errors)}")
+        
+        # Create job
+        job_id = create_job(params)
+        
+        # Start scraper in background
+        background_tasks.add_task(run_scraper, job_id, params)
+        
+        return {
+            "job_id": job_id, 
             "status": "running",
-            "processed": 0,
-            "total": request.limit,
-            "message": "Initializing browser automation...",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
+            "message": "Browser automation started",
             "scraper_type": "browser"
         }
-    
-    def run_browser_scraper(job_id: str, params: ScrapeRequest):
-        """Run the browser automation to collect leads"""
-        try:
-            from browser_automation import BrowserAutomation
-            add_job_log(job_id, "🔧 DEBUG: Imported BrowserAutomation successfully")
-            
-            add_job_log(job_id, "Starting browser automation with Selenium")
-            add_job_log(job_id, f"Target: {params.industry} in {params.location}")
-            add_job_log(job_id, f"Parameters: {params.limit} leads, min rating {params.min_rating}")
-            # Debug params object
-            print(f"🔧 SERVER DEBUG: params attributes = {dir(params)}")
-            print(f"🔧 SERVER DEBUG: params.recent_review_months = {getattr(params, 'recent_review_months', 'MISSING')}")
-            add_job_log(job_id, f"🔧 DEBUG: recent_review_months = {getattr(params, 'recent_review_months', 'NOT_FOUND')}")
-            
-            # Log website filter requirement
-            requires_website = getattr(params, 'requires_website', None)
-            if requires_website is None:
-                add_job_log(job_id, "Website filter: ANY (all businesses)")
-            elif requires_website == False:
-                add_job_log(job_id, "Website filter: NO WEBSITE ONLY (ideal prospects)")
-            elif requires_website == True:
-                add_job_log(job_id, "Website filter: MUST HAVE WEBSITE")
-            
-            # Check if we should use mock data
-            if params.use_mock_data:
-                add_job_log(job_id, "Using mock data for testing")
-                # Generate mock leads
-                import random
-                db = SessionLocal()
-                try:
-                    for i in range(min(params.limit, 10)):
-                        lead = Lead(
-                            business_name=f"Test {params.industry} #{i+1}",
-                            phone=f"(512) 555-{1000+i:04d}",
-                            website_url=f"https://test{i+1}.com" if i % 2 == 0 else None,
-                            profile_url=f"https://maps.google.com/test{i+1}",
-                            rating=round(random.uniform(3.5, 5.0), 1),
-                            review_count=random.randint(10, 500),
-                            location=params.location,
-                            industry=params.industry,
-                            source="browser_automation_mock",
-                            status=LeadStatus.NEW,
-                            has_website=i % 2 == 0,
-                            is_candidate=i % 2 != 0,
-                            meets_rating_threshold=True,
-                            has_recent_reviews=True,
-                            created_at=datetime.utcnow(),
-                            updated_at=datetime.utcnow()
-                        )
-                        db.add(lead)
-                        update_job_status(job_id, "running", i+1, params.limit)
-                        add_job_log(job_id, f"Mock lead: {lead.business_name}")
-                    db.commit()
-                    update_job_status(job_id, "done", params.limit, params.limit)
-                    add_job_log(job_id, f"Mock data generation complete: {params.limit} leads")
-                finally:
-                    db.close()
-                return
-            
-            # Initialize browser automation
-            use_profile = getattr(params, 'use_profile', False)
-            headless = getattr(params, 'headless', False)
-            use_browser_automation = getattr(params, 'use_browser_automation', True)
-            
-            if not use_browser_automation:
-                # Fall back to API-based approach if browser automation is disabled
-                add_job_log(job_id, "Browser automation disabled, using API approach")
-                update_job_status(job_id, "error", 0, params.limit, "Browser automation is disabled")
-                return
-            
-            add_job_log(job_id, f"Browser mode: {'headless' if headless else 'visible'}")
-            if use_profile:
-                add_job_log(job_id, "Using your existing Chrome profile with saved logins")
-            
-            automation = BrowserAutomation(
-                use_profile=use_profile,
-                headless=headless,
-                job_id=job_id
-            )
-            
-            # Track automation object for cancellation
-            job_automations[job_id] = automation
-            
-            # Navigate to Google Maps
-            search_query = f"{params.industry} near {params.location}"
-            add_job_log(job_id, f"Searching Google Maps for: {search_query}")
-            
-            results = automation.search_google_maps(
-                query=search_query,
-                limit=params.limit,
-                min_rating=params.min_rating,
-                min_reviews=params.min_reviews,
-                requires_website=getattr(params, 'requires_website', None),
-                recent_review_months=getattr(params, 'recent_review_months', None),
-                min_photos=getattr(params, 'min_photos', None),
-                min_description_length=getattr(params, 'min_description_length', None)
-            )
-            
-            # Save results to database with duplicate prevention
-            db = SessionLocal()
-            try:
-                saved_count = 0
-                duplicate_count = 0
-                for idx, result in enumerate(results):
-                    business_name = result.get('name', 'Unknown')
-                    phone = result.get('phone') or 'No phone'
-                    
-                    # Check for existing lead with same business name and phone
-                    existing_lead = db.query(Lead).filter(
-                        Lead.business_name == business_name,
-                        Lead.phone == phone
-                    ).first()
-                    
-                    if existing_lead:
-                        duplicate_count += 1
-                        add_job_log(job_id, f"Duplicate: {business_name} (already exists with phone {phone}) - skipped")
-                        continue
-                    
-                    # Also check for duplicate by business name and location (in case phone changed)
-                    name_location_duplicate = db.query(Lead).filter(
-                        Lead.business_name == business_name,
-                        Lead.location == params.location,
-                        Lead.industry == params.industry
-                    ).first()
-                    
-                    if name_location_duplicate:
-                        duplicate_count += 1
-                        add_job_log(job_id, f"Duplicate: {business_name} (already exists in {params.location}) - skipped")
-                        continue
-                    
-                    # Create new lead if no duplicates found
-                    lead = Lead(
-                        business_name=business_name,
-                        phone=phone,
-                        website_url=result.get('website'),
-                        profile_url=result.get('url', ''),
-                        rating=float(result.get('rating', 0.0)),
-                        review_count=int(result.get('reviews', 0)),
-                        last_review_date=result.get('last_review_date'),
-                        location=params.location,
-                        industry=params.industry,
-                        source="browser_automation",
-                        status=LeadStatus.NEW,
-                        has_website=result.get('website') is not None,
-                        is_candidate=result.get('website') is None,
-                        meets_rating_threshold=float(result.get('rating', 0)) >= params.min_rating,
-                        has_recent_reviews=result.get('has_recent_reviews', False),
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow()
-                    )
-                    db.add(lead)
-                    saved_count += 1
-                    update_job_status(job_id, "running", saved_count, len(results))
-                    add_job_log(job_id, f"New: {lead.business_name} - ⭐ {lead.rating} ({lead.review_count} reviews)")
-                
-                db.commit()
-                update_job_status(job_id, "done", saved_count, len(results))
-                
-                # Log final results with duplicate info
-                total_found = len(results)
-                if duplicate_count > 0:
-                    add_job_log(job_id, f"Browser automation complete: {saved_count} new leads saved, {duplicate_count} duplicates skipped (total found: {total_found})")
-                else:
-                    add_job_log(job_id, f"Browser automation complete: {saved_count} leads found")
-                
-                # Cleanup old jobs after successful completion
-                cleanup_old_jobs(max_jobs=3)
-            finally:
-                db.close()
-                try:
-                    automation.close()
-                except Exception as close_error:
-                    # Browser session may already be closed by cancellation handler
-                    add_job_log(job_id, f"Note: Browser session already closed ({type(close_error).__name__})")
-                # Clean up automation tracking
-                if job_id in job_automations:
-                    del job_automations[job_id]
-            
-        except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            update_job_status(job_id, "error", 0, params.limit, str(e))
-            add_job_log(job_id, f"Error: {str(e)}")
-            add_job_log(job_id, f"Traceback: {error_details}")
-            
-            # Clean up automation tracking on error
-            if job_id in job_automations:
-                try:
-                    job_automations[job_id].close()
-                except:
-                    pass
-                del job_automations[job_id]
-    
-    # Run in background thread
-    thread = threading.Thread(target=run_browser_scraper, args=(job_id, request))
-    thread.start()
-    
-    # Track the thread for potential cancellation
-    with job_lock:
-        job_threads[job_id] = thread
-    
-    return {"job_id": job_id, "type": "browser_automation"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start automation: {str(e)}")
 
 
 @app.get("/jobs")
-async def list_jobs():
-    """Return all current jobs (in-memory) sorted by updated_at desc."""
-    with job_lock:
-        all_jobs = list(jobs.values())
-    def _ts(j):
-        return j.get("updated_at") or j.get("created_at") or ""
-    all_jobs.sort(key=_ts, reverse=True)
-    return all_jobs
-
-
-def _scrape_prerequisites() -> tuple[bool, list[str]]:
-    msgs: list[str] = []
-    ok = True
-    # Check if maps proxy is available
+async def get_jobs():
+    """Get all jobs"""
     try:
-        import httpx
-        msgs.append("HTTP client: OK")
-        msgs.append("Maps proxy service: http://maps-proxy:8001")
+        jobs = get_all_jobs()
+        return jobs  # Jobs are already dictionaries in the in-memory system
     except Exception as e:
-        ok = False
-        msgs.append(f"HTTP client import failed: {e}")
-    return ok, msgs
+        raise HTTPException(status_code=500, detail=f"Failed to get jobs: {str(e)}")
 
 
-@app.get("/jobs/{job_id}", response_model=JobResponse)
-async def get_job_status(job_id: str):
-    with job_lock:
-        if job_id not in jobs:
-            raise HTTPException(status_code=404, detail="Job not found")
-        return JobResponse(**jobs[job_id])
+@app.get("/jobs/{job_id}")
+async def get_job(job_id: str):
+    """Get specific job details"""
+    job = get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return job  # Job is already a dictionary in the in-memory system
 
 
 @app.post("/jobs/{job_id}/cancel")
-async def cancel_job(job_id: str):
+async def cancel_job_endpoint(job_id: str):
     """Cancel a running job"""
-    with job_lock:
-        if job_id not in jobs:
-            raise HTTPException(status_code=404, detail="Job not found")
-        
-        job = jobs[job_id]
-        if job["status"] in ["done", "error", "cancelled"]:
-            return {"success": False, "message": f"Job already {job['status']}"}
-        
-        # Update job status
-        job["status"] = "cancelled"
-        job["message"] = "Job cancelled by user"
-        job["updated_at"] = datetime.utcnow().isoformat()
-        
-        # Try to stop the browser automation immediately
-        if job_id in job_automations:
-            try:
-                automation = job_automations[job_id]
-                automation.close()  # Close browser session immediately
-                add_job_log(job_id, "Browser session closed")
-                del job_automations[job_id]  # Clean up
-            except Exception as e:
-                add_job_log(job_id, f"Error closing browser session: {e}")
-        
-        # Try to stop the thread if it exists
-        if job_id in job_threads:
-            # Note: Thread interruption in Python is limited
-            # The actual job should check for cancellation status periodically
-            add_job_log(job_id, "Cancellation requested by user")
-        
-        return {"success": True, "message": "Job cancellation requested"}
+    if not get_job_by_id(job_id):
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    success = cancel_job(job_id)
+    if success:
+        return {"message": "Job cancelled successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to cancel job")
 
 
 @app.get("/jobs/{job_id}/logs")
 async def get_job_logs(job_id: str, tail: int = 500):
-    """Return the last N lines for a given job's in-memory logs.
-
-    Note: For live updates, prefer the existing WebSocket at /ws/jobs/{job_id}.
-    """
-    with job_lock:
-        lines = list(job_logs.get(job_id, []))
+    """Get logs for a specific job"""
+    job = get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Since we're using in-memory job management, job logs are printed to console
+    # For now, return an empty lines array as the logs are handled by console output
     tail = max(1, min(tail, 5000))
-    return {"job_id": job_id, "lines": lines[-tail:]}
+    return {"job_id": job_id, "lines": []}
 
+
+@app.get("/jobs/{job_id}/screenshots")
+async def get_job_screenshots_endpoint(job_id: str):
+    """Get screenshots for a specific job"""
+    job = get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    screenshots = get_job_screenshots(job_id)
+    return screenshots
+
+
+# Monitoring endpoint for automation progress page
+@app.get("/monitor/{job_id}")
+async def get_monitor_data(job_id: str):
+    """Get job monitoring data for the automation monitor page"""
+    job = get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Return job data with any logs or additional monitoring info
+    return {
+        "job": job,
+        "logs": [],  # Logs are handled via WebSocket
+        "screenshots": get_job_screenshots(job_id) if job else []
+    }
+
+
+# Excel Export Endpoint
+@app.get("/leads/export/excel")
+async def export_leads_excel(
+    status: Optional[str] = None,
+    industry: Optional[str] = None,
+    location: Optional[str] = None,
+    search: Optional[str] = None,
+    has_website: Optional[bool] = None,
+    min_rating: Optional[float] = None,
+    min_reviews: Optional[int] = None,
+    min_pagespeed_mobile: Optional[int] = None,
+    max_pagespeed_mobile: Optional[int] = None,
+    min_pagespeed_desktop: Optional[int] = None,
+    max_pagespeed_desktop: Optional[int] = None,
+    pagespeed_tested: Optional[bool] = None
+):
+    """
+    Export filtered leads to Excel file.
+    All query parameters are optional and will filter the export.
+    """
+    from excel_exporter import export_leads_to_excel
+    from fastapi.responses import Response
+    
+    try:
+        # Generate Excel file with filters
+        excel_content = export_leads_to_excel(
+            status=status,
+            industry=industry,
+            location=location,
+            search_query=search,
+            has_website=has_website,
+            min_rating=min_rating,
+            min_reviews=min_reviews,
+            min_pagespeed_mobile=min_pagespeed_mobile,
+            max_pagespeed_mobile=max_pagespeed_mobile,
+            min_pagespeed_desktop=min_pagespeed_desktop,
+            max_pagespeed_desktop=max_pagespeed_desktop,
+            pagespeed_tested=pagespeed_tested
+        )
+        
+        # Generate filename with timestamp
+        filename = f"leads_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        # Return Excel file as response
+        return Response(
+            content=excel_content,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Excel export error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+# Lead Management Endpoints
 @app.get("/leads", response_model=list[LeadResponse])
 async def get_leads(
     status: Optional[str] = None,
-    search: Optional[str] = None,
-    candidates_only: Optional[bool] = None
+    industry: Optional[str] = None,
+    location: Optional[str] = None,
+    has_website: Optional[bool] = None,
+    min_pagespeed_mobile: Optional[int] = None,
+    max_pagespeed_mobile: Optional[int] = None,
+    min_pagespeed_desktop: Optional[int] = None,
+    max_pagespeed_desktop: Optional[int] = None,
+    pagespeed_tested: Optional[bool] = None
 ):
+    """Get all leads with optional filtering"""
     db = SessionLocal()
     try:
-        query = db.query(Lead).options(selectinload(Lead.timeline_entries))
+        query = db.query(Lead).options(
+            selectinload(Lead.timeline_entries),
+            selectinload(Lead.sales_pitch)
+        )
         
+        # Apply filters
         if status:
             query = query.filter(Lead.status == status)
+        if industry:
+            query = query.filter(Lead.industry == industry)
+        if location:
+            query = query.filter(Lead.location == location)
+        if has_website is not None:
+            if has_website:
+                query = query.filter(Lead.website_url.isnot(None))
+            else:
+                query = query.filter(Lead.website_url.is_(None))
         
-        if search:
-            search_pattern = f"%{search}%"
-            query = query.filter(
-                (Lead.business_name.ilike(search_pattern)) |
-                (Lead.phone.ilike(search_pattern))
-            )
+        # PageSpeed filters
+        if min_pagespeed_mobile is not None:
+            query = query.filter(Lead.pagespeed_mobile_score >= min_pagespeed_mobile)
+        if max_pagespeed_mobile is not None:
+            query = query.filter(Lead.pagespeed_mobile_score <= max_pagespeed_mobile)
+        if min_pagespeed_desktop is not None:
+            query = query.filter(Lead.pagespeed_desktop_score >= min_pagespeed_desktop)
+        if max_pagespeed_desktop is not None:
+            query = query.filter(Lead.pagespeed_desktop_score <= max_pagespeed_desktop)
+        if pagespeed_tested is not None:
+            if pagespeed_tested:
+                query = query.filter(Lead.pagespeed_tested_at.isnot(None))
+            else:
+                query = query.filter(Lead.pagespeed_tested_at.is_(None))
         
-        if candidates_only:
-            query = query.filter(Lead.is_candidate == True)
-        
-        leads = query.all()
+        leads = query.order_by(Lead.created_at.desc()).all()
         return [LeadResponse.from_orm(lead) for lead in leads]
     finally:
         db.close()
 
 
+@app.get("/leads/{lead_id}", response_model=LeadResponse)
+async def get_lead(lead_id: str):
+    """Get specific lead"""
+    lead = get_lead_by_id(lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return LeadResponse.from_orm(lead)
+
+
 @app.delete("/leads/{lead_id}")
 async def delete_lead(lead_id: str):
-    """Delete a specific lead by ID"""
+    """Delete a specific lead"""
+    success = delete_lead_by_id(lead_id)
+    if success:
+        return {"message": "Lead deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+
+@app.put("/leads/{lead_id}", response_model=LeadResponse)
+async def update_lead_endpoint(lead_id: str, update_data: LeadUpdate):
+    """Update a lead"""
+    lead = update_lead(lead_id, update_data)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return lead
+
+
+@app.put("/leads/{lead_id}/timeline/{entry_id}", response_model=LeadResponse)
+async def update_timeline_entry(lead_id: str, entry_id: str, update_data: LeadTimelineEntryUpdate):
+    """Update a timeline entry"""
+    lead = update_lead_timeline_entry(lead_id, entry_id, update_data)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead or timeline entry not found")
+    return lead
+
+
+# Admin Endpoints
+@app.delete("/admin/leads")
+async def delete_all_leads_endpoint():
+    """Delete all leads"""
+    success = delete_all_leads()
+    if success:
+        return {"message": "All leads deleted successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to delete leads")
+
+
+@app.delete("/admin/leads/mock")
+async def delete_mock_leads_endpoint():
+    """Delete mock leads"""
+    success = delete_mock_leads()
+    if success:
+        return {"message": "Mock leads deleted successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to delete mock leads")
+
+
+# File serving endpoints
+@app.get("/logs")
+async def get_logs():
+    """Stream server logs"""
+    log_file = Path("server.log")
+    if not log_file.exists():
+        raise HTTPException(status_code=404, detail="Log file not found")
+    
+    def read_log():
+        with open(log_file, 'r') as f:
+            for line in f:
+                yield line
+    
+    return StreamingResponse(read_log(), media_type="text/plain")
+
+
+@app.get("/screenshots/{filename}")
+async def serve_screenshot(filename: str):
+    """Serve screenshot files"""
+    screenshot_path = Path("screenshots") / filename
+    if not screenshot_path.exists():
+        raise HTTPException(status_code=404, detail="Screenshot not found")
+    
+    return FileResponse(screenshot_path)
+
+
+# WebSocket endpoints
+@app.websocket("/ws/jobs/{job_id}")
+async def websocket_job_updates(websocket: WebSocket, job_id: str):
+    """WebSocket for job updates"""
+    await job_websocket_manager.handle_job_websocket(websocket, job_id)
+
+
+@app.websocket("/ws/logs")
+async def websocket_logs(websocket: WebSocket):
+    """WebSocket for log streaming"""
+    await log_websocket_manager.handle_log_websocket(websocket)
+
+
+@app.websocket("/ws/pagespeed")
+async def websocket_pagespeed(websocket: WebSocket):
+    """WebSocket for PageSpeed updates"""
+    await pagespeed_websocket_manager.handle_pagespeed_websocket(websocket)
+
+
+# Container management (placeholder endpoints)
+@app.get("/containers/status")
+async def get_container_status():
+    """Get container status"""
+    return {"status": "running", "containers": 1}
+
+
+@app.post("/containers/scale")
+async def scale_containers(target_count: int):
+    """Scale containers"""
+    return {"message": f"Scaling to {target_count} containers", "current": 1}
+
+
+# Parallel execution endpoints
+from pydantic import BaseModel
+
+class ParallelJobRequest(BaseModel):
+    industries: List[str]
+    locations: List[str]
+    limit: int = 50
+    min_rating: float = 0.0
+    min_reviews: int = 0
+    requires_website: Optional[bool] = None
+    recent_review_months: Optional[int] = 24
+    enable_pagespeed: bool = False
+    max_pagespeed_score: Optional[int] = None  # Maximum acceptable PageSpeed score (required if enable_pagespeed is True)
+
+@app.post("/jobs/parallel", response_model=Dict[str, Any])
+async def create_parallel_jobs(
+    job_request: ParallelJobRequest,
+    background_tasks: BackgroundTasks = None,
+    request: Request = None
+):
+    """Create parallel jobs for multiple industry-location combinations"""
+    try:
+        # Extract values from the request object
+        industries = job_request.industries
+        locations = job_request.locations
+        limit = job_request.limit
+        min_rating = job_request.min_rating
+        min_reviews = job_request.min_reviews
+        requires_website = job_request.requires_website
+        recent_review_months = job_request.recent_review_months
+        enable_pagespeed = job_request.enable_pagespeed
+        max_pagespeed_score = job_request.max_pagespeed_score
+        
+        # Validate PageSpeed parameters
+        if enable_pagespeed and max_pagespeed_score is None:
+            # Default to 50 if not provided but PageSpeed is enabled
+            max_pagespeed_score = 50
+            print(f"⚠️ PageSpeed enabled but no max_pagespeed_score provided, defaulting to 50")
+        
+        # Log the parameters received
+        print(f"🔍 Parallel job request received:")
+        print(f"    Industries: {industries}")
+        print(f"    Locations: {locations}")
+        print(f"    requires_website: {requires_website}")
+        print(f"    enable_pagespeed: {enable_pagespeed} (from Pydantic model)")
+        print(f"    max_pagespeed_score: {max_pagespeed_score}")
+        print(f"    limit: {limit}, min_rating: {min_rating}, min_reviews: {min_reviews}")
+        
+        # Check Selenium Grid status
+        grid_status = parallel_executor.get_grid_status()
+        # For single Chrome container, just check if we can connect
+        if not grid_status.get("ready") and grid_status.get("nodes", 0) == 0:
+            raise HTTPException(
+                status_code=503, 
+                detail=f"Selenium not available: {grid_status.get('error', 'No browser nodes available')}"
+            )
+        
+        # Calculate required nodes
+        total_jobs = len(industries) * len(locations)
+        available_nodes = grid_status.get("nodes", 0)
+        
+        # Note: We're using a fixed Selenium container, not dynamically scaling
+        # The single container can handle multiple sessions (SE_NODE_MAX_SESSIONS=3)
+        
+        # Create job matrix
+        base_params = {
+            "limit": limit,
+            "min_rating": min_rating,
+            "min_reviews": min_reviews,
+            "requires_website": requires_website,
+            "recent_review_months": recent_review_months,
+            "enable_pagespeed": enable_pagespeed,
+            "max_pagespeed_score": max_pagespeed_score
+        }
+        
+        job_matrix = parallel_executor.create_multi_location_jobs(
+            industries, locations, base_params
+        )
+        
+        # Execute in background
+        if background_tasks:
+            background_tasks.add_task(
+                parallel_executor.execute_parallel_jobs,
+                job_matrix
+            )
+        
+        return {
+            "parent_job_id": job_matrix["parent_id"],
+            "child_job_ids": job_matrix["child_ids"],
+            "total_searches": total_jobs,
+            "industries": industries,
+            "locations": locations,
+            "grid_nodes": grid_status.get("nodes", 0),
+            "message": f"Started {total_jobs} parallel searches"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create parallel jobs: {str(e)}")
+
+
+@app.get("/jobs/parallel/{parent_job_id}/status")
+async def get_parallel_job_status(parent_job_id: str):
+    """Get status of parallel job execution"""
+    parent_job = get_job_by_id(parent_job_id)
+    if not parent_job:
+        raise HTTPException(status_code=404, detail="Parent job not found")
+    
+    if parent_job.get("type") != "parent":
+        raise HTTPException(status_code=400, detail="Not a parent job")
+    
+    # Get child job statuses
+    child_statuses = []
+    for child_id in parent_job.get("child_jobs", []):
+        child_job = get_job_by_id(child_id)
+        if child_job:
+            child_statuses.append({
+                "id": child_id,
+                "industry": child_job.get("industry"),
+                "location": child_job.get("location"),
+                "status": child_job.get("status"),
+                "processed": child_job.get("processed", 0),
+                "total": child_job.get("total", 0)
+            })
+    
+    return {
+        "parent_job": parent_job,
+        "child_jobs": child_statuses,
+        "progress": {
+            "completed": parent_job.get("completed_combinations", 0),
+            "total": parent_job.get("total_combinations", 0),
+            "percentage": round(
+                (parent_job.get("completed_combinations", 0) / 
+                 max(parent_job.get("total_combinations", 1), 1)) * 100,
+                1
+            )
+        }
+    }
+
+
+@app.get("/containers/status")
+async def get_container_infrastructure_status():
+    """Get container infrastructure and resource status"""
+    from dynamic_container_manager import container_manager
+    return container_manager.get_container_stats()
+
+
+@app.post("/containers/cleanup")
+async def cleanup_orphaned_containers():
+    """Clean up orphaned containers and free resources"""
+    from dynamic_container_manager import container_manager
+    try:
+        container_manager.cleanup_orphaned_containers()
+        return {"message": "Cleanup completed successfully", "success": True}
+    except Exception as e:
+        return {"message": f"Cleanup failed: {str(e)}", "success": False}
+
+
+@app.get("/grid/status")
+async def get_selenium_grid_status():
+    """Get container infrastructure status (legacy endpoint)"""
+    return await get_container_infrastructure_status()
+
+
+@app.post("/grid/scale")
+async def scale_selenium_grid(target_nodes: int):
+    """This endpoint is deprecated - containers now scale automatically"""
+    return {
+        "message": "Containers now scale automatically based on demand and system resources",
+        "success": True,
+        "mode": "automatic",
+        "max_containers": os.getenv('MAX_SELENIUM_CONTAINERS', '10')
+    }
+
+
+# Analytics Endpoints
+@app.get("/analytics/overview")
+async def get_analytics_overview():
+    """Get conversion overview metrics"""
+    try:
+        db = SessionLocal()
+        overview = AnalyticsEngine.get_conversion_overview(db)
+        db.close()
+        return overview
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics overview: {str(e)}")
+
+
+@app.get("/analytics/segments")
+async def get_top_segments(limit: int = 10):
+    """Get top converting segments"""
+    try:
+        db = SessionLocal()
+        segments = AnalyticsEngine.get_top_converting_segments(db, limit)
+        db.close()
+        return segments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get segments: {str(e)}")
+
+
+@app.get("/analytics/timeline")
+async def get_conversion_timeline(days: int = 30):
+    """Get conversion timeline data"""
+    try:
+        db = SessionLocal()
+        timeline = AnalyticsEngine.get_conversion_timeline(db, days)
+        db.close()
+        return {"timeline": timeline}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get timeline: {str(e)}")
+
+
+@app.get("/analytics/insights")
+async def get_insights():
+    """Get actionable insights"""
+    try:
+        db = SessionLocal()
+        insights = AnalyticsEngine.get_actionable_insights(db)
+        db.close()
+        return {"insights": insights}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get insights: {str(e)}")
+
+
+# PageSpeed Insights Endpoints
+@app.post("/leads/{lead_id}/pagespeed")
+async def test_lead_pagespeed(lead_id: str, background_tasks: BackgroundTasks):
+    """Test PageSpeed for a single lead"""
+    from pagespeed_service import PageSpeedService
+    
     db = SessionLocal()
     try:
         lead = db.query(Lead).filter(Lead.id == lead_id).first()
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
-        db.delete(lead)
-        db.commit()
-        return {"deleted": lead_id, "business_name": lead.business_name}
+        
+        if not lead.website_url:
+            raise HTTPException(status_code=400, detail="Lead has no website")
+        
+        print(f"Starting PageSpeed test for {lead.business_name} - {lead.website_url}")
+        
+        # Run PageSpeed test in background
+        service = PageSpeedService()
+        
+        # Add to background task to run async
+        background_tasks.add_task(
+            service.test_lead_website,
+            lead_id
+        )
+        
+        return {"message": f"PageSpeed test started for {lead.business_name}. Results will appear in 1-2 minutes."}
+    except Exception as e:
+        print(f"Error in PageSpeed test: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
 
 
-@app.delete("/admin/leads")
-async def delete_all_leads():
-    """Dangerous: Deletes all leads. Use to clear mock/dev data."""
+@app.post("/leads/pagespeed/bulk")
+async def test_bulk_pagespeed(lead_ids: List[str], background_tasks: BackgroundTasks):
+    """Test PageSpeed for multiple leads"""
+    from pagespeed_service import PageSpeedService
+    
     db = SessionLocal()
     try:
-        count = db.query(Lead).count()
-        db.query(Lead).delete()
-        db.commit()
-        return {"deleted": count}
+        leads = db.query(Lead).filter(Lead.id.in_(lead_ids)).all()
+        if not leads:
+            raise HTTPException(status_code=404, detail="No leads found")
+        
+        # Filter leads with websites
+        leads_with_websites = [l for l in leads if l.website_url]
+        if not leads_with_websites:
+            raise HTTPException(status_code=400, detail="No leads have websites")
+        
+        # Run PageSpeed tests in background
+        service = PageSpeedService()
+        background_tasks.add_task(
+            service.test_multiple_leads_async,
+            [(l.id, l.website_url) for l in leads_with_websites]
+        )
+        
+        return {
+            "message": f"PageSpeed tests started for {len(leads_with_websites)} leads",
+            "lead_count": len(leads_with_websites)
+        }
     finally:
         db.close()
 
 
-@app.delete("/admin/leads/mock")
-async def delete_mock_leads():
-    """Delete only mock leads from the database"""
+@app.get("/leads/pagespeed/status")
+async def get_pagespeed_status():
+    """Get status of PageSpeed testing"""
+    from pagespeed_service import PageSpeedService
+    
+    service = PageSpeedService()
+    return service.get_testing_status()
+
+
+@app.post("/jobs/{job_id}/pagespeed")
+async def enable_job_pagespeed(job_id: str, enable: bool = True):
+    """Enable/disable PageSpeed testing for a job"""
+    job = get_job_by_id(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Store PageSpeed setting for job
+    job['pagespeed_enabled'] = enable
+    
+    return {
+        "job_id": job_id,
+        "pagespeed_enabled": enable,
+        "message": f"PageSpeed testing {'enabled' if enable else 'disabled'} for job"
+    }
+
+
+# Conversion Scoring Endpoints
+@app.post("/conversion/train", response_model=ConversionModelResponse)
+async def train_conversion_model(background_tasks: BackgroundTasks):
+    """Train a new conversion scoring model based on historical data"""
+    from conversion_scoring_service import ConversionScoringService
+    
     db = SessionLocal()
     try:
-        # Delete leads with 'mock' in the source field
-        mock_leads = db.query(Lead).filter(Lead.source.like('%mock%')).all()
-        count = len(mock_leads)
-        for lead in mock_leads:
-            db.delete(lead)
-        db.commit()
-        return {"deleted": count, "type": "mock"}
-    finally:
-        db.close()
-
-
-@app.get("/logs")
-async def get_logs(tail: int = 500):
-    """Return the last N lines from the server log file."""
-    try:
-        tail = max(1, min(tail, 5000))
-        if not LOG_PATH.exists():
-            return {"lines": []}
-        with LOG_PATH.open("r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-        return {"lines": [ln.rstrip("\n") for ln in lines[-tail:]]}
-    except Exception as e:
-        return {"lines": [f"Error reading logs: {e}"]}
-
-@app.get("/jobs/{job_id}/screenshots")
-async def get_job_screenshots(job_id: str):
-    """Get list of screenshots for a specific job"""
-    try:
-        import os
-        screenshots_dir = Path("/app/screenshots")
-        if not screenshots_dir.exists():
-            return {"screenshots": []}
+        service = ConversionScoringService(db)
+        model = service.train_model()
         
-        # Find all screenshots for this job
-        screenshots = []
-        for filename in os.listdir(screenshots_dir):
-            if filename.startswith(f"job_{job_id}_") and filename.endswith(".png"):
-                screenshots.append({
-                    "filename": filename,
-                    "timestamp": os.path.getmtime(screenshots_dir / filename),
-                    "size": os.path.getsize(screenshots_dir / filename)
-                })
+        if not model:
+            raise HTTPException(
+                status_code=400, 
+                detail="Not enough data to train model. Need at least 100 samples with conversions."
+            )
         
-        # Sort by screenshot number (embedded in filename)
-        screenshots.sort(key=lambda x: x["filename"])
+        # Schedule background recalculation of all scores with new model
+        background_tasks.add_task(service.calculate_all_scores)
         
-        return {"screenshots": screenshots}
-    except Exception as e:
-        return {"screenshots": [], "error": str(e)}
-
-@app.get("/screenshots/{filename}")
-async def get_screenshot(filename: str):
-    """Serve a screenshot image file"""
-    try:
-        from fastapi.responses import FileResponse
-        screenshots_dir = Path("/app/screenshots")
-        file_path = screenshots_dir / filename
-        
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Screenshot not found")
-        
-        return FileResponse(
-            file_path,
-            media_type="image/png",
-            filename=filename
+        return ConversionModelResponse(
+            model_version=model.model_version,
+            accuracy=model.model_accuracy,
+            f1_score=model.f1_score,
+            precision=model.precision_score,
+            recall=model.recall_score,
+            training_samples=model.training_samples,
+            baseline_conversion_rate=model.baseline_conversion_rate,
+            created_at=model.created_at,
+            is_active=model.is_active
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error serving screenshot: {e}")
-
-@app.websocket("/ws/jobs/{job_id}")
-async def websocket_endpoint(websocket: WebSocket, job_id: str):
-    await websocket.accept()
-    active_connections[job_id].append(websocket)
-    
-    # Send existing logs
-    for log in job_logs.get(job_id, []):
-        await websocket.send_json({
-            "type": "log",
-            "message": log
-        })
-    
-    try:
-        # Send job status updates
-        while True:
-            await asyncio.sleep(1)
-            with job_lock:
-                if job_id in jobs:
-                    await websocket.send_json({
-                        "type": "status",
-                        "data": jobs[job_id]
-                    })
-                    if jobs[job_id]["status"] in ["done", "error"]:
-                        break
-    except WebSocketDisconnect:
-        active_connections[job_id].remove(websocket)
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-        if websocket in active_connections[job_id]:
-            active_connections[job_id].remove(websocket)
-
-
-@app.websocket("/ws/logs")
-async def websocket_logs(websocket: WebSocket):
-    await websocket.accept()
-    logs_connections.append(websocket)
-    try:
-        # On connect, send the last 200 lines
-        if LOG_PATH.exists():
-            with LOG_PATH.open("r", encoding="utf-8", errors="ignore") as f:
-                lines = f.readlines()[-200:]
-                for ln in lines:
-                    await websocket.send_json({"type": "log", "message": ln.rstrip("\n")})
-
-        # Tail the file for new lines
-        last_size = LOG_PATH.stat().st_size if LOG_PATH.exists() else 0
-        while True:
-            await asyncio.sleep(1)
-            if not LOG_PATH.exists():
-                continue
-            size = LOG_PATH.stat().st_size
-            if size > last_size:
-                with LOG_PATH.open("r", encoding="utf-8", errors="ignore") as f:
-                    f.seek(last_size)
-                    chunk = f.read(size - last_size)
-                last_size = size
-                for ln in chunk.splitlines():
-                    await websocket.send_json({"type": "log", "message": ln})
-    except WebSocketDisconnect:
-        if websocket in logs_connections:
-            logs_connections.remove(websocket)
-    except Exception as e:
-        try:
-            await websocket.send_json({"type": "error", "message": str(e)})
-        except Exception:
-            pass
-        if websocket in logs_connections:
-            logs_connections.remove(websocket)
-
-@app.get("/leads/{lead_id}", response_model=LeadResponse)
-async def get_lead(lead_id: str):
-    db = SessionLocal()
-    try:
-        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
-        if not lead:
-            raise HTTPException(status_code=404, detail="Lead not found")
-        return LeadResponse.from_orm(lead)
+        logger.error(f"Error training conversion model: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
 
 
-@app.put("/leads/{lead_id}", response_model=LeadResponse)
-async def update_lead(lead_id: str, update: LeadUpdate):
+@app.post("/conversion/calculate", response_model=ConversionScoringResponse)
+async def calculate_conversion_scores(background_tasks: BackgroundTasks):
+    """Calculate conversion scores for all leads"""
+    from conversion_scoring_service import ConversionScoringService
+    
     db = SessionLocal()
     try:
-        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
-        if not lead:
-            raise HTTPException(status_code=404, detail="Lead not found")
+        service = ConversionScoringService(db)
         
-        update_data = update.dict(exclude_unset=True)
+        # Run calculation in background
+        background_tasks.add_task(service.calculate_all_scores)
         
-        # Handle timeline entries separately
-        timeline_entries = update_data.pop('timeline', None)
+        # Get current stats
+        total_leads = db.query(func.count(Lead.id)).scalar()
         
-        # Update lead fields
-        for key, value in update_data.items():
-            setattr(lead, key, value)
+        return ConversionScoringResponse(
+            status="started",
+            total_leads=total_leads,
+            message="Conversion scoring started in background"
+        )
+    except Exception as e:
+        logger.error(f"Error calculating conversion scores: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+@app.get("/conversion/stats", response_model=ConversionModelResponse)
+async def get_conversion_model_stats():
+    """Get statistics about the current conversion model"""
+    from conversion_scoring_service import ConversionScoringService
+    
+    db = SessionLocal()
+    try:
+        service = ConversionScoringService(db)
+        stats = service.get_model_stats()
         
-        # Handle timeline entries
-        if timeline_entries is not None:
-            # Add new timeline entries
-            for entry_data in timeline_entries:
-                # Check if entry already exists
-                existing_entry = db.query(LeadTimelineEntry).filter(
-                    LeadTimelineEntry.id == entry_data['id']
-                ).first()
-                
-                if not existing_entry:
-                    # Create new timeline entry
-                    timeline_entry = LeadTimelineEntry(
-                        id=entry_data['id'],
-                        lead_id=lead_id,
-                        type=TimelineEntryType(entry_data['type']),
-                        title=entry_data['title'],
-                        description=entry_data.get('description'),
-                        previous_status=LeadStatus(entry_data['previous_status']) if entry_data.get('previous_status') else None,
-                        new_status=LeadStatus(entry_data['new_status']) if entry_data.get('new_status') else None,
-                        created_at=datetime.fromisoformat(entry_data.get('created_at', datetime.utcnow().isoformat())) if isinstance(entry_data.get('created_at'), str) else entry_data.get('created_at', datetime.utcnow()),
-                        follow_up_date=datetime.fromisoformat(entry_data['follow_up_date']) if isinstance(entry_data.get('follow_up_date'), str) else entry_data.get('follow_up_date'),
-                        is_completed=entry_data.get('is_completed', False),
-                        completed_by=entry_data.get('completed_by'),
-                        completed_at=datetime.fromisoformat(entry_data['completed_at']) if isinstance(entry_data.get('completed_at'), str) else entry_data.get('completed_at')
-                    )
-                    db.add(timeline_entry)
+        if 'status' in stats and stats['status'] == 'No model trained':
+            raise HTTPException(status_code=404, detail="No conversion model has been trained yet")
         
-        lead.updated_at = datetime.utcnow()
+        return ConversionModelResponse(
+            model_version=stats['model_version'],
+            accuracy=stats['accuracy'],
+            f1_score=stats['f1_score'],
+            precision=stats['precision'],
+            recall=stats['recall'],
+            training_samples=stats['training_samples'],
+            baseline_conversion_rate=stats['baseline_conversion_rate'],
+            created_at=stats['created_at'],
+            is_active=True
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting conversion model stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+@app.get("/leads/top-converting")
+async def get_top_converting_leads(
+    limit: int = 20,
+    min_score: float = 0.5
+):
+    """Get leads with highest conversion probability"""
+    from conversion_scoring_service import ConversionScoringService
+    
+    db = SessionLocal()
+    try:
+        # Get leads sorted by conversion score
+        leads = db.query(Lead).filter(
+            Lead.conversion_score.isnot(None),
+            Lead.conversion_score >= min_score,
+            Lead.status.notin_([LeadStatus.converted, LeadStatus.doNotCall])
+        ).order_by(Lead.conversion_score.desc()).limit(limit).all()
+        
+        return [LeadResponse.from_orm(lead) for lead in leads]
+    except Exception as e:
+        logger.error(f"Error getting top converting leads: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+# Sales Pitch Management Endpoints
+@app.get("/sales-pitches", response_model=List[SalesPitchResponse])
+def get_sales_pitches(active_only: bool = True):
+    """Get all sales pitches"""
+    db = SessionLocal()
+    try:
+        query = db.query(SalesPitch)
+        if active_only:
+            query = query.filter(SalesPitch.is_active == True)
+        pitches = query.all()
+        return pitches
+    finally:
+        db.close()
+
+
+@app.post("/sales-pitches", response_model=SalesPitchResponse)
+def create_sales_pitch(pitch: SalesPitchCreate):
+    """Create a new sales pitch"""
+    db = SessionLocal()
+    try:
+        db_pitch = SalesPitch(**pitch.dict())
+        db.add(db_pitch)
         db.commit()
-        db.refresh(lead)
-        
-        return LeadResponse.from_orm(lead)
+        db.refresh(db_pitch)
+        return db_pitch
     finally:
         db.close()
 
 
-@app.put("/leads/{lead_id}/timeline/{entry_id}", response_model=LeadResponse)
-async def update_timeline_entry(lead_id: str, entry_id: str, update: LeadTimelineEntryUpdate):
+@app.put("/sales-pitches/{pitch_id}", response_model=SalesPitchResponse)
+def update_sales_pitch(pitch_id: str, pitch_update: SalesPitchUpdate):
+    """Update an existing sales pitch"""
     db = SessionLocal()
     try:
-        # Find the lead and timeline entry
-        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
+        db_pitch = db.query(SalesPitch).filter(SalesPitch.id == pitch_id).first()
+        if not db_pitch:
+            raise HTTPException(status_code=404, detail="Sales pitch not found")
+        
+        update_data = pitch_update.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_pitch, field, value)
+        
+        db_pitch.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(db_pitch)
+        return db_pitch
+    finally:
+        db.close()
+
+
+@app.delete("/sales-pitches/{pitch_id}")
+def delete_sales_pitch(pitch_id: str):
+    """Delete a sales pitch (soft delete by setting inactive)"""
+    db = SessionLocal()
+    try:
+        db_pitch = db.query(SalesPitch).filter(SalesPitch.id == pitch_id).first()
+        if not db_pitch:
+            raise HTTPException(status_code=404, detail="Sales pitch not found")
+        
+        # Check if there are at least 2 active pitches before deactivating
+        active_count = db.query(SalesPitch).filter(SalesPitch.is_active == True).count()
+        if active_count <= 2 and db_pitch.is_active:
+            raise HTTPException(
+                status_code=400, 
+                detail="Cannot deactivate pitch. At least 2 active pitches are required."
+            )
+        
+        db_pitch.is_active = False
+        db_pitch.updated_at = datetime.utcnow()
+        db.commit()
+        return {"status": "success", "message": "Sales pitch deactivated"}
+    finally:
+        db.close()
+
+
+@app.post("/leads/{lead_id}/assign-pitch")
+def assign_pitch_to_lead(lead_id: str, request: LeadUpdateRequest):
+    """Assign a sales pitch to a lead"""
+    db = SessionLocal()
+    try:
+        lead = db.query(Lead).filter(Lead.id == lead_id).first()
         if not lead:
             raise HTTPException(status_code=404, detail="Lead not found")
         
-        timeline_entry = db.query(LeadTimelineEntry).filter(
-            LeadTimelineEntry.id == entry_id,
-            LeadTimelineEntry.lead_id == lead_id
-        ).first()
-        if not timeline_entry:
-            raise HTTPException(status_code=404, detail="Timeline entry not found")
-        
-        # Update timeline entry fields based on what was explicitly provided
-        if hasattr(update, '__fields_set__'):
-            fields_sent = update.__fields_set__
-        else:
-            # Fallback if __fields_set__ is not available
-            fields_sent = {k for k, v in update.dict().items() if v is not None}
-        
-        for field in fields_sent:
-            value = getattr(update, field)
-            setattr(timeline_entry, field, value)
+        pitch_id = request.sales_pitch_id
+        if not pitch_id:
+            raise HTTPException(status_code=400, detail="sales_pitch_id is required")
             
-            # Special case: if follow_up_date is being updated, also update the lead's follow_up_date
-            if field == 'follow_up_date':
-                lead.follow_up_date = value
+        pitch = db.query(SalesPitch).filter(
+            SalesPitch.id == pitch_id,
+            SalesPitch.is_active == True
+        ).first()
+        if not pitch:
+            raise HTTPException(status_code=404, detail="Sales pitch not found or inactive")
         
-        # Update lead's updated_at timestamp
-        lead.updated_at = datetime.utcnow()
+        lead.sales_pitch_id = pitch_id
+        
+        # Track the pitch attempt
+        pitch.attempts += 1
+        
+        # Add timeline entry
+        timeline_entry = LeadTimelineEntry(
+            id=str(uuid.uuid4()),
+            lead_id=lead_id,
+            type=TimelineEntryType.NOTE,
+            title="Sales Pitch Assigned",
+            description=f"Assigned pitch: {pitch.name}",
+            created_at=datetime.utcnow()
+        )
+        db.add(timeline_entry)
         
         db.commit()
         db.refresh(lead)
-        
         return LeadResponse.from_orm(lead)
     finally:
         db.close()
 
 
-@app.post("/jobs/multi-industry", response_model=Dict[str, Any])
-async def start_multi_industry_automation(request: ScrapeRequest, background_tasks: BackgroundTasks):
-    """Start concurrent browser automation for multiple industries"""
-    
-    # Extract industries from the request - expect them in the industry field as comma-separated or in industries list
-    industries = []
-    if hasattr(request, 'industries') and request.industries:
-        industries = request.industries
-    elif ',' in request.industry:
-        industries = [i.strip() for i in request.industry.split(',')]
-    else:
-        industries = [request.industry]
-    
-    if len(industries) <= 1:
-        # Fall back to single industry job
-        return await start_browser_automation(request, background_tasks)
-    
-    logger.info(f"Starting multi-industry job for {len(industries)} industries: {industries}")
-    
-    # Use simple sequential processor (bulletproof fallback)
-    from simple_multi_industry import simple_multi_industry_processor
-    parent_job_id = simple_multi_industry_processor.create_multi_industry_job(industries, request)
-    
-    # Create entry in main jobs dict for compatibility
-    with job_lock:
-        jobs[parent_job_id] = {
-            "job_id": parent_job_id,
-            "status": "running",
-            "processed": 0,
-            "total": request.limit,
-            "message": f"Processing {len(industries)} industries sequentially...",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
-            "scraper_type": "multi-industry",
-            "industries": industries,
-            "location": request.location
+@app.get("/sales-pitches/analytics")
+def get_pitch_analytics():
+    """Get A/B testing analytics for all sales pitches"""
+    db = SessionLocal()
+    try:
+        pitches = db.query(SalesPitch).all()
+        
+        analytics = []
+        for pitch in pitches:
+            # Count conversions
+            converted_leads = db.query(Lead).filter(
+                Lead.sales_pitch_id == pitch.id,
+                Lead.status == LeadStatus.converted
+            ).count()
+            
+            # Update pitch conversion metrics
+            if pitch.attempts > 0:
+                pitch.conversions = converted_leads
+                pitch.conversion_rate = (converted_leads / pitch.attempts) * 100
+            
+            analytics.append({
+                "id": pitch.id,
+                "name": pitch.name,
+                "attempts": pitch.attempts,
+                "conversions": pitch.conversions,
+                "conversion_rate": pitch.conversion_rate,
+                "is_active": pitch.is_active
+            })
+        
+        db.commit()
+        
+        # Calculate statistical significance if we have 2 active pitches
+        active_pitches = [p for p in analytics if p["is_active"]]
+        if len(active_pitches) >= 2:
+            # Simple chi-square test placeholder
+            total_attempts = sum(p["attempts"] for p in active_pitches)
+            total_conversions = sum(p["conversions"] for p in active_pitches)
+            
+            if total_attempts > 0:
+                baseline_rate = total_conversions / total_attempts
+                for pitch in analytics:
+                    if pitch["attempts"] > 0:
+                        expected = pitch["attempts"] * baseline_rate
+                        pitch["expected_conversions"] = expected
+                        pitch["performance"] = "above" if pitch["conversions"] > expected else "below"
+        
+        return {
+            "pitches": analytics,
+            "total_attempts": sum(p["attempts"] for p in analytics),
+            "total_conversions": sum(p["conversions"] for p in analytics),
+            "overall_conversion_rate": (sum(p["conversions"] for p in analytics) / 
+                                       max(sum(p["attempts"] for p in analytics), 1)) * 100
         }
-    
-    # Start the sequential execution
-    background_tasks.add_task(
-        simple_multi_industry_processor.execute_multi_industry_job_sequential,
-        parent_job_id
-    )
-    
-    add_job_log(parent_job_id, f"🚀 Starting sequential automation for {len(industries)} industries")
-    add_job_log(parent_job_id, f"Industries: {', '.join(industries)}")
-    add_job_log(parent_job_id, f"Location: {request.location}")
-    add_job_log(parent_job_id, f"Target leads per industry: {request.limit // len(industries)}")
-    add_job_log(parent_job_id, f"Processing mode: Sequential (bulletproof)")
-    
-    return {"job_id": parent_job_id, "type": "multi-industry", "industries": industries}
-
-
-@app.get("/jobs/{job_id}/multi-status")
-async def get_multi_industry_job_status(job_id: str):
-    """Get detailed status of a multi-industry job"""
-    from simple_multi_industry import simple_multi_industry_processor
-    
-    status = simple_multi_industry_processor.get_job_status(job_id)
-    if not status:
-        raise HTTPException(status_code=404, detail="Multi-industry job not found")
-    
-    return status
-
-
-@app.get("/containers/status")
-async def get_container_status():
-    """Get status of Selenium containers"""
-    # Simple fallback - just return info about the single container
-    return {
-        "total_containers": 1,
-        "mode": "single-container",
-        "containers": [
-            {
-                "name": "selenium-chrome",
-                "status": "running",
-                "hub_url": "http://selenium-chrome:4444/wd/hub",
-                "note": "Using single Selenium container (Docker orchestration disabled)"
-            }
-        ]
-    }
-
-
-@app.post("/containers/scale")
-async def scale_containers(target_instances: int):
-    """Container scaling not available in single-container mode"""
-    return {
-        "action": "not_available",
-        "message": "Container scaling not available in single-container mode",
-        "current_instances": 1,
-        "mode": "single-container"
-    }
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the application on startup"""
-    global event_loop
-    event_loop = asyncio.get_running_loop()
-    
-    # Initialize database
-    init_db()
-    
-    # Log startup mode
-    logger.info("✅ LeadLawk API started in single-container mode")
-    logger.info("📋 Multi-industry jobs will process sequentially")
-    logger.info("🔧 Using existing Selenium container: selenium-chrome:4444")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":

@@ -254,3 +254,68 @@ final jobsListProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
   } catch (_) {}
   return const <Map<String, dynamic>>[];
 });
+
+/// Auto-refreshing jobs provider that updates every 3 seconds
+class AutoRefreshJobsNotifier extends StateNotifier<AsyncValue<List<Map<String, dynamic>>>> {
+  final Ref ref;
+  Timer? _timer;
+  
+  AutoRefreshJobsNotifier(this.ref) : super(const AsyncValue.loading()) {
+    _startAutoRefresh();
+  }
+  
+  void _startAutoRefresh() {
+    // Initial fetch
+    _fetchJobs();
+    
+    // Set up periodic refresh every 3 seconds
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _fetchJobs();
+    });
+  }
+  
+  Future<void> _fetchJobs() async {
+    // Check if notifier is still mounted before updating state
+    if (!mounted) return;
+    
+    try {
+      final dio = ref.read(dioProvider);
+      final resp = await dio.get(
+        'http://localhost:8000/jobs',
+        options: Options(
+          receiveTimeout: const Duration(seconds: 2),
+          sendTimeout: const Duration(seconds: 2),
+        ),
+      );
+      
+      // Check again after async operation
+      if (!mounted) return;
+      
+      final data = resp.data;
+      if (data is List) {
+        final jobs = data.cast<Map>().map((e) => e.cast<String, dynamic>()).toList();
+        state = AsyncValue.data(jobs);
+      } else {
+        state = const AsyncValue.data(<Map<String, dynamic>>[]);
+      }
+    } catch (e, stack) {
+      // Check if mounted before setting error state
+      if (!mounted) return;
+      
+      // Don't overwrite existing data with error on refresh failure
+      if (!state.hasValue) {
+        state = AsyncValue.error(e, stack);
+      }
+    }
+  }
+  
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+}
+
+final autoRefreshJobsProvider = StateNotifierProvider.autoDispose<AutoRefreshJobsNotifier, AsyncValue<List<Map<String, dynamic>>>>((ref) {
+  return AutoRefreshJobsNotifier(ref);
+});

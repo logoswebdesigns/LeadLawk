@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    build: ./server
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server/db:/app/db
+      - ./server/screenshots:/app/screenshots
+      - ./server/website_screenshots:/app/website_screenshots
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444/wd/hub
+      - MAX_PARALLEL_JOBS=100  # Increase Python thread pool
+    restart: unless-stopped
+    depends_on:
+      - selenium-chrome
+    networks:
+      - leadloq-network
+
+  selenium-chrome:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC port for debugging
+    volumes:
+      - ./screenshots:/screenshots
+      - ./website_screenshots:/website_screenshots
+    environment:
+      - SE_NODE_MAX_SESSIONS=100  # Increased from 50 to 100
+      - SE_NODE_SESSION_TIMEOUT=120
+      - SE_VNC_PASSWORD=secret
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_INSTANCES=100
+      - START_XVFB=true
+    shm_size: '4gb'  # Increased shared memory for more sessions
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+networks:
+  leadloq-network:
+    driver: bridge

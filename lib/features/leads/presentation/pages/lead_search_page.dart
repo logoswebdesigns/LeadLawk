@@ -5,6 +5,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/automation_form_provider.dart';
 import '../providers/job_provider.dart';
 import '../providers/server_status_provider.dart';
+import '../widgets/multi_city_input.dart';
+import '../widgets/pagespeed_filter.dart';
 
 class LeadSearchPage extends ConsumerStatefulWidget {
   const LeadSearchPage({super.key});
@@ -86,15 +88,17 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Refresh job data
-          ref.invalidate(jobsListProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-        },
-        color: AppTheme.primaryGold,
-        backgroundColor: AppTheme.backgroundDark,
-        child: CustomScrollView(
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              // Refresh job data
+              ref.invalidate(jobsListProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            color: AppTheme.primaryGold,
+            backgroundColor: AppTheme.backgroundDark,
+            child: CustomScrollView(
           slivers: [
             // App Bar
             SliverToBoxAdapter(
@@ -132,230 +136,6 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-            
-            // Recent Jobs Section
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    final jobsAsync = ref.watch(jobsListProvider);
-                    return jobsAsync.when(
-                      data: (jobs) {
-                        if (jobs.isEmpty) return const SizedBox.shrink();
-                        
-                        // Show only recent 3 jobs
-                        final recentJobs = jobs.take(3).toList();
-                        
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.elevatedSurface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              // Header
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () => context.go('/server'),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.primaryBlue.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: const Icon(
-                                            Icons.history,
-                                            color: AppTheme.primaryBlue,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Recent Lead Jobs',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              Text(
-                                                'View your automation history',
-                                                style: TextStyle(
-                                                  color: Colors.white.withOpacity(0.6),
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Text(
-                                          'View All',
-                                          style: TextStyle(
-                                            color: AppTheme.primaryBlue,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.chevron_right,
-                                          color: AppTheme.primaryBlue,
-                                          size: 16,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              
-                              // Job Cards
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                                child: Column(
-                                  children: [
-                                    const Divider(color: AppTheme.backgroundDark),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      height: 140,
-                                      child: ListView.separated(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: recentJobs.length,
-                                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                                        itemBuilder: (context, index) {
-                                          final job = recentJobs[index];
-                                          final status = job['status']?.toString() ?? 'unknown';
-                                          final jobId = job['job_id']?.toString() ?? '';
-                                          final processed = job['processed'] ?? 0;
-                                          final total = job['total'] ?? 0;
-                                          final color = _getJobStatusColor(status);
-                                          
-                                          // Extract user-friendly title from job parameters
-                                          final params = job['params'] as Map<String, dynamic>?;
-                                          final industry = params?['industry']?.toString() ?? 
-                                                         job['industry']?.toString() ?? 'Business';
-                                          final location = params?['location']?.toString() ?? 
-                                                         job['location']?.toString() ?? 'Unknown';
-                                          final jobTitle = '$industry in $location';
-                                          
-                                          return Container(
-                                            width: 200,
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.elevatedSurface,
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: color.withOpacity(0.3),
-                                              ),
-                                            ),
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                borderRadius: BorderRadius.circular(12),
-                                                onTap: () => context.go('/browser/monitor/$jobId'),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(16),
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Icon(
-                                                            status == 'running' 
-                                                                ? Icons.sync 
-                                                                : status == 'done' 
-                                                                    ? Icons.check_circle
-                                                                    : Icons.error,
-                                                            color: color,
-                                                            size: 16,
-                                                          ),
-                                                          const SizedBox(width: 8),
-                                                          Expanded(
-                                                            child: FittedBox(
-                                                              fit: BoxFit.scaleDown,
-                                                              alignment: Alignment.centerLeft,
-                                                              child: Text(
-                                                                jobTitle,
-                                                                style: const TextStyle(
-                                                                  color: Colors.white,
-                                                                  fontWeight: FontWeight.w600,
-                                                                  fontSize: 12,
-                                                                ),
-                                                                maxLines: 1,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                        decoration: BoxDecoration(
-                                                          color: color.withOpacity(0.1),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: Text(
-                                                          status.toUpperCase(),
-                                                          style: TextStyle(
-                                                            color: color,
-                                                            fontSize: 10,
-                                                            fontWeight: FontWeight.w700,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const Spacer(),
-                                                      if (total > 0) ...[
-                                                        LinearProgressIndicator(
-                                                          value: (processed / total).toDouble(),
-                                                          minHeight: 4,
-                                                          backgroundColor: color.withOpacity(0.15),
-                                                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                                                        ),
-                                                        const SizedBox(height: 4),
-                                                        Text(
-                                                          '$processed / $total leads',
-                                                          style: const TextStyle(
-                                                            fontSize: 10,
-                                                            color: Colors.white70,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                    );
-                  },
                 ),
               ),
             ),
@@ -482,25 +262,28 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Select Multiple Industries:',
-                                            style: TextStyle(
-                                              color: Colors.white.withOpacity(0.8),
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          if (formState.selectedIndustries.isEmpty && !formState.isCustomIndustry)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange.withOpacity(0.2),
-                                                borderRadius: BorderRadius.circular(4),
-                                                border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                'Select Multiple Industries:',
+                                                style: TextStyle(
+                                                  color: Colors.white.withOpacity(0.8),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            if (formState.selectedIndustries.isEmpty && !formState.isCustomIndustry)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange.withOpacity(0.2),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                                                ),
                                               child: const Text(
                                                 'Required',
                                                 style: TextStyle(
@@ -510,7 +293,8 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                                 ),
                                               ),
                                             ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       Row(
                                         children: [
@@ -681,40 +465,28 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _locationController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: 'Target Location',
-                                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                                  hintText: 'e.g., Austin, TX or New York City',
-                                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                                  prefixIcon: const Icon(Icons.location_on, color: AppTheme.primaryGold),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                              const SizedBox(height: 24),
+                              
+                              // Multi-city input replacing the single location field
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.primaryGold.withOpacity(0.1),
+                                      AppTheme.primaryGold.withOpacity(0.05),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
-                                  ),
-                                  filled: true,
-                                  fillColor: AppTheme.primaryGold.withOpacity(0.05),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppTheme.primaryGold.withOpacity(0.2),
                                   ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a location';
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  formNotifier.setLocation(value);
-                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(20),
+                                  child: MultiCityInput(),
+                                ),
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -723,7 +495,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                 decoration: InputDecoration(
                                   labelText: 'Maximum Results',
                                   labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
-                                  hintText: 'How many leads to find (1-200)',
+                                  hintText: 'How many leads to find',
                                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                                   prefixIcon: const Icon(Icons.format_list_numbered, color: AppTheme.primaryGold),
                                   suffixText: 'leads',
@@ -749,8 +521,8 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                     return 'Please enter a limit';
                                   }
                                   final limit = int.tryParse(value);
-                                  if (limit == null || limit < 1 || limit > 200) {
-                                    return 'Limit must be between 1 and 200';
+                                  if (limit == null || limit < 1) {
+                                    return 'Please enter a valid number greater than 0';
                                   }
                                   return null;
                                 },
@@ -1179,6 +951,10 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 24),
+                      
+                      // Enhanced PageSpeed Testing with Filter
+                      const PageSpeedFilter(),
                   ],
                 ),
               ),
@@ -1251,16 +1027,41 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           );
                           return;
                         }
+                        
+                        // Check if at least one location is selected
+                        if (formState.selectedLocations.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please add at least one city or select a state'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 4),
+                            ),
+                          );
+                          return;
+                        }
 
-                        await jobNotifier.startAutomation(formState.toParams());
+                        // Log the request details
+                        final params = formState.toParams();
+                        print('🚀 START LEAD GENERATION PRESSED');
+                        print('📍 Selected Locations: ${formState.selectedLocations}');
+                        print('🏢 Selected Industries: ${formState.selectedIndustries.isNotEmpty ? formState.selectedIndustries : [formState.industry]}');
+                        print('🎯 Limit: ${formState.limit}');
+                        print('⭐ Min Rating: ${formState.minRating}');
+                        print('💬 Min Reviews: ${formState.minReviews}');
+                        print('🌐 Requires Website: ${formState.requiresWebsite}');
+                        print('📅 Recent Reviews (months): ${formState.recentReviewMonths}');
+                        print('🚀 Enable PageSpeed: ${formState.enablePagespeed}');
+                        print('📊 Max PageSpeed Score: ${formState.maxPagespeedScore}');
+                        
+                        await jobNotifier.startAutomation(params);
 
                         // Wait a moment for the state to update
                         await Future.delayed(const Duration(milliseconds: 100));
                         
                         final updatedJobState = ref.read(jobProvider);
                         if (updatedJobState.jobId != null && context.mounted) {
-                          // Navigate to the monitoring page
-                          context.go('/browser/monitor/${updatedJobState.jobId}');
+                          // Navigate back to the leads list page
+                          context.go('/leads');
                         }
                       }
                     },
@@ -1282,6 +1083,8 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
             ),
           ],
         ),
+      ),
+        ],
       ),
     );
   }

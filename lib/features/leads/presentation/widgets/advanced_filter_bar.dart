@@ -1,0 +1,139 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../domain/entities/lead.dart';
+import '../pages/leads_list_page.dart';
+import 'advanced_filter_section.dart';
+import 'advanced_filter_extras.dart';
+import 'advanced_filter_search.dart';
+
+class AdvancedFilterBar extends ConsumerStatefulWidget {
+  const AdvancedFilterBar({super.key});
+
+  @override
+  ConsumerState<AdvancedFilterBar> createState() => AdvancedFilterBarState();
+}
+
+class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
+  bool showAdvancedFilters = false;
+  final searchController = TextEditingController();
+  Timer? debounceTimer;
+
+  @override
+  void dispose() {
+    debounceTimer?.cancel();
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.elevatedSurface,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: 0.05),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildSearchBar(),
+          const SizedBox(height: 12),
+          buildStatusFilters(),
+          const SizedBox(height: 12),
+          _buildSortingRow(),
+          const SizedBox(height: 12),
+          _buildQuickFilters(),
+          if (showAdvancedFilters) ...[
+            const SizedBox(height: 12),
+            buildAdvancedFilterSection(),
+          ],
+          const SizedBox(height: 8),
+          buildToggleButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSortingRow() {
+    final sortOption = ref.watch(sortOptionProvider);
+    final sortAscending = ref.watch(sortAscendingProvider);
+
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<SortOption>(
+            value: sortOption,
+            decoration: InputDecoration(
+              labelText: 'Sort by',
+              isDense: true,
+              filled: true,
+              fillColor: AppTheme.backgroundDark,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            items: SortOption.values.map((option) {
+              return DropdownMenuItem(
+                value: option,
+                child: Text(_getSortLabel(option)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(sortOptionProvider.notifier).state = value;
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: Icon(
+            sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+            color: AppTheme.primaryGold,
+          ),
+          onPressed: () {
+            ref.read(sortAscendingProvider.notifier).state = !sortAscending;
+          },
+          tooltip: sortAscending ? 'Ascending' : 'Descending',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickFilters() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _buildFilterChip('Has Website', ref.watch(hasWebsiteFilterProvider) == true,
+            (selected) => ref.read(hasWebsiteFilterProvider.notifier).state = selected ? true : null),
+        _buildFilterChip('No Website', ref.watch(hasWebsiteFilterProvider) == false,
+            (selected) => ref.read(hasWebsiteFilterProvider.notifier).state = selected ? false : null),
+        _buildFilterChip('High Rating', ref.watch(meetsRatingFilterProvider) == true,
+            (selected) => ref.read(meetsRatingFilterProvider.notifier).state = selected ? true : null),
+        _buildFilterChip('Recent Reviews', ref.watch(hasRecentReviewsFilterProvider) == true,
+            (selected) => ref.read(hasRecentReviewsFilterProvider.notifier).state = selected ? true : null),
+      ],
+    );
+  }
+
+  String _getSortLabel(SortOption option) => option.name.replaceAll('_', ' ').toUpperCase();
+
+  Widget _buildFilterChip(String label, bool selected, Function(bool) onSelected) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: onSelected,
+      selectedColor: AppTheme.primaryGold.withValues(alpha: 0.2),
+      checkmarkColor: AppTheme.primaryGold,
+    );
+  }
+}

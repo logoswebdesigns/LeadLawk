@@ -13,7 +13,7 @@ from pathlib import Path
 
 def add_missing_columns():
     """Add missing columns to existing tables."""
-    db_path = Path("db/leadlawk.db")
+    db_path = Path("db/leadloq.db")
     if not db_path.exists():
         print("Database file not found, skipping column migration.")
         return

@@ -8,24 +8,19 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/main_scaffold.dart';
-import 'features/leads/presentation/pages/leads_list_page_v2.dart';
+import 'features/leads/presentation/pages/leads_list_page.dart';
 import 'features/leads/presentation/pages/lead_detail_page.dart';
 import 'features/leads/presentation/pages/lead_search_page.dart';
 import 'features/leads/presentation/pages/automation_monitor_page.dart';
 import 'features/leads/presentation/pages/server_diagnostics_page.dart';
 import 'features/leads/presentation/pages/account_page.dart';
+import 'features/analytics/presentation/pages/analytics_page.dart';
 import 'features/leads/presentation/providers/automation_form_provider.dart';
 import 'features/leads/presentation/providers/server_status_provider.dart';
-
-String _envForPlatform() {
-  if (kIsWeb) return '.env.web';
-  if (Platform.isMacOS) return '.env.macos';
-  if (Platform.isAndroid) return '.env.android';
-  return '.env';
-}
+import 'features/leads/presentation/providers/lead_monitor_provider.dart';
+import 'features/leads/presentation/services/pagespeed_notification_service.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   final prefs = await SharedPreferences.getInstance();
@@ -55,6 +50,14 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize notification service after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final notificationService = ref.read(pageSpeedNotificationServiceProvider);
+        notificationService.initialize(context);
+      }
+    });
 
     // Create the router once so route state isn't reset on rebuilds.
     _router = GoRouter(
@@ -71,7 +74,7 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
               path: '/leads',
               builder: (context, state) {
                 final filter = state.uri.queryParameters['filter'];
-                return LeadsListPageV2(initialFilter: filter);
+                return LeadsListPage(initialFilter: filter);
               },
             ),
             GoRoute(
@@ -93,6 +96,10 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
               },
             ),
             GoRoute(
+              path: '/analytics',
+              builder: (context, state) => const AnalyticsPage(),
+            ),
+            GoRoute(
               path: '/account',
               builder: (context, state) => const AccountPage(),
             ),
@@ -110,6 +117,37 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
   Widget build(BuildContext context) {
     // Listen without rebuilding the app on status polls.
     ref.listen(serverStatusProvider, (_, __) {});
+    
+    // Listen for new leads and show toast notifications
+    ref.listen(leadMonitorProvider, (previous, next) {
+      if (next.isNotEmpty && context.mounted) {
+        for (final lead in next) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.business, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'New lead added: ${lead.businessName}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppTheme.successGreen,
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
+      }
+    });
+    
     return MaterialApp.router(
       title: 'LeadLoq',
       theme: AppTheme.lightTheme(),

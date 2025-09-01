@@ -51,19 +51,19 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
     });
     
     _wsService.status.listen((status) {
-      print('🔔 WebSocket status update received: $status');
+      // DEBUG: print('🔔 WebSocket status update received: $status');
       setState(() {
         _jobStatus = status;
       });
       
       if (status['status'] == 'done') {
-        print('✅ Job completed - processed: ${status['processed']}, total: ${status['total']}');
+        // DEBUG: print('✅ Job completed - processed: ${status['processed']}, total: ${status['total']}');
         _showCompletionDialog();
       } else if (status['status'] == 'error') {
-        print('❌ Job failed with error: ${status['message']}');
+        // DEBUG: print('❌ Job failed with error: ${status['message']}');
         _showErrorDialog(status['message'] ?? 'Unknown error');
       } else if (status['status'] == 'running') {
-        print('🏃 Job running - processed: ${status['processed']}, total: ${status['total']}');
+        // DEBUG: print('🏃 Job running - processed: ${status['processed']}, total: ${status['total']}');
       }
     });
   }
@@ -109,15 +109,15 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   void _showCompletionDialog() async {
     // Get the actual lead count from the API instead of relying on WebSocket status
     int actualLeadCount = _jobStatus?['processed'] ?? 0;
-    print('💬 Completion dialog - WebSocket processed count: $actualLeadCount');
-    print('💬 Full job status: $_jobStatus');
+    // DEBUG: print('💬 Completion dialog - WebSocket processed count: $actualLeadCount');
+    // DEBUG: print('💬 Full job status: $_jobStatus');
     
     try {
       final dio = ref.read(dioProvider);
       final response = await dio.get('http://localhost:8000/leads');
       if (response.statusCode == 200) {
         final leads = response.data as List;
-        print('💬 Total leads in database: ${leads.length}');
+        // DEBUG: print('💬 Total leads in database: ${leads.length}');
         
         // Count recently created leads (within the last few minutes)
         final now = DateTime.now();
@@ -130,19 +130,19 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
           }
         }).length;
         
-        print('💬 Recent leads (last 10 minutes): $recentLeads');
+        // DEBUG: print('💬 Recent leads (last 10 minutes): $recentLeads');
         
         // Use the higher count between WebSocket status and recent leads
         if (recentLeads > actualLeadCount) {
           actualLeadCount = recentLeads;
-          print('💬 Using recent leads count: $actualLeadCount');
+          // DEBUG: print('💬 Using recent leads count: $actualLeadCount');
         } else {
-          print('💬 Using WebSocket count: $actualLeadCount');
+          // DEBUG: print('💬 Using WebSocket count: $actualLeadCount');
         }
       }
     } catch (e) {
       // If API call fails, fall back to WebSocket status
-      print('❌ Failed to fetch actual lead count: $e');
+      // DEBUG: print('❌ Failed to fetch actual lead count: $e');
     }
     
     showDialog(
@@ -258,7 +258,9 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   
   @override
   Widget build(BuildContext context) {
-    final progress = (_jobStatus?['processed'] ?? 0) / (_jobStatus?['total'] ?? 1);
+    final processed = _jobStatus?['processed'] ?? 0;
+    final total = _jobStatus?['total'] ?? 0;
+    final progress = total > 0 ? processed / total : 0.0;
     
     return Scaffold(
       backgroundColor: AppTheme.backgroundGray,

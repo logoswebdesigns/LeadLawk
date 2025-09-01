@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    container_name: leadloq-api
+    build: ./server
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-hub:4444/wd/hub
+    volumes:
+      - ./server/db:/app/db
+      - ./server/screenshots:/app/screenshots
+    depends_on:
+      - selenium-hub
+    networks:
+      - leadloq-network
+
+  selenium-hub:
+    image: seleniarm/hub:latest  # ARM64 compatible
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+    environment:
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=300
+    networks:
+      - leadloq-network
+
+  selenium-node:
+    image: seleniarm/node-chromium:latest  # ARM64 compatible
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=1
+    networks:
+      - leadloq-network
+    deploy:
+      replicas: 3  # Start with 3 Chrome nodes
+
+networks:
+  leadloq-network:
+    driver: bridge

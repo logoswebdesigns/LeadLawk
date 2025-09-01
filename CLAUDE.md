@@ -86,11 +86,12 @@ CallLog: lead_id, duration, outcome (call tracking)
 3. Update status filtering logic in `LeadsRepository` implementations
 4. Test status transitions in lead detail page
 
-### Browser Automation Changes
-1. Core logic in `server/browser_automation.py` 
-2. Business extraction patterns in `server/business_extractor.py`
-3. Screenshot capture uses retry logic with file verification (critical for reliability)
-4. Always rebuild Docker image after changes: `docker-compose up --build -d`
+### Server Code Changes (CRITICAL)
+1. **ALL server changes require container rebuild**: `docker-compose down && docker-compose up -d --build`
+2. Core browser logic in `server/browser_automation.py` 
+3. Business extraction patterns in `server/business_extractor.py`
+4. Screenshot capture uses retry logic with file verification (critical for reliability)
+5. **Verification Required**: Always verify changes are in running container with `docker exec leadloq-api grep "your-change" /app/filename.py`
 
 ### Adding API Endpoints
 1. Define Pydantic schemas in `server/schemas.py`
@@ -132,13 +133,19 @@ CallLog: lead_id, duration, outcome (call tracking)
 ### Python/Docker
 - `USE_DOCKER=1` environment variable for container detection
 - `SELENIUM_HUB_URL` for remote WebDriver connection
-- SQLite database path: `/app/db/leadlawk.db` (note: not leadloq.db)
+- SQLite database path: `/app/db/leadloq.db`
 
 ## Code Standards
 
 ### SOLID Principles Compliance
 - **Strict adherence to SOLID principles required**
 - **File length limit: 100 lines maximum per file**
+- **No versioned files: Delete old files instead of creating v2/enhanced versions**
+- **Clean Architecture: Strict conformance to clean architecture patterns**
+- **Known Patterns Only: Use tried and true patterns, avoid obscure or difficult-to-maintain logic**
+- **No Task is Complete Until Built and Tested: Never mark tasks complete without successful compilation and testing**
+- **Always Verify No Errors Before Completion: Run `flutter analyze` and `flutter test` to ensure no compilation errors exist before claiming work is complete**
+- **Never Deliver Code With Errors: Code must compile and pass basic tests - unacceptable to deliver broken code**
 - Single Responsibility: Each class/function has one reason to change
 - Open/Closed: Extend functionality without modifying existing code
 - Liskov Substitution: Derived classes must be substitutable for base classes
@@ -146,6 +153,23 @@ CallLog: lead_id, duration, outcome (call tracking)
 - Dependency Inversion: Depend on abstractions, not concretions
 
 When files exceed 100 lines, refactor into smaller, focused modules. Extract related functions into separate utility files or break large classes into smaller, single-purpose classes.
+
+**File Management Rules:**
+- Never create versioned files (file_v2.dart, enhanced_file.py, etc.)
+- Always refactor existing files in place or properly rename/delete old versions
+- Clean up deprecated files immediately to prevent technical debt
+- Use git for version history, not file naming conventions
+
+## Testing Standards
+
+### Component Testing Requirements
+- **Every new component must have at least 1 test**
+- Test files should be placed in the `test/` directory with matching structure
+- Widget tests should verify:
+  - Component renders without errors
+  - Key interactions work as expected
+  - State management updates correctly
+- Use `flutter test` to run all tests before marking tasks complete
 
 ## Testing & Debugging
 
@@ -158,8 +182,8 @@ When files exceed 100 lines, refactor into smaller, focused modules. Extract rel
 ### Database Operations
 ```bash
 # Access database directly
-sqlite3 server/db/leadlawk.db ".tables"
-sqlite3 server/db/leadlawk.db "SELECT * FROM leads WHERE status = 'NEW' LIMIT 5;"
+sqlite3 server/db/leadloq.db ".tables"
+sqlite3 server/db/leadloq.db "SELECT * FROM leads WHERE status = 'NEW' LIMIT 5;"
 ```
 
 ### Common Debugging

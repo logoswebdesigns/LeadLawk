@@ -7,7 +7,8 @@ import '../repositories/leads_repository.dart';
 class BrowserAutomationParams extends Equatable {
   final String industry;  // For backward compatibility and custom industry
   final List<String> industries;  // Multiple industries for concurrent jobs
-  final String location;
+  final String location;  // Primary location for backward compatibility
+  final List<String> locations;  // Multiple cities for broader searches
   final int limit;
   final double minRating;
   final int minReviews;
@@ -21,11 +22,14 @@ class BrowserAutomationParams extends Equatable {
   final int? recentReviewMonths;  // Recent review filter: null = any, int = within X months
   final int? minPhotos;  // Photo count filter: null = any, int = minimum photo count
   final int? minDescriptionLength;  // Description quality filter: null = any, int = minimum chars
+  final bool enablePagespeed;  // Enable automatic PageSpeed testing for leads with websites
+  final int maxPagespeedScore;  // Maximum acceptable PageSpeed score (leads above this are filtered out)
 
   const BrowserAutomationParams({
     required this.industry,
     this.industries = const [],
     required this.location,
+    this.locations = const [],
     required this.limit,
     required this.minRating,
     required this.minReviews,
@@ -39,6 +43,8 @@ class BrowserAutomationParams extends Equatable {
     this.recentReviewMonths,
     this.minPhotos,
     this.minDescriptionLength,
+    this.enablePagespeed = true,  // Default to enabled for better lead qualification
+    this.maxPagespeedScore = 75,  // Default threshold
   });
 
   @override
@@ -46,6 +52,7 @@ class BrowserAutomationParams extends Equatable {
         industry,
         industries,
         location,
+        locations,
         limit,
         minRating,
         minReviews,
@@ -59,6 +66,8 @@ class BrowserAutomationParams extends Equatable {
         recentReviewMonths,
         minPhotos,
         minDescriptionLength,
+        enablePagespeed,
+        maxPagespeedScore,
       ];
 }
 

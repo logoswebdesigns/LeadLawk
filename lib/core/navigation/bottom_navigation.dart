@@ -15,8 +15,10 @@ class AppBottomNavigationBar extends StatelessWidget {
       return 0;
     } else if (currentPath.startsWith('/browser')) {
       return 1;
-    } else if (currentPath.startsWith('/account')) {
+    } else if (currentPath.startsWith('/analytics')) {
       return 2;
+    } else if (currentPath.startsWith('/account')) {
+      return 3;
     }
     return 0;
   }
@@ -57,9 +59,16 @@ class AppBottomNavigationBar extends StatelessWidget {
               ),
               _buildNavItem(
                 context: context,
+                icon: Icons.insights,
+                label: 'Analytics',
+                index: 2,
+                path: '/analytics',
+              ),
+              _buildNavItem(
+                context: context,
                 icon: Icons.person_outline,
                 label: 'Account',
-                index: 2,
+                index: 3,
                 path: '/account',
               ),
             ],

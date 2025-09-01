@@ -3,10 +3,12 @@ from typing import Optional, List
 from datetime import datetime
 
 
-class ScrapeRequest(BaseModel):
+class BrowserAutomationRequest(BaseModel):
+    query: Optional[str] = None  # Full search query (e.g., "electrician papillion")
     industry: str
     industries: Optional[List[str]] = None  # For multi-industry concurrent jobs
     location: str
+    locations: Optional[List[str]] = None  # For multi-city searches
     limit: int = 50
     min_rating: float = 4.0
     min_reviews: int = 3
@@ -21,6 +23,8 @@ class ScrapeRequest(BaseModel):
     recent_review_months: Optional[int] = None  # Reviews within X months: None = any, int = within X months
     min_photos: Optional[int] = None  # Minimum photos: None = any, int = minimum photo count
     min_description_length: Optional[int] = None  # Minimum description length: None = any, int = minimum chars
+    enable_pagespeed: bool = False  # Enable automatic PageSpeed testing for leads with websites
+    max_pagespeed_score: Optional[int] = None  # Maximum acceptable PageSpeed score (leads above this are filtered out, required if enable_pagespeed is True)
 
 
 class JobResponse(BaseModel):
@@ -114,10 +118,37 @@ class LeadResponse(BaseModel):
     status: str
     notes: Optional[str]
     screenshot_path: Optional[str]
+    website_screenshot_path: Optional[str]
     created_at: datetime
     updated_at: datetime
     follow_up_date: Optional[datetime]
     timeline: List[LeadTimelineEntryResponse] = []
+    
+    # PageSpeed Insights fields
+    pagespeed_mobile_score: Optional[int] = None
+    pagespeed_desktop_score: Optional[int] = None
+    pagespeed_mobile_performance: Optional[float] = None
+    pagespeed_desktop_performance: Optional[float] = None
+    pagespeed_first_contentful_paint: Optional[float] = None
+    pagespeed_largest_contentful_paint: Optional[float] = None
+    pagespeed_total_blocking_time: Optional[float] = None
+    pagespeed_cumulative_layout_shift: Optional[float] = None
+    pagespeed_speed_index: Optional[float] = None
+    pagespeed_time_to_interactive: Optional[float] = None
+    pagespeed_accessibility_score: Optional[int] = None
+    pagespeed_best_practices_score: Optional[int] = None
+    pagespeed_seo_score: Optional[int] = None
+    pagespeed_tested_at: Optional[datetime] = None
+    pagespeed_test_error: Optional[str] = None
+    
+    # Conversion scoring fields
+    conversion_score: Optional[float] = None
+    conversion_score_calculated_at: Optional[datetime] = None
+    conversion_score_factors: Optional[str] = None
+    
+    # Sales pitch tracking
+    sales_pitch_id: Optional[str] = None
+    sales_pitch_name: Optional[str] = None
 
     @staticmethod
     def from_orm(obj):
@@ -141,11 +172,100 @@ class LeadResponse(BaseModel):
             status=obj.status.value if hasattr(obj.status, 'value') else obj.status,
             notes=obj.notes,
             screenshot_path=obj.screenshot_path,
+            website_screenshot_path=obj.website_screenshot_path,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
             follow_up_date=obj.follow_up_date,
-            timeline=[LeadTimelineEntryResponse.from_orm(entry) for entry in obj.timeline_entries] if hasattr(obj, 'timeline_entries') else []
+            timeline=[LeadTimelineEntryResponse.from_orm(entry) for entry in obj.timeline_entries] if hasattr(obj, 'timeline_entries') else [],
+            # PageSpeed fields
+            pagespeed_mobile_score=obj.pagespeed_mobile_score,
+            pagespeed_desktop_score=obj.pagespeed_desktop_score,
+            pagespeed_mobile_performance=obj.pagespeed_mobile_performance,
+            pagespeed_desktop_performance=obj.pagespeed_desktop_performance,
+            pagespeed_first_contentful_paint=obj.pagespeed_first_contentful_paint,
+            pagespeed_largest_contentful_paint=obj.pagespeed_largest_contentful_paint,
+            pagespeed_total_blocking_time=obj.pagespeed_total_blocking_time,
+            pagespeed_cumulative_layout_shift=obj.pagespeed_cumulative_layout_shift,
+            pagespeed_speed_index=obj.pagespeed_speed_index,
+            pagespeed_time_to_interactive=obj.pagespeed_time_to_interactive,
+            pagespeed_accessibility_score=obj.pagespeed_accessibility_score,
+            pagespeed_best_practices_score=obj.pagespeed_best_practices_score,
+            pagespeed_seo_score=obj.pagespeed_seo_score,
+            pagespeed_tested_at=obj.pagespeed_tested_at,
+            pagespeed_test_error=obj.pagespeed_test_error,
+            # Conversion scoring fields
+            conversion_score=obj.conversion_score,
+            conversion_score_calculated_at=obj.conversion_score_calculated_at,
+            conversion_score_factors=obj.conversion_score_factors,
+            # Sales pitch tracking
+            sales_pitch_id=obj.sales_pitch_id,
+            sales_pitch_name=obj.sales_pitch.name if obj.sales_pitch else None,
         )
 
     class Config:
         from_attributes = True
+
+class ConversionModelResponse(BaseModel):
+    """Response for conversion model information"""
+    model_version: str
+    accuracy: Optional[float]
+    f1_score: Optional[float]
+    precision: Optional[float]
+    recall: Optional[float]
+    training_samples: Optional[int]
+    baseline_conversion_rate: Optional[float]
+    created_at: Optional[datetime]
+    is_active: bool
+    
+    class Config:
+        protected_namespaces = ()
+
+
+class ConversionScoringResponse(BaseModel):
+    """Response for conversion scoring operations"""
+    status: str
+    total_leads: Optional[int] = None
+    scores_updated: Optional[int] = None
+    duration_seconds: Optional[float] = None
+    average_time_per_lead: Optional[float] = None
+    message: Optional[str] = None
+    errors: List[str] = []
+    stats: Optional[dict] = None
+    
+    class Config:
+        protected_namespaces = ()
+
+
+class SalesPitchBase(BaseModel):
+    name: str
+    content: str
+    is_active: bool = True
+
+
+class SalesPitchCreate(SalesPitchBase):
+    pass
+
+
+class SalesPitchUpdate(BaseModel):
+    name: Optional[str] = None
+    content: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class SalesPitchResponse(SalesPitchBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    conversions: int
+    attempts: int
+    conversion_rate: float
+    
+    class Config:
+        from_attributes = True
+
+
+class LeadUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+    sales_pitch_id: Optional[str] = None
+    follow_up_date: Optional[datetime] = None

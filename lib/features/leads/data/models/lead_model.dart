@@ -36,6 +36,8 @@ class LeadModel {
   final String? notes;
   @JsonKey(name: 'screenshot_path')
   final String? screenshotPath;
+  @JsonKey(name: 'website_screenshot_path')
+  final String? websiteScreenshotPath;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -43,6 +45,52 @@ class LeadModel {
   @JsonKey(name: 'follow_up_date')
   final DateTime? followUpDate;
   final List<LeadTimelineEntryModel>? timeline;
+  
+  // PageSpeed fields
+  @JsonKey(name: 'pagespeed_mobile_score')
+  final int? pagespeedMobileScore;
+  @JsonKey(name: 'pagespeed_desktop_score')
+  final int? pagespeedDesktopScore;
+  @JsonKey(name: 'pagespeed_mobile_performance')
+  final double? pagespeedMobilePerformance;
+  @JsonKey(name: 'pagespeed_desktop_performance')
+  final double? pagespeedDesktopPerformance;
+  @JsonKey(name: 'pagespeed_first_contentful_paint')
+  final double? pagespeedFirstContentfulPaint;
+  @JsonKey(name: 'pagespeed_largest_contentful_paint')
+  final double? pagespeedLargestContentfulPaint;
+  @JsonKey(name: 'pagespeed_cumulative_layout_shift')
+  final double? pagespeedCumulativeLayoutShift;
+  @JsonKey(name: 'pagespeed_total_blocking_time')
+  final double? pagespeedTotalBlockingTime;
+  @JsonKey(name: 'pagespeed_time_to_interactive')
+  final double? pagespeedTimeToInteractive;
+  @JsonKey(name: 'pagespeed_speed_index')
+  final double? pagespeedSpeedIndex;
+  @JsonKey(name: 'pagespeed_accessibility_score')
+  final int? pagespeedAccessibilityScore;
+  @JsonKey(name: 'pagespeed_best_practices_score')
+  final int? pagespeedBestPracticesScore;
+  @JsonKey(name: 'pagespeed_seo_score')
+  final int? pagespeedSeoScore;
+  @JsonKey(name: 'pagespeed_tested_at')
+  final DateTime? pagespeedTestedAt;
+  @JsonKey(name: 'pagespeed_test_error')
+  final String? pagespeedTestError;
+  
+  // Conversion scoring fields
+  @JsonKey(name: 'conversion_score')
+  final double? conversionScore;
+  @JsonKey(name: 'conversion_score_calculated_at')
+  final DateTime? conversionScoreCalculatedAt;
+  @JsonKey(name: 'conversion_score_factors')
+  final String? conversionScoreFactors;
+  
+  // Sales pitch tracking
+  @JsonKey(name: 'sales_pitch_id')
+  final String? salesPitchId;
+  @JsonKey(name: 'sales_pitch_name')
+  final String? salesPitchName;
 
   LeadModel({
     required this.id,
@@ -64,10 +112,31 @@ class LeadModel {
     required this.status,
     this.notes,
     this.screenshotPath,
+    this.websiteScreenshotPath,
     required this.createdAt,
     required this.updatedAt,
     this.followUpDate,
     this.timeline,
+    this.pagespeedMobileScore,
+    this.pagespeedDesktopScore,
+    this.pagespeedMobilePerformance,
+    this.pagespeedDesktopPerformance,
+    this.pagespeedFirstContentfulPaint,
+    this.pagespeedLargestContentfulPaint,
+    this.pagespeedCumulativeLayoutShift,
+    this.pagespeedTotalBlockingTime,
+    this.pagespeedTimeToInteractive,
+    this.pagespeedSpeedIndex,
+    this.pagespeedAccessibilityScore,
+    this.pagespeedBestPracticesScore,
+    this.pagespeedSeoScore,
+    this.pagespeedTestedAt,
+    this.pagespeedTestError,
+    this.conversionScore,
+    this.conversionScoreCalculatedAt,
+    this.conversionScoreFactors,
+    this.salesPitchId,
+    this.salesPitchName,
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) =>
@@ -96,10 +165,31 @@ class LeadModel {
       status: _statusFromString(status),
       notes: notes,
       screenshotPath: screenshotPath,
+      websiteScreenshotPath: websiteScreenshotPath,
       createdAt: createdAt,
       updatedAt: updatedAt,
       followUpDate: followUpDate,
       timeline: timeline?.map((entry) => entry.toEntity()).toList() ?? [],
+      pagespeedMobileScore: pagespeedMobileScore,
+      pagespeedDesktopScore: pagespeedDesktopScore,
+      pagespeedMobilePerformance: pagespeedMobilePerformance,
+      pagespeedDesktopPerformance: pagespeedDesktopPerformance,
+      pagespeedFirstContentfulPaint: pagespeedFirstContentfulPaint,
+      pagespeedLargestContentfulPaint: pagespeedLargestContentfulPaint,
+      pagespeedCumulativeLayoutShift: pagespeedCumulativeLayoutShift,
+      pagespeedTotalBlockingTime: pagespeedTotalBlockingTime,
+      pagespeedTimeToInteractive: pagespeedTimeToInteractive,
+      pagespeedSpeedIndex: pagespeedSpeedIndex,
+      pagespeedAccessibilityScore: pagespeedAccessibilityScore,
+      pagespeedBestPracticesScore: pagespeedBestPracticesScore,
+      pagespeedSeoScore: pagespeedSeoScore,
+      pagespeedTestedAt: pagespeedTestedAt,
+      pagespeedTestError: pagespeedTestError,
+      conversionScore: conversionScore,
+      conversionScoreCalculatedAt: conversionScoreCalculatedAt,
+      conversionScoreFactors: conversionScoreFactors,
+      salesPitchId: salesPitchId,
+      salesPitchName: salesPitchName,
     );
   }
 
@@ -124,10 +214,29 @@ class LeadModel {
       status: _statusToString(lead.status),
       notes: lead.notes,
       screenshotPath: lead.screenshotPath,
+      websiteScreenshotPath: lead.websiteScreenshotPath,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
       followUpDate: lead.followUpDate,
       timeline: lead.timeline.map((entry) => LeadTimelineEntryModel.fromEntity(entry)).toList(),
+      pagespeedMobileScore: lead.pagespeedMobileScore,
+      pagespeedDesktopScore: lead.pagespeedDesktopScore,
+      pagespeedMobilePerformance: lead.pagespeedMobilePerformance,
+      pagespeedDesktopPerformance: lead.pagespeedDesktopPerformance,
+      pagespeedFirstContentfulPaint: lead.pagespeedFirstContentfulPaint,
+      pagespeedLargestContentfulPaint: lead.pagespeedLargestContentfulPaint,
+      pagespeedCumulativeLayoutShift: lead.pagespeedCumulativeLayoutShift,
+      pagespeedTotalBlockingTime: lead.pagespeedTotalBlockingTime,
+      pagespeedTimeToInteractive: lead.pagespeedTimeToInteractive,
+      pagespeedSpeedIndex: lead.pagespeedSpeedIndex,
+      pagespeedAccessibilityScore: lead.pagespeedAccessibilityScore,
+      pagespeedBestPracticesScore: lead.pagespeedBestPracticesScore,
+      pagespeedSeoScore: lead.pagespeedSeoScore,
+      pagespeedTestedAt: lead.pagespeedTestedAt,
+      pagespeedTestError: lead.pagespeedTestError,
+      conversionScore: lead.conversionScore,
+      conversionScoreCalculatedAt: lead.conversionScoreCalculatedAt,
+      conversionScoreFactors: lead.conversionScoreFactors,
     );
   }
 
@@ -139,12 +248,20 @@ class LeadModel {
         return LeadStatus.viewed;
       case 'called':
         return LeadStatus.called;
+      case 'callbackScheduled':
+      case 'callback_scheduled':
+        return LeadStatus.callbackScheduled;
       case 'interested':
         return LeadStatus.interested;
       case 'converted':
         return LeadStatus.converted;
+      case 'doNotCall':
       case 'dnc':
-        return LeadStatus.dnc;
+      case 'do_not_call':
+        return LeadStatus.doNotCall;
+      case 'didNotConvert':
+      case 'did_not_convert':
+        return LeadStatus.didNotConvert;
       default:
         return LeadStatus.new_;
     }
@@ -158,12 +275,16 @@ class LeadModel {
         return 'viewed';
       case LeadStatus.called:
         return 'called';
+      case LeadStatus.callbackScheduled:
+        return 'callbackScheduled';
       case LeadStatus.interested:
         return 'interested';
       case LeadStatus.converted:
         return 'converted';
-      case LeadStatus.dnc:
-        return 'dnc';
+      case LeadStatus.doNotCall:
+        return 'doNotCall';
+      case LeadStatus.didNotConvert:
+        return 'didNotConvert';
     }
   }
 }

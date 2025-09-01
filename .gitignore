@@ -82,5 +82,9 @@ logs/
 *.pid
 server/db/*.db
 
+# Screenshots (generated during automation)
+screenshots/
+server/screenshots/
+
 # macOS
 .DS_Store

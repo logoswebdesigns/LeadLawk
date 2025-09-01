@@ -18,7 +18,7 @@ void main() {
                   Text(
                     'Quick Actions',
                     style: TextStyle(
-                      color: AppTheme.darkGray, // This was the problem!
+                      color: Colors.white, // Fixed: Use white for proper contrast
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -31,7 +31,7 @@ void main() {
       
       // Calculate contrast ratio
       const Color background = AppTheme.elevatedSurface;
-      const Color foreground = AppTheme.darkGray;
+      const Color foreground = Colors.white;
       
       final double contrastRatio = _calculateContrastRatio(foreground, background);
       
@@ -47,9 +47,9 @@ double _calculateContrastRatio(Color foreground, Color background) {
   // Calculate relative luminance
   double getLuminance(Color color) {
     final List<double> rgb = [
-      color.red / 255.0,
-      color.green / 255.0,
-      color.blue / 255.0,
+      (color.r * 255.0).round() / 255.0,
+      (color.g * 255.0).round() / 255.0,
+      (color.b * 255.0).round() / 255.0,
     ];
     
     for (int i = 0; i < rgb.length; i++) {

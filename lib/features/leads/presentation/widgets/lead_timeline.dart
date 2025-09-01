@@ -49,23 +49,40 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
   }
 
   Color _getEntryColor(TimelineEntryType type) {
+    // GitHub Actions style: More muted, professional colors
     switch (type) {
       case TimelineEntryType.leadCreated:
-        return AppTheme.mediumGray;
+        return const Color(0xFF6E7781); // GitHub gray
       case TimelineEntryType.statusChange:
-        return AppTheme.primaryBlue;
+        return const Color(0xFF0969DA); // GitHub blue
       case TimelineEntryType.note:
-        return AppTheme.primaryGold;
+        return const Color(0xFF8B949E); // Muted gray
       case TimelineEntryType.followUp:
-        return AppTheme.warningOrange;
+        return const Color(0xFFFB8500); // GitHub orange
       case TimelineEntryType.reminder:
-        return AppTheme.accentPurple;
+        return const Color(0xFF8250DF); // GitHub purple
       case TimelineEntryType.phoneCall:
-        return AppTheme.successGreen;
+        return const Color(0xFF1F883D); // GitHub green
       case TimelineEntryType.email:
-        return AppTheme.primaryIndigo;
+        return const Color(0xFF0969DA); // GitHub blue
       case TimelineEntryType.meeting:
-        return AppTheme.accentCyan;
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.objectionHandled:
+        return const Color(0xFFDA3633); // GitHub red
+      case TimelineEntryType.decisionMakerReached:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.painPointDiscovered:
+        return const Color(0xFFFB8500); // GitHub orange
+      case TimelineEntryType.nextStepsAgreed:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.competitorMentioned:
+        return const Color(0xFF8250DF); // GitHub purple
+      case TimelineEntryType.budgetDiscussed:
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.viewedDetails:
+        return const Color(0xFF6E7781); // GitHub gray
+      case TimelineEntryType.exportedData:
+        return const Color(0xFF6E7781); // GitHub gray
     }
   }
 
@@ -87,6 +104,22 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         return Icons.email;
       case TimelineEntryType.meeting:
         return Icons.meeting_room;
+      case TimelineEntryType.objectionHandled:
+        return Icons.report_problem;
+      case TimelineEntryType.decisionMakerReached:
+        return Icons.account_circle;
+      case TimelineEntryType.painPointDiscovered:
+        return Icons.lightbulb;
+      case TimelineEntryType.nextStepsAgreed:
+        return Icons.check_circle;
+      case TimelineEntryType.competitorMentioned:
+        return Icons.compare_arrows;
+      case TimelineEntryType.budgetDiscussed:
+        return Icons.attach_money;
+      case TimelineEntryType.viewedDetails:
+        return Icons.visibility;
+      case TimelineEntryType.exportedData:
+        return Icons.download;
     }
   }
 
@@ -108,6 +141,22 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         return 'Email';
       case TimelineEntryType.meeting:
         return 'Meeting';
+      case TimelineEntryType.objectionHandled:
+        return 'Objection';
+      case TimelineEntryType.decisionMakerReached:
+        return 'Decision Maker';
+      case TimelineEntryType.painPointDiscovered:
+        return 'Pain Point';
+      case TimelineEntryType.nextStepsAgreed:
+        return 'Next Steps';
+      case TimelineEntryType.competitorMentioned:
+        return 'Competitor';
+      case TimelineEntryType.budgetDiscussed:
+        return 'Budget';
+      case TimelineEntryType.viewedDetails:
+        return 'Viewed';
+      case TimelineEntryType.exportedData:
+        return 'Exported';
     }
   }
 
@@ -373,10 +422,28 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
   }
 
   Widget _buildTimelineList() {
-    final sortedTimeline = List<LeadTimelineEntry>.from(widget.lead.timeline)
+    // Ensure we always have a complete status history
+    final timeline = _ensureCompleteStatusHistory(
+      List<LeadTimelineEntry>.from(widget.lead.timeline),
+      widget.lead,
+    );
+    
+    final sortedTimeline = timeline
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    return ListView.builder(
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: const Color(0xFF30363D), width: 1),
+          right: BorderSide(color: const Color(0xFF30363D), width: 1),
+          bottom: BorderSide(color: const Color(0xFF30363D), width: 1),
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(6),
+          bottomRight: Radius.circular(6),
+        ),
+      ),
+      child: ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: sortedTimeline.length,
@@ -388,55 +455,48 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left rail with timestamp
-              SizedBox(
-                width: 80,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatTimeOnly(entry.createdAt),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatDateOnly(entry.createdAt),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
+              // GitHub Actions style timestamp
+              Container(
+                width: 140,
+                padding: const EdgeInsets.only(right: 16, top: 2),
+                child: Text(
+                  _formatGitHubStyleTime(entry.createdAt),
+                  style: const TextStyle(
+                    color: Color(0xFF8B949E), // GitHub muted
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                  textAlign: TextAlign.right,
                 ),
               ),
               const SizedBox(width: 12),
-              // Timeline rail with dot and connecting line
-              Column(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: _getEntryColor(entry.type),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.backgroundDark,
-                        width: 2,
+              // GitHub Actions style icon and line
+              SizedBox(
+                width: 32,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _getGitHubIconBackground(entry.type),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getEntryIcon(entry.type),
+                        size: 14,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                  if (!isLast)
-                    Container(
-                      width: 2,
-                      height: 48,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      color: Colors.white.withOpacity(0.1),
-                    ),
-                ],
+                    if (!isLast)
+                      Container(
+                        width: 2,
+                        height: 40,
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        color: const Color(0xFF30363D),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(width: 16),
               // Timeline content
@@ -450,103 +510,128 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           ),
         );
       },
+      ),
     );
   }
 
   Widget _buildTimelineEntryCard(LeadTimelineEntry entry) {
-    final color = _getEntryColor(entry.type);
     final isOverdue = entry.followUpDate != null && 
                       entry.followUpDate!.isBefore(DateTime.now()) && 
                       !entry.isCompleted;
     final isEditing = _editingEntryId == entry.id;
+    final isSynthetic = entry.metadata?['synthetic'] == true;
 
     if (isEditing) {
       return _buildEditForm(entry);
     }
 
+    // GitHub Actions style entry card
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface,
-        borderRadius: BorderRadius.circular(12),
+        color: isSynthetic 
+            ? const Color(0xFF0D1117).withOpacity(0.5) // Dimmer for synthetic
+            : const Color(0xFF0D1117), // GitHub dark background
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isOverdue 
-              ? AppTheme.errorRed.withOpacity(0.5)
-              : color.withOpacity(0.2),
+              ? const Color(0xFFDA3633) // GitHub red
+              : isSynthetic 
+                  ? const Color(0xFF30363D).withOpacity(0.5) // Subtle border for synthetic
+                  : Colors.transparent,
+          width: isOverdue || isSynthetic ? 1 : 0,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // GitHub Actions style: Simple title with muted metadata
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _getEntryTypeLabel(entry.type),
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              // Edit button
-              IconButton(
-                onPressed: () => _startEditingEntry(entry),
-                icon: const Icon(Icons.edit, size: 16),
-                style: IconButton.styleFrom(
-                  foregroundColor: Colors.white.withOpacity(0.6),
-                  padding: const EdgeInsets.all(4),
-                  minimumSize: Size.zero,
-                ),
-                tooltip: 'Edit entry',
-              ),
-              if (entry.followUpDate != null && !entry.isCompleted)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isOverdue 
-                        ? AppTheme.errorRed.withOpacity(0.15)
-                        : AppTheme.warningOrange.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    isOverdue ? 'Overdue' : 'Scheduled',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isOverdue ? AppTheme.errorRed : AppTheme.warningOrange,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.title,
+                      style: const TextStyle(
+                        color: Color(0xFFF0F6FC), // GitHub white
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
+                    if (entry.description?.isNotEmpty == true) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        entry.description!,
+                        style: const TextStyle(
+                          color: Color(0xFF8B949E), // GitHub muted
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
+              ),
+              // Action buttons
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isSynthetic)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF30363D).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Auto',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF8B949E),
+                        ),
+                      ),
+                    ),
+                  if (entry.followUpDate != null && !entry.isCompleted)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isOverdue 
+                            ? const Color(0xFFDA3633).withOpacity(0.15)
+                            : const Color(0xFFFB8500).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isOverdue ? 'Overdue' : 'Scheduled',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isOverdue 
+                              ? const Color(0xFFDA3633) 
+                              : const Color(0xFFFB8500),
+                        ),
+                      ),
+                    ),
+                  if (!isSynthetic) // Only show edit button for non-synthetic entries
+                    IconButton(
+                      onPressed: () => _startEditingEntry(entry),
+                      icon: const Icon(Icons.more_horiz, size: 16),
+                      style: IconButton.styleFrom(
+                        foregroundColor: const Color(0xFF8B949E),
+                        padding: const EdgeInsets.all(4),
+                        minimumSize: Size.zero,
+                      ),
+                      tooltip: 'Edit entry',
+                    ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            entry.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
-          ),
-          if (entry.description?.isNotEmpty == true) ...[
-            const SizedBox(height: 6),
-            Text(
-              entry.description!,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-          ],
           if (entry.followUpDate != null) ...[
             const SizedBox(height: 8),
             Container(
@@ -794,49 +879,77 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
 
   @override
   Widget build(BuildContext context) {
-    final sortedTimeline = List<LeadTimelineEntry>.from(widget.lead.timeline)
+    // Ensure we always have a complete status history
+    final timeline = _ensureCompleteStatusHistory(
+      List<LeadTimelineEntry>.from(widget.lead.timeline),
+      widget.lead,
+    );
+    
+    final sortedTimeline = timeline
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Activity Timeline',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white.withOpacity(0.9),
-                fontWeight: FontWeight.w600,
-              ),
+        // GitHub Actions style header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22), // GitHub dark header
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(6),
+              topRight: Radius.circular(6),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFF30363D), // GitHub border
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.history,
+                size: 16,
+                color: Color(0xFF8B949E), // GitHub muted
               ),
-              child: Text(
-                '${sortedTimeline.length}',
-                style: const TextStyle(
-                  color: AppTheme.primaryGold,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 8),
+              Text(
+                'Activity Log',
+                style: TextStyle(
+                  color: const Color(0xFF8B949E),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-            const Spacer(),
-            if (!_showAddForm)
-              IconButton(
-                onPressed: _showAddEntryForm,
-                icon: const Icon(Icons.add),
-                style: IconButton.styleFrom(
-                  foregroundColor: AppTheme.primaryGold,
-                  backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF30363D),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                tooltip: 'Add Timeline Entry',
+                child: Text(
+                  '${sortedTimeline.length}',
+                  style: const TextStyle(
+                    color: Color(0xFF8B949E),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-          ],
+              const Spacer(),
+              if (!_showAddForm)
+                IconButton(
+                  onPressed: _showAddEntryForm,
+                  icon: const Icon(Icons.add),
+                  style: IconButton.styleFrom(
+                    foregroundColor: AppTheme.primaryGold,
+                    backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
+                  ),
+                  tooltip: 'Add Timeline Entry',
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -1113,5 +1226,156 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           _buildTimelineList(),
       ],
     );
+  }
+  
+  // Ensure complete status history in timeline
+  List<LeadTimelineEntry> _ensureCompleteStatusHistory(
+    List<LeadTimelineEntry> timeline, 
+    Lead lead,
+  ) {
+    // Define the status progression order
+    final statusProgression = [
+      LeadStatus.new_,
+      LeadStatus.viewed,
+      LeadStatus.called,
+      // Terminal statuses that can come after called
+      LeadStatus.callbackScheduled,
+      LeadStatus.interested,
+      LeadStatus.converted,
+      LeadStatus.doNotCall,
+      LeadStatus.didNotConvert,
+    ];
+    
+    // Check existing status change entries
+    final existingStatuses = <LeadStatus>{};
+    for (final entry in timeline) {
+      if (entry.type == TimelineEntryType.statusChange) {
+        // Try to extract the status from metadata or title
+        final newStatusStr = entry.metadata?['new_status'];
+        if (newStatusStr != null) {
+          try {
+            final status = LeadStatus.values.firstWhere(
+              (s) => s.name == newStatusStr,
+            );
+            existingStatuses.add(status);
+          } catch (_) {}
+        }
+      }
+    }
+    
+    // NOTE: We do NOT auto-generate Lead Created events
+    // The server should create this entry when the lead is created
+    // If it's missing, that's a data integrity issue that should be fixed server-side
+    
+    // Find the current status index
+    final currentStatusIndex = statusProgression.indexOf(lead.status);
+    
+    // If the lead has progressed beyond NEW, add missing status transitions
+    if (currentStatusIndex > 0) {
+      // We need to add status transitions up to the current status
+      DateTime syntheticTime = lead.createdAt;
+      
+      for (int i = 1; i <= currentStatusIndex; i++) {
+        final status = statusProgression[i];
+        
+        // Skip if we already have this status change
+        if (existingStatuses.contains(status)) continue;
+        
+        // Skip terminal statuses unless it's the current status
+        if (i > 2 && status != lead.status) continue;
+        
+        // Add a small time increment for synthetic entries
+        syntheticTime = syntheticTime.add(Duration(seconds: i));
+        
+        // Create synthetic status change entry
+        timeline.add(LeadTimelineEntry(
+          id: 'synthetic-${status.name}-${widget.lead.id}',
+          leadId: widget.lead.id,
+          type: TimelineEntryType.statusChange,
+          title: 'Status changed to ${_getStatusLabel(status)}',
+          description: 'Status progression (auto-generated)',
+          createdAt: syntheticTime,
+          metadata: {
+            'synthetic': true,
+            'previous_status': i > 0 ? statusProgression[i - 1].name : LeadStatus.new_.name,
+            'new_status': status.name,
+          },
+        ));
+      }
+    }
+    
+    return timeline;
+  }
+  
+  String _getStatusLabel(LeadStatus status) {
+    switch (status) {
+      case LeadStatus.new_:
+        return 'NEW';
+      case LeadStatus.viewed:
+        return 'VIEWED';
+      case LeadStatus.called:
+        return 'CALLED';
+      case LeadStatus.callbackScheduled:
+        return 'CALLBACK SCHEDULED';
+      case LeadStatus.interested:
+        return 'INTERESTED';
+      case LeadStatus.converted:
+        return 'CONVERTED';
+      case LeadStatus.doNotCall:
+        return 'DO NOT CALL';
+      case LeadStatus.didNotConvert:
+        return 'DID NOT CONVERT';
+    }
+  }
+  
+  // GitHub Actions style formatting helpers
+  String _formatGitHubStyleTime(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inSeconds < 60) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    
+    // Format as "Oct 23, 2024"
+    return DateFormat('MMM d, yyyy').format(date);
+  }
+  
+  Color _getGitHubIconBackground(TimelineEntryType type) {
+    switch (type) {
+      case TimelineEntryType.leadCreated:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.statusChange:
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.note:
+        return const Color(0xFF6E7781); // GitHub gray
+      case TimelineEntryType.followUp:
+        return const Color(0xFFFB8500); // GitHub orange
+      case TimelineEntryType.reminder:
+        return const Color(0xFF8250DF); // GitHub purple
+      case TimelineEntryType.phoneCall:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.email:
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.meeting:
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.objectionHandled:
+        return const Color(0xFFDA3633); // GitHub red
+      case TimelineEntryType.decisionMakerReached:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.painPointDiscovered:
+        return const Color(0xFFFB8500); // GitHub orange
+      case TimelineEntryType.nextStepsAgreed:
+        return const Color(0xFF1F883D); // GitHub green
+      case TimelineEntryType.competitorMentioned:
+        return const Color(0xFF8250DF); // GitHub purple
+      case TimelineEntryType.budgetDiscussed:
+        return const Color(0xFF0969DA); // GitHub blue
+      case TimelineEntryType.viewedDetails:
+        return const Color(0xFF6E7781); // GitHub gray
+      case TimelineEntryType.exportedData:
+        return const Color(0xFF6E7781); // GitHub gray
+    }
   }
 }

@@ -7,6 +7,9 @@ class EmptyState extends StatefulWidget {
   final IconData icon;
   final String? buttonText;
   final VoidCallback? onButtonPressed;
+  final String? secondaryButtonText;
+  final VoidCallback? onSecondaryButtonPressed;
+  final IconData? secondaryButtonIcon;
   
   const EmptyState({
     super.key,
@@ -15,6 +18,9 @@ class EmptyState extends StatefulWidget {
     required this.icon,
     this.buttonText,
     this.onButtonPressed,
+    this.secondaryButtonText,
+    this.onSecondaryButtonPressed,
+    this.secondaryButtonIcon,
   });
 
   @override
@@ -99,7 +105,7 @@ class _EmptyStateState extends State<EmptyState>
               widget.title,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppTheme.darkGray,
+                color: Colors.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -107,25 +113,50 @@ class _EmptyStateState extends State<EmptyState>
             Text(
               widget.description,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.mediumGray,
+                color: Colors.white.withOpacity(0.8),
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            if (widget.buttonText != null && widget.onButtonPressed != null) ...[
+            if (widget.buttonText != null && widget.onButtonPressed != null ||
+                widget.secondaryButtonText != null && widget.onSecondaryButtonPressed != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: widget.onButtonPressed,
-                icon: const Icon(Icons.add),
-                label: Text(widget.buttonText!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryIndigo,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                ),
+              Column(
+                children: [
+                  // Primary button (if provided)
+                  if (widget.buttonText != null && widget.onButtonPressed != null) ...[
+                    ElevatedButton.icon(
+                      onPressed: widget.onButtonPressed,
+                      icon: const Icon(Icons.add),
+                      label: Text(widget.buttonText!),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryIndigo,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                    if (widget.secondaryButtonText != null && widget.onSecondaryButtonPressed != null)
+                      const SizedBox(height: 12),
+                  ],
+                  // Secondary button (if provided) - below primary button
+                  if (widget.secondaryButtonText != null && widget.onSecondaryButtonPressed != null)
+                    OutlinedButton.icon(
+                      onPressed: widget.onSecondaryButtonPressed,
+                      icon: Icon(widget.secondaryButtonIcon ?? Icons.refresh),
+                      label: Text(widget.secondaryButtonText!),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryGold,
+                        side: const BorderSide(color: AppTheme.primaryGold),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
             ],

@@ -5,7 +5,7 @@ from pathlib import Path
 
 Path("db").mkdir(exist_ok=True)
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./db/leadlawk.db"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./db/leadloq.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 

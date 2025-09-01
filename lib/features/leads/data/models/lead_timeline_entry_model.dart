@@ -99,6 +99,22 @@ class LeadTimelineEntryModel {
         return TimelineEntryType.email;
       case 'meeting':
         return TimelineEntryType.meeting;
+      case 'objection_handled':
+        return TimelineEntryType.objectionHandled;
+      case 'decision_maker_reached':
+        return TimelineEntryType.decisionMakerReached;
+      case 'pain_point_discovered':
+        return TimelineEntryType.painPointDiscovered;
+      case 'next_steps_agreed':
+        return TimelineEntryType.nextStepsAgreed;
+      case 'competitor_mentioned':
+        return TimelineEntryType.competitorMentioned;
+      case 'budget_discussed':
+        return TimelineEntryType.budgetDiscussed;
+      case 'viewed_details':
+        return TimelineEntryType.viewedDetails;
+      case 'exported_data':
+        return TimelineEntryType.exportedData;
       default:
         return TimelineEntryType.note;
     }
@@ -122,6 +138,22 @@ class LeadTimelineEntryModel {
         return 'email';
       case TimelineEntryType.meeting:
         return 'meeting';
+      case TimelineEntryType.objectionHandled:
+        return 'objection_handled';
+      case TimelineEntryType.decisionMakerReached:
+        return 'decision_maker_reached';
+      case TimelineEntryType.painPointDiscovered:
+        return 'pain_point_discovered';
+      case TimelineEntryType.nextStepsAgreed:
+        return 'next_steps_agreed';
+      case TimelineEntryType.competitorMentioned:
+        return 'competitor_mentioned';
+      case TimelineEntryType.budgetDiscussed:
+        return 'budget_discussed';
+      case TimelineEntryType.viewedDetails:
+        return 'viewed_details';
+      case TimelineEntryType.exportedData:
+        return 'exported_data';
     }
   }
 
@@ -133,12 +165,20 @@ class LeadTimelineEntryModel {
         return LeadStatus.viewed;
       case 'called':
         return LeadStatus.called;
+      case 'callbackScheduled':
+      case 'callback_scheduled':
+        return LeadStatus.callbackScheduled;
       case 'interested':
         return LeadStatus.interested;
       case 'converted':
         return LeadStatus.converted;
+      case 'doNotCall':
       case 'dnc':
-        return LeadStatus.dnc;
+      case 'do_not_call':
+        return LeadStatus.doNotCall;
+      case 'didNotConvert':
+      case 'did_not_convert':
+        return LeadStatus.didNotConvert;
       default:
         return LeadStatus.new_;
     }
@@ -152,12 +192,16 @@ class LeadTimelineEntryModel {
         return 'viewed';
       case LeadStatus.called:
         return 'called';
+      case LeadStatus.callbackScheduled:
+        return 'callbackScheduled';
       case LeadStatus.interested:
         return 'interested';
       case LeadStatus.converted:
         return 'converted';
-      case LeadStatus.dnc:
-        return 'dnc';
+      case LeadStatus.doNotCall:
+        return 'doNotCall';
+      case LeadStatus.didNotConvert:
+        return 'didNotConvert';
     }
   }
 }

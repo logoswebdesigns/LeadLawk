@@ -1,6 +1,11 @@
-# Python FastAPI server - simplified without browser automation
-# Browser automation will run on host machine
+# Python FastAPI server with dynamic container management
 FROM python:3.12-slim
+
+# Install system dependencies for psutil and Docker
+RUN apt-get update && apt-get install -y \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app

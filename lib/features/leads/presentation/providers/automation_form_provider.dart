@@ -6,6 +6,7 @@ class AutomationFormState {
   final String industry;
   final List<String> selectedIndustries;
   final String location;
+  final List<String> selectedLocations; // Support multiple cities
   final int limit;
   final double minRating;
   final int minReviews;
@@ -20,11 +21,14 @@ class AutomationFormState {
   final int? recentReviewMonths;
   final int? minPhotos;
   final int? minDescriptionLength;
+  final bool enablePagespeed;
+  final int maxPagespeedScore; // Filter leads by max PageSpeed score
 
   AutomationFormState({
     this.industry = '',
     this.selectedIndustries = const [],
     this.location = '',
+    this.selectedLocations = const [],
     this.limit = 50,
     this.minRating = 4.0,
     this.minReviews = 3,
@@ -36,15 +40,18 @@ class AutomationFormState {
     this.useProfile = false,
     this.headless = true,  // Default to headless for better performance
     this.requiresWebsite,  // null = any, true = required, false = not required
-    this.recentReviewMonths,  // null = any, int = within X months
+    this.recentReviewMonths = 24,  // Default to 24 months
     this.minPhotos,  // null = any, int = minimum photo count
     this.minDescriptionLength,  // null = any, int = minimum description chars
+    this.enablePagespeed = true,  // Default to enabled for better lead qualification
+    this.maxPagespeedScore = 75,  // Default threshold for PageSpeed filtering
   });
 
   AutomationFormState copyWith({
     String? industry,
     List<String>? selectedIndustries,
     String? location,
+    List<String>? selectedLocations,
     int? limit,
     double? minRating,
     int? minReviews,
@@ -59,11 +66,14 @@ class AutomationFormState {
     int? recentReviewMonths,
     int? minPhotos,
     int? minDescriptionLength,
+    bool? enablePagespeed,
+    int? maxPagespeedScore,
   }) {
     return AutomationFormState(
       industry: industry ?? this.industry,
       selectedIndustries: selectedIndustries ?? this.selectedIndustries,
       location: location ?? this.location,
+      selectedLocations: selectedLocations ?? this.selectedLocations,
       limit: limit ?? this.limit,
       minRating: minRating ?? this.minRating,
       minReviews: minReviews ?? this.minReviews,
@@ -78,10 +88,14 @@ class AutomationFormState {
       recentReviewMonths: recentReviewMonths ?? this.recentReviewMonths,
       minPhotos: minPhotos ?? this.minPhotos,
       minDescriptionLength: minDescriptionLength ?? this.minDescriptionLength,
+      enablePagespeed: enablePagespeed ?? this.enablePagespeed,
+      maxPagespeedScore: maxPagespeedScore ?? this.maxPagespeedScore,
     );
   }
 
   BrowserAutomationParams toParams() {
+    print('🔍 Creating BrowserAutomationParams with enablePagespeed: $enablePagespeed, maxScore: $maxPagespeedScore');
+    
     // Use custom industry if set, otherwise use first selected industry as fallback
     final primaryIndustry = isCustomIndustry 
         ? industry.toLowerCase()
@@ -89,10 +103,24 @@ class AutomationFormState {
             ? selectedIndustries.first.toLowerCase()
             : '';
     
+    // Always use the selected industries list if it has items
+    // For custom industry, still include selectedIndustries if user has selected multiple
+    final List<String> industriesList = selectedIndustries.isNotEmpty
+        ? selectedIndustries.map((i) => i.toLowerCase()).toList()
+        : (isCustomIndustry && primaryIndustry.isNotEmpty) 
+            ? [primaryIndustry]
+            : [];
+    
+    // Use selected locations if available, otherwise fall back to single location
+    final List<String> locationsList = selectedLocations.isNotEmpty
+        ? selectedLocations
+        : (location.isNotEmpty ? [location] : []);
+    
     return BrowserAutomationParams(
-      industry: primaryIndustry,
-      industries: selectedIndustries.map((i) => i.toLowerCase()).toList(),
-      location: location,
+      industry: primaryIndustry.isNotEmpty ? primaryIndustry : (industriesList.isNotEmpty ? industriesList.first : ''),
+      industries: industriesList,
+      location: locationsList.isNotEmpty ? locationsList.first : '', // Primary location for backward compatibility
+      locations: locationsList, // Pass all locations
       limit: limit,
       minRating: minRating,
       minReviews: minReviews,
@@ -105,6 +133,8 @@ class AutomationFormState {
       recentReviewMonths: recentReviewMonths,
       minPhotos: minPhotos,
       minDescriptionLength: minDescriptionLength,
+      enablePagespeed: enablePagespeed,
+      maxPagespeedScore: maxPagespeedScore,
     );
   }
 }
@@ -126,6 +156,7 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
       minRating: prefs.getDouble('last_min_rating') ?? 4.0,
       minReviews: prefs.getInt('last_min_reviews') ?? 3,
       recentDays: prefs.getInt('last_recent_days') ?? 365,
+      recentReviewMonths: prefs.getInt('last_recent_review_months') ?? 24,
     );
   }
 
@@ -163,7 +194,7 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
   }
 
   void setLimit(int limit) {
-    state = state.copyWith(limit: limit.clamp(1, 200));
+    state = state.copyWith(limit: limit.clamp(1, 999999)); // No practical upper limit
     _savePreferences();
   }
 
@@ -218,6 +249,12 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
     state = state.copyWith(minDescriptionLength: value);
   }
 
+  void setEnablePagespeed(bool value) {
+    print('🔍 Setting enablePagespeed to: $value');
+    state = state.copyWith(enablePagespeed: value);
+    print('🔍 State enablePagespeed is now: ${state.enablePagespeed}');
+  }
+
   void addIndustry(String industry) {
     final updatedIndustries = List<String>.from(state.selectedIndustries);
     if (!updatedIndustries.contains(industry)) {
@@ -253,6 +290,37 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
       isCustomIndustry: false,
       industry: '',
     );
+    _savePreferences();
+  }
+
+  void addLocation(String location) {
+    final updatedLocations = List<String>.from(state.selectedLocations);
+    if (!updatedLocations.contains(location) && location.isNotEmpty) {
+      updatedLocations.add(location);
+      state = state.copyWith(selectedLocations: updatedLocations);
+      _savePreferences();
+    }
+  }
+
+  void removeLocation(String location) {
+    final updatedLocations = List<String>.from(state.selectedLocations);
+    updatedLocations.remove(location);
+    state = state.copyWith(selectedLocations: updatedLocations);
+    _savePreferences();
+  }
+
+  void setSelectedLocations(List<String> locations) {
+    state = state.copyWith(selectedLocations: locations);
+    _savePreferences();
+  }
+
+  void clearSelectedLocations() {
+    state = state.copyWith(selectedLocations: []);
+    _savePreferences();
+  }
+
+  void setMaxPagespeedScore(int score) {
+    state = state.copyWith(maxPagespeedScore: score.clamp(0, 100));
     _savePreferences();
   }
 }

@@ -9,7 +9,15 @@ enum TimelineEntryType {
   reminder,
   phoneCall,
   email,
-  meeting
+  meeting,
+  objectionHandled,  // Track objection patterns
+  decisionMakerReached,  // Track DM contact
+  painPointDiscovered,  // Track pain points
+  nextStepsAgreed,  // Track commitment
+  competitorMentioned,  // Track competition
+  budgetDiscussed,  // Track budget conversations
+  viewedDetails,  // Track engagement
+  exportedData  // Track export actions
 }
 
 class LeadTimelineEntry extends Equatable {
@@ -25,6 +33,7 @@ class LeadTimelineEntry extends Equatable {
   final bool isCompleted;
   final String? completedBy;
   final DateTime? completedAt;
+  final Map<String, dynamic>? metadata;
 
   const LeadTimelineEntry({
     required this.id,
@@ -39,6 +48,7 @@ class LeadTimelineEntry extends Equatable {
     this.isCompleted = false,
     this.completedBy,
     this.completedAt,
+    this.metadata,
   });
 
   LeadTimelineEntry copyWith({
@@ -54,6 +64,7 @@ class LeadTimelineEntry extends Equatable {
     bool? isCompleted,
     String? completedBy,
     DateTime? completedAt,
+    Map<String, dynamic>? metadata,
   }) {
     return LeadTimelineEntry(
       id: id ?? this.id,
@@ -68,6 +79,7 @@ class LeadTimelineEntry extends Equatable {
       isCompleted: isCompleted ?? this.isCompleted,
       completedBy: completedBy ?? this.completedBy,
       completedAt: completedAt ?? this.completedAt,
+      metadata: metadata ?? this.metadata,
     );
   }
 
@@ -85,5 +97,6 @@ class LeadTimelineEntry extends Equatable {
         isCompleted,
         completedBy,
         completedAt,
+        metadata,
       ];
 }

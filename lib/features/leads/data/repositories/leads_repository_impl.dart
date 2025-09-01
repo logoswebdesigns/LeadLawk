@@ -75,6 +75,16 @@ class LeadsRepositoryImpl implements LeadsRepository {
   }
 
   @override
+  Future<Either<Failure, void>> addTimelineEntry(String leadId, Map<String, dynamic> entryData) async {
+    try {
+      await remoteDataSource.addTimelineEntry(leadId, entryData);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, String>> startAutomation(BrowserAutomationParams params) async {
     try {
       final jobId = await remoteDataSource.startAutomation(params);
@@ -137,6 +147,21 @@ class LeadsRepositoryImpl implements LeadsRepository {
       return Right(count);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+  
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> recalculateConversionScores() async {
+    try {
+      final result = await remoteDataSource.recalculateConversionScores();
+      return Right(result);
+    } catch (e) {
+      // Extract the actual error message without "Exception: " prefix
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11); // Remove "Exception: " prefix
+      }
+      return Left(ServerFailure(errorMessage));
     }
   }
 }
