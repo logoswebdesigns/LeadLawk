@@ -17,6 +17,8 @@ abstract class LeadsRemoteDataSource {
   Future<Map<String, dynamic>> getJobStatus(String jobId);
   Future<int> deleteMockLeads();
   Future<Map<String, dynamic>> recalculateConversionScores();
+  Future<void> deleteLead(String id);
+  Future<void> deleteLeads(List<String> ids);
 }
 
 class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
@@ -231,6 +233,31 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     } catch (e) {
       // Catch any other errors
       throw Exception('Unexpected error: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteLead(String id) async {
+    try {
+      await dio.delete('$baseUrl/leads/$id');
+    } on DioException catch (e) {
+      throw Exception('Failed to delete lead: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> deleteLeads(List<String> ids) async {
+    // Since there's no bulk delete endpoint, delete one by one
+    final errors = <String>[];
+    for (final id in ids) {
+      try {
+        await dio.delete('$baseUrl/leads/$id');
+      } on DioException catch (e) {
+        errors.add('Failed to delete $id: ${e.message}');
+      }
+    }
+    if (errors.isNotEmpty) {
+      throw Exception('Some leads failed to delete: ${errors.join(', ')}');
     }
   }
 }

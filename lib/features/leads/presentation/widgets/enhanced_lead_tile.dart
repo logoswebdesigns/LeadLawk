@@ -51,6 +51,7 @@ class _EnhancedLeadTileState extends ConsumerState<EnhancedLeadTile>
     final isNewlyAdded = wsNotifier.isNewLead(widget.lead.id);
     final selectedLeads = ref.watch(selectedLeadsProvider);
     final isSelected = selectedLeads.contains(widget.lead.id);
+    final isSelectionMode = ref.watch(isSelectionModeProvider);
     
     if (isNewlyAdded && !_animationController.isAnimating) {
       _animationController.forward();
@@ -94,32 +95,61 @@ class _EnhancedLeadTileState extends ConsumerState<EnhancedLeadTile>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () => context.go('/leads/${widget.lead.id}'),
+              onTap: () {
+                if (isSelectionMode) {
+                  // Toggle selection
+                  final current = ref.read(selectedLeadsProvider);
+                  final updated = Set<String>.from(current);
+                  if (isSelected) {
+                    updated.remove(widget.lead.id);
+                  } else {
+                    updated.add(widget.lead.id);
+                  }
+                  ref.read(selectedLeadsProvider.notifier).state = updated;
+                  
+                  // Enter selection mode if not already
+                  if (!isSelectionMode) {
+                    ref.read(isSelectionModeProvider.notifier).state = true;
+                  }
+                } else {
+                  // Navigate to detail
+                  context.go('/leads/${widget.lead.id}');
+                }
+              },
+              onLongPress: () {
+                // Enter selection mode on long press
+                if (!isSelectionMode) {
+                  ref.read(isSelectionModeProvider.notifier).state = true;
+                  ref.read(selectedLeadsProvider.notifier).state = {widget.lead.id};
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    // Checkbox
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Checkbox(
-                        value: isSelected,
-                        onChanged: (value) {
-                          final current = ref.read(selectedLeadsProvider);
-                          final updated = Set<String>.from(current);
-                          if (value == true) {
-                            updated.add(widget.lead.id);
-                          } else {
-                            updated.remove(widget.lead.id);
-                          }
-                          ref.read(selectedLeadsProvider.notifier).state = updated;
-                        },
-                        activeColor: AppTheme.primaryGold,
-                        checkColor: Colors.black,
+                    // Checkbox (only show in selection mode)
+                    if (isSelectionMode) ...[
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Checkbox(
+                          value: isSelected,
+                          onChanged: (value) {
+                            final current = ref.read(selectedLeadsProvider);
+                            final updated = Set<String>.from(current);
+                            if (value == true) {
+                              updated.add(widget.lead.id);
+                            } else {
+                              updated.remove(widget.lead.id);
+                            }
+                            ref.read(selectedLeadsProvider.notifier).state = updated;
+                          },
+                          activeColor: AppTheme.primaryGold,
+                          checkColor: Colors.black,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
+                      const SizedBox(width: 14),
+                    ],
                     // Content
                     Expanded(
                       child: Column(

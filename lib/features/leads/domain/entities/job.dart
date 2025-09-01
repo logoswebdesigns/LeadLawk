@@ -8,6 +8,9 @@ class Job extends Equatable {
   final int processed;
   final int total;
   final String? message;
+  final String? industry;
+  final String? location;
+  final String? query;
 
   const Job({
     required this.id,
@@ -15,8 +18,11 @@ class Job extends Equatable {
     required this.processed,
     required this.total,
     this.message,
+    this.industry,
+    this.location,
+    this.query,
   });
 
   @override
-  List<Object?> get props => [id, status, processed, total, message];
+  List<Object?> get props => [id, status, processed, total, message, industry, location, query];
 }

@@ -107,6 +107,9 @@ class LeadsRepositoryImpl implements LeadsRepository {
           processed: data['processed'] ?? 0,
           total: data['total'] ?? 0,
           message: data['message'],
+          industry: data['industry'],
+          location: data['location'],
+          query: data['query'],
         );
 
         if (status == JobStatus.done || status == JobStatus.error) {
@@ -121,6 +124,9 @@ class LeadsRepositoryImpl implements LeadsRepository {
           processed: 0,
           total: 0,
           message: e.toString(),
+          industry: null,
+          location: null,
+          query: null,
         );
         break;
       }
@@ -162,6 +168,26 @@ class LeadsRepositoryImpl implements LeadsRepository {
         errorMessage = errorMessage.substring(11); // Remove "Exception: " prefix
       }
       return Left(ServerFailure(errorMessage));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteLead(String id) async {
+    try {
+      await remoteDataSource.deleteLead(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteLeads(List<String> ids) async {
+    try {
+      await remoteDataSource.deleteLeads(ids);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

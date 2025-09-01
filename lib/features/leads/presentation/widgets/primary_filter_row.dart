@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../pages/leads_list_page.dart';
-import 'sort_options_modal.dart';
 
 class PrimaryFilterRow extends ConsumerWidget {
   const PrimaryFilterRow({super.key});
@@ -12,38 +10,27 @@ class PrimaryFilterRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentStatus = ref.watch(statusFilterProvider);
-    final sortOption = ref.watch(sortOptionProvider);
     
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          // Status Filter
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildStatusChip('All', null, currentStatus, ref),
-                  ...LeadStatus.values.map((status) {
-                    final label = _getStatusLabel(status);
-                    return _buildStatusChip(
-                      label,
-                      status.name,
-                      currentStatus,
-                      ref,
-                      color: _getStatusColor(status),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Sort Button
-          _buildSortButton(sortOption, ref, context),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatusChip('All', null, currentStatus, ref),
+            ...LeadStatus.values.map((status) {
+              final label = _getStatusLabel(status);
+              return _buildStatusChip(
+                label,
+                status.name,
+                currentStatus,
+                ref,
+                color: _getStatusColor(status),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -92,41 +79,6 @@ class PrimaryFilterRow extends ConsumerWidget {
     );
   }
 
-  Widget _buildSortButton(SortOption sort, WidgetRef ref, BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showSortOptions(context, ref),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              CupertinoIcons.sort_down,
-              size: 16,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              _getSortLabel(sort),
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSortOptions(BuildContext context, WidgetRef ref) {
-    SortOptionsModal.show(context);
-  }
-
   String _getStatusLabel(LeadStatus status) {
     switch (status) {
       case LeadStatus.new_: return 'New';
@@ -150,17 +102,6 @@ class PrimaryFilterRow extends ConsumerWidget {
       case LeadStatus.didNotConvert: return const Color(0xFFFF3B30);
       case LeadStatus.callbackScheduled: return const Color(0xFF5AC8FA);
       case LeadStatus.doNotCall: return const Color(0xFF8E8E93);
-    }
-  }
-
-  String _getSortLabel(SortOption option) {
-    switch (option) {
-      case SortOption.newest: return 'Newest';
-      case SortOption.rating: return 'Rating';
-      case SortOption.reviews: return 'Reviews';
-      case SortOption.alphabetical: return 'A-Z';
-      case SortOption.pageSpeed: return 'Speed';
-      case SortOption.conversion: return 'Score';
     }
   }
 }

@@ -8,10 +8,12 @@ import '../../domain/entities/lead.dart';
 import '../providers/job_provider.dart';
 import '../providers/pagespeed_websocket_provider.dart';
 import '../providers/server_status_provider.dart';
-import '../widgets/clean_filter_bar.dart';
+import '../widgets/filter_bar.dart';
 import '../widgets/conversion_pipeline.dart';
 import '../widgets/active_jobs_monitor.dart';
 import '../widgets/enhanced_lead_tile.dart';
+import '../widgets/sort_bar.dart';
+import '../widgets/selection_action_bar.dart';
 
 // Sorting options
 enum SortOption {
@@ -50,14 +52,19 @@ final pageSpeedFilterProvider = StateProvider<String?>((ref) => null);
 final sortOptionProvider = StateProvider<SortOption>((ref) => SortOption.newest);
 final sortAscendingProvider = StateProvider<bool>((ref) => false);
 final selectedLeadsProvider = StateProvider<Set<String>>((ref) => {});
+final isSelectionModeProvider = StateProvider<bool>((ref) => false);
 final groupByOptionProvider = StateProvider<GroupByOption>((ref) => GroupByOption.none);
 final expandedGroupsProvider = StateProvider<Set<String>>((ref) => {});
+final refreshTriggerProvider = StateProvider<int>((ref) => 0);
 
 // Main leads provider
 final leadsProvider = FutureProvider.autoDispose<List<Lead>>(
   (ref) async {
     print('🔄 leadsProvider: Fetching leads from repository...');
     final repository = ref.watch(leadsRepositoryProvider);
+    
+    // Watch refresh trigger to force refresh
+    ref.watch(refreshTriggerProvider);
     
     // Get filter parameters
     final status = ref.watch(statusFilterProvider);
@@ -365,8 +372,11 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
               ),
               // Active jobs monitor
               const ActiveJobsMonitor(),
-              // Clean filter bar
-              const CleanFilterBar(),
+              // Filter bar
+              const FilterBar(),
+              // Sort bar OR Selection action bar (mutually exclusive)
+              const SortBar(),
+              const SelectionActionBar(),
               // Leads list
               Expanded(
                 child: leadsAsync.when(
@@ -403,14 +413,18 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 64, color: AppTheme.mediumGray),
+            Icon(
+              Icons.inbox, 
+              size: 64, 
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
             const SizedBox(height: 16),
             Text(
               'No leads found',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.lightGray,
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
             const SizedBox(height: 8),
@@ -418,17 +432,24 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
               'Try adjusting your filters or start a new search',
               style: TextStyle(
                 fontSize: 14,
-                color: AppTheme.mediumGray,
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.go('/leads/search'),
+              onPressed: () => context.go('/browser'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: const Text('Start Search'),
+              child: const Text(
+                'Start Search',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),

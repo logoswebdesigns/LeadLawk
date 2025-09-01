@@ -70,8 +70,8 @@ void main() {
       );
 
       expect(find.byType(ConversionPipeline), findsOneWidget);
-      expect(find.text('Conversion Pipeline'), findsOneWidget);
-      expect(find.text('3 total leads'), findsOneWidget);
+      expect(find.text('Pipeline'), findsOneWidget);
+      expect(find.text('3 leads'), findsOneWidget);
     });
 
     testWidgets('displays all pipeline stages', (WidgetTester tester) async {
@@ -87,14 +87,14 @@ void main() {
         ),
       );
 
-      // Check for stage labels
+      // Check for stage labels (uppercase as rendered)
       expect(find.text('NEW'), findsOneWidget);
       expect(find.text('VIEWED'), findsOneWidget);
       expect(find.text('CALLED'), findsOneWidget);
-      expect(find.text('INTERESTED'), findsOneWidget);
+      expect(find.text('INTEREST'), findsOneWidget);
       expect(find.text('CALLBACK'), findsOneWidget);
-      expect(find.text('CONVERTED'), findsOneWidget);
-      expect(find.text('NO CONVERT'), findsOneWidget);
+      expect(find.text('WON'), findsOneWidget);
+      expect(find.text('LOST'), findsOneWidget);
       expect(find.text('DNC'), findsOneWidget);
     });
 
@@ -119,7 +119,7 @@ void main() {
       expect(find.text('1'), findsWidgets);
     });
 
-    testWidgets('displays stage icons', (WidgetTester tester) async {
+    testWidgets('displays percentage for each stage', (WidgetTester tester) async {
       final leads = createTestLeads();
       
       await tester.pumpWidget(
@@ -132,10 +132,11 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.fiber_new), findsOneWidget);
-      expect(find.byIcon(Icons.visibility), findsOneWidget);
-      expect(find.byIcon(Icons.phone), findsOneWidget);
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      // With 3 leads: 1 new, 1 called, 1 converted
+      // Each non-empty stage should show 33%
+      expect(find.text('33%'), findsNWidgets(3)); // 3 stages with 1 lead each
+      // Empty stages should show 0%
+      expect(find.text('0%'), findsNWidgets(5)); // 5 empty stages
     });
 
     testWidgets('horizontal scrolling works', (WidgetTester tester) async {

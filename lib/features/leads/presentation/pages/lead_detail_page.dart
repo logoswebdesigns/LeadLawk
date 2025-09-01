@@ -331,13 +331,54 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   }
 
   Widget _buildErrorState(String error) {
+    // Check if it's a 404 error (lead not found)
+    final is404 = error.contains('404') || error.contains('not found');
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
+          Icon(
+            is404 ? Icons.search_off : Icons.error_outline, 
+            size: 64, 
+            color: Colors.white.withValues(alpha: 0.3),
+          ),
           const SizedBox(height: 16),
-          Text('Error: $error', style: TextStyle(color: AppTheme.errorRed)),
+          Text(
+            is404 ? 'Lead Not Found' : 'Error Loading Lead',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            is404 
+              ? 'This lead may have been deleted or does not exist'
+              : 'Unable to load lead details',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => context.go('/leads'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGold,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Back to Leads',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );

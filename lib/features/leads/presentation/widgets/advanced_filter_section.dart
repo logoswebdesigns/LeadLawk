@@ -1,112 +1,171 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
-import 'advanced_filter_bar.dart';
-import 'advanced_filter_extras.dart';
 
-extension AdvancedFilterBarExtension on AdvancedFilterBarState {
-  Widget buildAdvancedFilterSection() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildRatingFilter()),
-            const SizedBox(width: 8),
-            Expanded(child: _buildReviewCountFilter()),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(child: _buildPageSpeedFilter()),
-            const SizedBox(width: 8),
-            Expanded(child: buildFollowUpFilter()),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(child: buildLocationFilter()),
-            const SizedBox(width: 8),
-            Expanded(child: buildIndustryFilter()),
-          ],
-        ),
-        const SizedBox(height: 8),
-        buildGroupBySection(),
-      ],
-    );
-  }
+class AdvancedFilterSection extends ConsumerWidget {
+  const AdvancedFilterSection({super.key});
 
-  Widget _buildRatingFilter() {
-    final value = ref.watch(ratingRangeFilterProvider);
-    return DropdownButtonFormField<String?>(
-      value: value,
-      decoration: _getInputDecoration('Rating Range'),
-      items: const [
-        DropdownMenuItem(value: null, child: Text('All Ratings')),
-        DropdownMenuItem(value: '5', child: Text('5 Stars')),
-        DropdownMenuItem(value: '4-5', child: Text('4-5 Stars')),
-        DropdownMenuItem(value: '3-4', child: Text('3-4 Stars')),
-        DropdownMenuItem(value: '2-3', child: Text('2-3 Stars')),
-        DropdownMenuItem(value: '1-2', child: Text('1-2 Stars')),
-      ],
-      onChanged: (value) => ref.read(ratingRangeFilterProvider.notifier).state = value,
-    );
-  }
-
-  Widget _buildReviewCountFilter() {
-    final value = ref.watch(reviewCountRangeFilterProvider);
-    return DropdownButtonFormField<String?>(
-      value: value,
-      decoration: _getInputDecoration('Review Count'),
-      items: const [
-        DropdownMenuItem(value: null, child: Text('All Reviews')),
-        DropdownMenuItem(value: '100+', child: Text('100+ Reviews')),
-        DropdownMenuItem(value: '50-99', child: Text('50-99 Reviews')),
-        DropdownMenuItem(value: '20-49', child: Text('20-49 Reviews')),
-        DropdownMenuItem(value: '5-19', child: Text('5-19 Reviews')),
-        DropdownMenuItem(value: '1-4', child: Text('1-4 Reviews')),
-      ],
-      onChanged: (value) => ref.read(reviewCountRangeFilterProvider.notifier).state = value,
-    );
-  }
-
-  Widget _buildPageSpeedFilter() {
-    final value = ref.watch(pageSpeedFilterProvider);
-    return DropdownButtonFormField<String?>(
-      value: value,
-      decoration: _getInputDecoration('PageSpeed Score'),
-      items: const [
-        DropdownMenuItem(value: null, child: Text('All Scores')),
-        DropdownMenuItem(value: '90+', child: Text('90+ (Fast)')),
-        DropdownMenuItem(value: '50-89', child: Text('50-89 (Average)')),
-        DropdownMenuItem(value: '<50', child: Text('<50 (Slow)')),
-        DropdownMenuItem(value: 'none', child: Text('Not Analyzed')),
-      ],
-      onChanged: (value) => ref.read(pageSpeedFilterProvider.notifier).state = value,
-    );
-  }
-
-  Widget buildToggleButton() {
-    return TextButton.icon(
-      onPressed: () => setState(() => showAdvancedFilters = !showAdvancedFilters),
-      icon: Icon(showAdvancedFilters ? Icons.expand_less : Icons.expand_more),
-      label: Text(showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'),
-      style: TextButton.styleFrom(foregroundColor: AppTheme.primaryGold),
-    );
-  }
-
-  InputDecoration _getInputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      isDense: true,
-      filled: true,
-      fillColor: AppTheme.backgroundDark,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Divider(color: Colors.white12, height: 1),
+          const SizedBox(height: 16),
+          Text(
+            'FILTERS',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.4),
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Quick Filters
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildQuickFilter('Has Website', ref.watch(hasWebsiteFilterProvider) == true,
+                  (val) => ref.read(hasWebsiteFilterProvider.notifier).state = val ? true : null, ref),
+              _buildQuickFilter('No Website', ref.watch(hasWebsiteFilterProvider) == false,
+                  (val) => ref.read(hasWebsiteFilterProvider.notifier).state = val ? false : null, ref),
+              _buildQuickFilter('High Rating', ref.watch(meetsRatingFilterProvider) == true,
+                  (val) => ref.read(meetsRatingFilterProvider.notifier).state = val ? true : null, ref),
+              _buildQuickFilter('Recent Reviews', ref.watch(hasRecentReviewsFilterProvider) == true,
+                  (val) => ref.read(hasRecentReviewsFilterProvider.notifier).state = val ? true : null, ref),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Dropdown Filters
+          Row(
+            children: [
+              Expanded(child: _buildDropdown('Rating', ref.watch(ratingRangeFilterProvider), _ratingOptions(), 
+                  (val) => ref.read(ratingRangeFilterProvider.notifier).state = val)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildDropdown('Reviews', ref.watch(reviewCountRangeFilterProvider), _reviewOptions(),
+                  (val) => ref.read(reviewCountRangeFilterProvider.notifier).state = val)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _buildDropdown('PageSpeed', ref.watch(pageSpeedFilterProvider), _speedOptions(),
+                  (val) => ref.read(pageSpeedFilterProvider.notifier).state = val)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildDropdown('Follow-up', ref.watch(followUpFilterProvider), _followUpOptions(),
+                  (val) => ref.read(followUpFilterProvider.notifier).state = val)),
+            ],
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildQuickFilter(String label, bool isSelected, Function(bool) onTap, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => onTap(!isSelected),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? AppTheme.primaryGold.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                : Colors.transparent,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isSelected
+                ? AppTheme.primaryGold
+                : Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, String? value, List<DropdownOption> options, Function(String?) onChanged) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String?>(
+          value: value,
+          isExpanded: true,
+          hint: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+          icon: Icon(
+            CupertinoIcons.chevron_down,
+            size: 16,
+            color: Colors.white.withValues(alpha: 0.5),
+          ),
+          dropdownColor: AppTheme.elevatedSurface,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          items: options.map((opt) => DropdownMenuItem(
+            value: opt.value,
+            child: Text(opt.label),
+          )).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  List<DropdownOption> _ratingOptions() => [
+    DropdownOption(null, 'All Ratings'),
+    DropdownOption('5', '5 Stars'),
+    DropdownOption('4-5', '4-5 Stars'),
+    DropdownOption('3-4', '3-4 Stars'),
+  ];
+
+  List<DropdownOption> _reviewOptions() => [
+    DropdownOption(null, 'All Reviews'),
+    DropdownOption('100+', '100+'),
+    DropdownOption('50-99', '50-99'),
+    DropdownOption('20-49', '20-49'),
+  ];
+
+  List<DropdownOption> _speedOptions() => [
+    DropdownOption(null, 'All Speeds'),
+    DropdownOption('90+', 'Fast (90+)'),
+    DropdownOption('50-89', 'Average'),
+    DropdownOption('<50', 'Slow (<50)'),
+  ];
+
+  List<DropdownOption> _followUpOptions() => [
+    DropdownOption(null, 'All'),
+    DropdownOption('upcoming', 'Upcoming'),
+    DropdownOption('overdue', 'Overdue'),
+  ];
+}
+
+class DropdownOption {
+  final String? value;
+  final String label;
+  DropdownOption(this.value, this.label);
 }

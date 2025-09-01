@@ -6,16 +6,16 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../pages/leads_list_page.dart';
 import 'primary_filter_row.dart';
-import 'advanced_filter_section_clean.dart';
+import 'advanced_filter_section.dart';
 
-class CleanFilterBar extends ConsumerStatefulWidget {
-  const CleanFilterBar({super.key});
+class FilterBar extends ConsumerStatefulWidget {
+  const FilterBar({super.key});
 
   @override
-  ConsumerState<CleanFilterBar> createState() => CleanFilterBarState();
+  ConsumerState<FilterBar> createState() => FilterBarState();
 }
 
-class CleanFilterBarState extends ConsumerState<CleanFilterBar> {
+class FilterBarState extends ConsumerState<FilterBar> {
   final searchController = TextEditingController();
   Timer? debounceTimer;
   bool showFilters = false;
@@ -41,6 +41,7 @@ class CleanFilterBarState extends ConsumerState<CleanFilterBar> {
       child: SafeArea(
         bottom: false,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Search Bar
             Container(

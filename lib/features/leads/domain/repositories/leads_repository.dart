@@ -27,4 +27,8 @@ abstract class LeadsRepository {
   Future<Either<Failure, int>> deleteMockLeads();
   
   Future<Either<Failure, Map<String, dynamic>>> recalculateConversionScores();
+  
+  Future<Either<Failure, void>> deleteLead(String id);
+  
+  Future<Either<Failure, void>> deleteLeads(List<String> ids);
 }

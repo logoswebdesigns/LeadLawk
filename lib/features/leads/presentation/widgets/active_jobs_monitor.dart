@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/job_provider.dart';
+import '../../domain/entities/job.dart';
 
 class ActiveJobsMonitor extends ConsumerWidget {
   const ActiveJobsMonitor({super.key});
@@ -35,6 +36,7 @@ class ActiveJobsMonitor extends ConsumerWidget {
           child: SafeArea(
             bottom: false,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
@@ -72,7 +74,12 @@ class ActiveJobsMonitor extends ConsumerWidget {
                 // Job card
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                  child: _JobCard(job: job),
+                  child: _JobCard(
+                    job: job,
+                    onComplete: () {
+                      // Job completed, provider will handle removal
+                    },
+                  ),
                 ),
               ],
             ),
@@ -81,21 +88,97 @@ class ActiveJobsMonitor extends ConsumerWidget {
   }
 }
 
-class _JobCard extends StatelessWidget {
-  final dynamic job;
+class _JobCard extends StatefulWidget {
+  final Job job;
+  final VoidCallback onComplete;
   
-  const _JobCard({required this.job});
+  const _JobCard({required this.job, required this.onComplete});
+
+  @override
+  State<_JobCard> createState() => _JobCardState();
+}
+
+class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  bool _isCompleted = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+  }
+  
+  @override
+  void didUpdateWidget(_JobCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if job just completed
+    if (widget.job.status == JobStatus.done && !_isCompleted) {
+      _isCompleted = true;
+      // Wait 2 seconds then fade out
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          _animationController.forward().then((_) {
+            if (mounted) widget.onComplete();
+          });
+        }
+      });
+    }
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final progress = (job.progress ?? 0) / 100.0;
-    final industry = job.searchQuery ?? 'Search';
-    final location = job.location ?? '';
-    final leadsFound = job.totalBusinessesFound ?? 0;
+    final job = widget.job;
+    final progress = job.total > 0 ? job.processed / job.total : 0.0;
     
-    return GestureDetector(
-      onTap: () => context.go('/automation-monitor'),
-      child: Container(
+    // Build display text from job data
+    String displayText = '';
+    if (job.industry != null && job.location != null) {
+      displayText = '${job.industry} in ${job.location}';
+    } else if (job.query != null) {
+      displayText = job.query!;
+    } else if (job.message != null) {
+      displayText = job.message!;
+      // Clean up common message patterns
+      if (displayText.contains('Starting browser automation')) {
+        displayText = 'Initializing search...';
+      } else if (displayText.contains('Searching for businesses')) {
+        displayText = 'Searching for businesses...';
+      } else if (displayText.contains('Job created')) {
+        displayText = 'Preparing search...';
+      }
+    } else {
+      displayText = 'Processing...';
+    }
+    
+    final leadsFound = job.processed;
+    
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: GestureDetector(
+              onTap: () => context.go('/browser/monitor/${job.id}'),
+              child: Container(
         width: double.infinity,
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(12),
@@ -113,18 +196,34 @@ class _JobCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  CupertinoIcons.search,
+                  job.status == JobStatus.done 
+                      ? CupertinoIcons.checkmark_circle_fill
+                      : job.status == JobStatus.error 
+                          ? CupertinoIcons.exclamationmark_circle_fill
+                          : CupertinoIcons.search,
                   size: 14,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: job.status == JobStatus.done 
+                      ? AppTheme.successGreen
+                      : job.status == JobStatus.error 
+                          ? AppTheme.errorRed
+                          : Colors.white.withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '$industry in $location',
-                    style: const TextStyle(
+                    job.status == JobStatus.done 
+                        ? 'Completed: $displayText'
+                        : job.status == JobStatus.error 
+                            ? 'Failed: $displayText'
+                            : displayText,
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: job.status == JobStatus.done 
+                          ? AppTheme.successGreen
+                          : job.status == JobStatus.error 
+                              ? AppTheme.errorRed
+                              : Colors.white,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -173,7 +272,11 @@ class _JobCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
