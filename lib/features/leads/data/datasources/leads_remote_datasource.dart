@@ -65,18 +65,6 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     }
   }
 
-  @override
-  Future<LeadModel> updateLead(LeadModel lead) async {
-    try {
-      final response = await dio.put(
-        '$baseUrl/leads/${lead.id}',
-        data: lead.toJson(),
-      );
-      return LeadModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('Failed to update lead: ${e.message}');
-    }
-  }
 
   @override
   Future<String> startAutomation(BrowserAutomationParams params) async {
@@ -161,6 +149,40 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   }
 
   @override
+  Future<LeadModel> updateLead(LeadModel lead) async {
+    try {
+      // Build update data - only send fields that can be updated
+      final updateData = <String, dynamic>{
+        'status': lead.status,  // status is already a String in LeadModel
+      };
+      
+      // Add optional fields if they exist
+      if (lead.notes != null) {
+        updateData['notes'] = lead.notes;
+      }
+      if (lead.followUpDate != null) {
+        updateData['follow_up_date'] = lead.followUpDate!.toIso8601String();
+      }
+      
+      print('🔄 Updating lead ${lead.id} with data: $updateData');
+      print('📡 PUT $baseUrl/leads/${lead.id}');
+      
+      final response = await dio.put(
+        '$baseUrl/leads/${lead.id}',
+        data: updateData,
+      );
+      
+      print('✅ Lead update response: ${response.statusCode}');
+      print('📦 Response data status: ${response.data['status']}');
+      
+      return LeadModel.fromJson(response.data);
+    } on DioException catch (e) {
+      print('❌ Failed to update lead: ${e.response?.data}');
+      throw Exception('Failed to update lead: ${e.message}');
+    }
+  }
+
+  @override
   Future<LeadModel> updateTimelineEntry(String leadId, String entryId, Map<String, dynamic> updates) async {
     try {
       final response = await dio.put(
@@ -176,8 +198,16 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   @override
   Future<void> addTimelineEntry(String leadId, Map<String, dynamic> entryData) async {
     try {
-      await dio.post('$baseUrl/leads/$leadId/timeline', data: entryData);
+      print('🌐 POST $baseUrl/leads/$leadId/timeline');
+      print('📤 Request data: $entryData');
+      
+      final response = await dio.post('$baseUrl/leads/$leadId/timeline', data: entryData);
+      
+      print('✅ Timeline entry added successfully: ${response.statusCode}');
     } on DioException catch (e) {
+      print('❌ Failed to add timeline entry: ${e.response?.statusCode} - ${e.response?.data}');
+      print('❌ Error type: ${e.type}');
+      print('❌ Error message: ${e.message}');
       throw Exception('Failed to add timeline entry: ${e.message}');
     }
   }

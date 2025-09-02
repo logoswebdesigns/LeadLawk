@@ -91,10 +91,10 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: AppTheme.elevatedSurface.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppTheme.accentCyan,
+          color: AppTheme.accentCyan.withOpacity(0.5),
           width: 1,
         ),
       ),
@@ -106,10 +106,14 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             focusNode: _notesFocusNode,
             maxLines: 4,
             style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Add your notes here...',
-              hintStyle: TextStyle(color: Colors.grey),
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
               border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+              fillColor: Colors.transparent,
+              filled: true,
             ),
           ),
           const SizedBox(height: 8),
@@ -118,11 +122,19 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             children: [
               TextButton(
                 onPressed: () => setState(() => _isEditingNotes = false),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white.withOpacity(0.6),
+                ),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: _saveNotes,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.accentCyan,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                ),
                 child: const Text('Save'),
               ),
             ],
@@ -139,8 +151,12 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: AppTheme.elevatedSurface.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
         ),
         child: Text(
           _notesController.text.isNotEmpty 
@@ -148,8 +164,9 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
               : 'Tap to add notes...',
           style: TextStyle(
             color: _notesController.text.isNotEmpty 
-                ? Colors.white 
-                : Colors.grey,
+                ? Colors.white.withOpacity(0.9)
+                : Colors.white.withOpacity(0.3),
+            fontSize: 14,
           ),
         ),
       ),

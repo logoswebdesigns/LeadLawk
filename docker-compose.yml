@@ -31,10 +31,12 @@ services:
       - ./screenshots:/screenshots
       - ./website_screenshots:/website_screenshots
     environment:
-      - SE_NODE_MAX_SESSIONS=50
+      - SE_NODE_MAX_SESSIONS=10
       - SE_NODE_SESSION_TIMEOUT=120
       - SE_VNC_PASSWORD=secret
-    shm_size: '2gb'
+      - SE_NODE_MAX_INSTANCES=10
+      - SE_OPTS=--max-sessions 10
+    shm_size: '4gb'
     restart: unless-stopped
     networks:
       - leadloq-network

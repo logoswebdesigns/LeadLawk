@@ -23,12 +23,13 @@ from browser_automation import BrowserAutomation
 class ParallelJobExecutor:
     """Execute multiple search jobs in parallel using Selenium Grid"""
     
-    def __init__(self, max_workers: int = 50):
+    def __init__(self, max_workers: int = 8):
         self.max_workers = max_workers
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.active_jobs = {}
         self.job_queue = queue.Queue()
         self.selenium_hub_url = os.getenv('SELENIUM_HUB_URL', 'http://selenium-hub:4444/wd/hub')
+        print(f"🔧 ParallelJobExecutor initialized with max_workers={max_workers}")
         
     def create_multi_location_jobs(self, 
                                  industries: List[str], 
@@ -276,4 +277,6 @@ class ParallelJobExecutor:
 # Global executor instance
 # max_workers determines how many jobs can be in flight at once
 # Set to 50 to match Selenium Grid capacity
-parallel_executor = ParallelJobExecutor(max_workers=50)
+# Initialize with reasonable defaults for parallel execution
+# 3 concurrent sessions is a good balance for most systems
+parallel_executor = ParallelJobExecutor(max_workers=3)

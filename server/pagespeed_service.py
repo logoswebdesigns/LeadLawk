@@ -165,6 +165,9 @@ class PageSpeedService:
             mobile_results, desktop_results = await asyncio.gather(mobile_task, desktop_task)
             
             # Update lead with results
+            has_error = False
+            error_messages = []
+            
             if 'error' not in mobile_results:
                 lead.pagespeed_mobile_score = mobile_results['performance_score']
                 lead.pagespeed_mobile_performance = mobile_results['performance_score'] / 100.0
@@ -180,10 +183,23 @@ class PageSpeedService:
                 lead.pagespeed_cumulative_layout_shift = metrics['cumulative_layout_shift']
                 lead.pagespeed_speed_index = metrics['speed_index']
                 lead.pagespeed_time_to_interactive = metrics['time_to_interactive']
+            else:
+                has_error = True
+                error_messages.append(f"Mobile: {mobile_results.get('error', 'Unknown error')}")
             
             if 'error' not in desktop_results:
                 lead.pagespeed_desktop_score = desktop_results['performance_score']
                 lead.pagespeed_desktop_performance = desktop_results['performance_score'] / 100.0
+            else:
+                has_error = True
+                error_messages.append(f"Desktop: {desktop_results.get('error', 'Unknown error')}")
+            
+            # Store error if any tests failed
+            if has_error:
+                lead.pagespeed_test_error = " | ".join(error_messages)
+                logger.warning(f"PageSpeed test had errors for {lead_id}: {lead.pagespeed_test_error}")
+            else:
+                lead.pagespeed_test_error = None  # Clear any previous error
             
             # Save screenshot if available
             screenshot_path = None

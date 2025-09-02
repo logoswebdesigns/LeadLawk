@@ -1,15 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
 import 'sort_options_modal.dart';
 
-class SortBar extends ConsumerWidget {
+class SortBar extends ConsumerStatefulWidget {
   const SortBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SortBar> createState() => _SortBarState();
+}
+
+class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStateMixin {
+  late AnimationController _rotationController;
+  bool _isRefreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+    
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+    _rotationController.repeat();
+    
+    // Increment refresh trigger to force refresh
+    ref.read(refreshTriggerProvider.notifier).state++;
+    ref.invalidate(leadsProvider);
+    
+    // Wait a bit for the refresh to start
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    try {
+      // Wait for the leads to reload
+      await ref.read(leadsProvider.future);
+    } catch (e) {
+      // Handle error silently - the error will be shown in the leads list
+    }
+    
+    if (mounted) {
+      setState(() {
+        _isRefreshing = false;
+      });
+      _rotationController.stop();
+      _rotationController.reset();
+      
+      // Success feedback
+      HapticFeedback.lightImpact();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sortOption = ref.watch(sortOptionProvider);
     final sortAscending = ref.watch(sortAscendingProvider);
     final leadsAsync = ref.watch(leadsProvider);
@@ -48,6 +109,49 @@ class SortBar extends ConsumerWidget {
               error: (_, __) => const SizedBox.shrink(),
             ),
             const Spacer(),
+            // Refresh button
+            GestureDetector(
+              onTap: _isRefreshing ? null : _handleRefresh,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _isRefreshing 
+                      ? AppTheme.primaryGold.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: _isRefreshing 
+                      ? Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RotationTransition(
+                      turns: _rotationController,
+                      child: Icon(
+                        CupertinoIcons.arrow_clockwise,
+                        size: 14,
+                        color: _isRefreshing 
+                            ? AppTheme.primaryGold
+                            : Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _isRefreshing ? 'Refreshing...' : 'Refresh',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _isRefreshing 
+                            ? AppTheme.primaryGold
+                            : Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             // Select button
             GestureDetector(
               onTap: () => ref.read(isSelectionModeProvider.notifier).state = true,

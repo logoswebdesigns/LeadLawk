@@ -7,16 +7,16 @@ import '../../domain/entities/lead.dart';
 import '../providers/pagespeed_websocket_provider.dart';
 import '../pages/leads_list_page.dart';
 
-class EnhancedLeadTile extends ConsumerStatefulWidget {
+class LeadTile extends ConsumerStatefulWidget {
   final Lead lead;
   
-  const EnhancedLeadTile({super.key, required this.lead});
+  const LeadTile({super.key, required this.lead});
   
   @override
-  ConsumerState<EnhancedLeadTile> createState() => _EnhancedLeadTileState();
+  ConsumerState<LeadTile> createState() => _LeadTileState();
 }
 
-class _EnhancedLeadTileState extends ConsumerState<EnhancedLeadTile> 
+class _LeadTileState extends ConsumerState<LeadTile> 
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _goldenEffectAnimation;
@@ -201,10 +201,15 @@ class _EnhancedLeadTileState extends ConsumerState<EnhancedLeadTile>
               ? Colors.green.withValues(alpha: 0.8)
               : Colors.red.withValues(alpha: 0.8),
         ),
-        // PageSpeed score
-        if (widget.lead.pagespeedMobileScore != null) ...[
+        // PageSpeed score or error indicator
+        if (widget.lead.hasWebsite) ...[
           const SizedBox(width: 12),
-          _buildPageSpeedMetric(widget.lead.pagespeedMobileScore!),
+          if (widget.lead.pagespeedMobileScore != null)
+            _buildPageSpeedMetric(widget.lead.pagespeedMobileScore!)
+          else if (widget.lead.pagespeedTestError != null)
+            _buildPageSpeedError()
+          else
+            _buildPageSpeedPending(),
         ],
         // Rating
         if (widget.lead.rating != null) ...[
@@ -285,6 +290,80 @@ class _EnhancedLeadTileState extends ConsumerState<EnhancedLeadTile>
           ),
         ),
       ],
+    );
+  }
+  
+  Widget _buildPageSpeedError() {
+    return Tooltip(
+      message: 'PageSpeed test failed: ${widget.lead.pagespeedTestError ?? "Unknown error"}',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.orange.withValues(alpha: 0.3),
+              border: Border.all(
+                color: Colors.orange,
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.exclamationmark,
+              size: 10,
+              color: Colors.orange,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '!',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPageSpeedPending() {
+    return Tooltip(
+      message: 'PageSpeed test not run yet',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey.withValues(alpha: 0.2),
+              border: Border.all(
+                color: Colors.grey.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              CupertinoIcons.minus,
+              size: 10,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '-',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
     );
   }
   

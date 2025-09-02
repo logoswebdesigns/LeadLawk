@@ -11,7 +11,7 @@ import '../providers/server_status_provider.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/conversion_pipeline.dart';
 import '../widgets/active_jobs_monitor.dart';
-import '../widgets/enhanced_lead_tile.dart';
+import '../widgets/lead_tile.dart';
 import '../widgets/sort_bar.dart';
 import '../widgets/selection_action_bar.dart';
 
@@ -241,15 +241,39 @@ List<Lead> _applyFiltersAndSort(List<Lead> leads, Ref ref) {
         comparison = a.businessName.compareTo(b.businessName);
         break;
       case SortOption.pageSpeed:
-        final aScore = a.pagespeedMobileScore ?? a.pagespeedDesktopScore ?? -1;
-        final bScore = b.pagespeedMobileScore ?? b.pagespeedDesktopScore ?? -1;
-        comparison = bScore.compareTo(aScore);
-        break;
+        final aScore = a.pagespeedMobileScore ?? a.pagespeedDesktopScore;
+        final bScore = b.pagespeedMobileScore ?? b.pagespeedDesktopScore;
+        
+        // Handle null values - always push them to the end
+        if (aScore == null && bScore == null) {
+          return 0; // Keep original order for both nulls
+        } else if (aScore == null) {
+          return 1; // a goes after b (always at end)
+        } else if (bScore == null) {
+          return -1; // b goes after a (always at end)
+        } else {
+          // Both have scores, compare normally with sort direction
+          return sortAscending 
+              ? aScore.compareTo(bScore)  // Ascending: lowest first
+              : bScore.compareTo(aScore); // Descending: highest first
+        }
       case SortOption.conversion:
-        final aScore = a.conversionScore ?? -1;
-        final bScore = b.conversionScore ?? -1;
-        comparison = bScore.compareTo(aScore);
-        break;
+        final aScore = a.conversionScore;
+        final bScore = b.conversionScore;
+        
+        // Handle null values - always push them to the end
+        if (aScore == null && bScore == null) {
+          return 0; // Keep original order for both nulls
+        } else if (aScore == null) {
+          return 1; // a goes after b (always at end)
+        } else if (bScore == null) {
+          return -1; // b goes after a (always at end)
+        } else {
+          // Both have scores, compare normally with sort direction
+          return sortAscending 
+              ? aScore.compareTo(bScore)  // Ascending: lowest first
+              : bScore.compareTo(aScore); // Descending: highest first
+        }
     }
     
     // For newest, always sort newest first regardless of ascending flag
@@ -462,7 +486,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       itemCount: leads.length,
       itemBuilder: (context, index) {
         final lead = leads[index];
-        return EnhancedLeadTile(lead: lead);
+        return LeadTile(lead: lead);
       },
     );
   }

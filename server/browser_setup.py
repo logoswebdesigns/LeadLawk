@@ -36,6 +36,16 @@ class BrowserSetup:
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1920,1080")
         
+        # Safe performance optimizations that won't break Google Maps
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-default-apps")
+        options.add_argument("--disable-features=TranslateUI")
+        
+        # Memory optimizations - keep conservative to ensure stability
+        options.add_argument("--memory-pressure-off")
+        options.add_argument("--max_old_space_size=4096")
+        
         # Hub URL for Selenium standalone-chrome container
         hub_url = os.environ.get('SELENIUM_HUB_URL', 'http://selenium-chrome:4444/wd/hub')
         print(f"🐳 Connecting to Selenium Hub at: {hub_url}")

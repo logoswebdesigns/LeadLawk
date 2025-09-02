@@ -1,0 +1,286 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import '../../domain/entities/job.dart';
+
+class ActiveJobsState {
+  final List<Job> jobs;
+  final bool isLoading;
+  final String? error;
+
+  ActiveJobsState({
+    this.jobs = const [],
+    this.isLoading = false,
+    this.error,
+  });
+
+  ActiveJobsState copyWith({
+    List<Job>? jobs,
+    bool? isLoading,
+    String? error,
+  }) {
+    return ActiveJobsState(
+      jobs: jobs ?? this.jobs,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
+}
+
+class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
+  final Dio dio;
+  Timer? _pollTimer;
+  Map<String, WebSocketChannel> _wsChannels = {};
+  Map<String, StreamSubscription> _wsSubscriptions = {};
+
+  ActiveJobsNotifier(this.dio) : super(ActiveJobsState()) {
+    _startPolling();
+  }
+
+  void _startPolling() {
+    // Initial fetch
+    fetchActiveJobs();
+    
+    // Poll for updates - use longer interval if many jobs to reduce server load
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      fetchActiveJobs();
+    });
+  }
+
+  Future<void> fetchActiveJobs() async {
+    try {
+      // Get the API base URL
+      final apiUrl = kIsWeb 
+          ? 'http://127.0.0.1:8000'
+          : Platform.isMacOS 
+              ? 'http://127.0.0.1:8000'
+              : 'http://10.0.2.2:8000';
+      
+      final response = await dio.get(
+        '$apiUrl/jobs',
+        options: Options(
+          headers: {'Accept': 'application/json'},
+          sendTimeout: const Duration(milliseconds: 5000),
+          receiveTimeout: const Duration(milliseconds: 10000),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jobsJson = response.data;
+        
+        // Filter for active jobs (running or pending)
+        final activeJobs = jobsJson
+            .where((job) => 
+                job['status'] == 'running' || 
+                job['status'] == 'pending' ||
+                job['status'] == 'initializing' ||
+                job['status'] == 'queued')
+            .map((job) => Job(
+                  id: job['id'],
+                  status: _parseJobStatus(job['status']),
+                  processed: job['processed'] ?? 0,
+                  total: job['total'] ?? 0,
+                  message: job['message'],
+                  industry: job['industry'],
+                  location: job['location'],
+                  query: job['query'],
+                  timestamp: job['timestamp'] != null 
+                      ? DateTime.tryParse(job['timestamp'])
+                      : DateTime.now(),
+                  type: job['type'],
+                  totalCombinations: job['total_combinations'],
+                  completedCombinations: job['completed_combinations'],
+                  childJobs: job['child_jobs'] != null 
+                      ? List<String>.from(job['child_jobs'])
+                      : null,
+                  parentId: job['parent_id'],
+                  leadsFound: job['leads_found'],
+                ))
+            .toList();
+
+        state = state.copyWith(
+          jobs: activeJobs,
+          isLoading: false,
+          error: null,
+        );
+        
+        // Temporarily disable WebSocket connections due to 403 errors
+        // The polling mechanism will still update job status every 2 seconds
+        /*
+        final jobsToConnect = activeJobs.take(5).toList();
+        for (final job in jobsToConnect) {
+          if (!_wsChannels.containsKey(job.id)) {
+            connectToJob(job.id);
+          }
+        }
+        */
+        
+        // Disconnect WebSocket for completed jobs
+        final activeJobIds = activeJobs.map((j) => j.id).toSet();
+        _wsChannels.keys.toList().forEach((jobId) {
+          if (!activeJobIds.contains(jobId)) {
+            disconnectFromJob(jobId);
+          }
+        });
+      }
+    } catch (e) {
+      // Only log non-timeout errors to reduce console spam
+      if (!e.toString().contains('Connection closed') && 
+          !e.toString().contains('timeout')) {
+        print('Error fetching active jobs: $e');
+      }
+      // Don't set error state for network issues, just keep trying
+      // The polling will retry in 2 seconds
+    }
+  }
+
+  void connectToJob(String jobId) async {
+    // Prevent connecting if we already have too many connections
+    if (_wsChannels.length >= 5) {
+      return;
+    }
+    
+    try {
+      // Get the WebSocket URL
+      final wsUrl = kIsWeb 
+          ? 'ws://127.0.0.1:8000'
+          : Platform.isMacOS 
+              ? 'ws://127.0.0.1:8000'
+              : 'ws://10.0.2.2:8000';
+      
+      final uri = Uri.parse('$wsUrl/ws/$jobId');
+      
+      final channel = WebSocketChannel.connect(uri);
+      _wsChannels[jobId] = channel;
+      
+      _wsSubscriptions[jobId] = channel.stream.listen(
+        (message) {
+          try {
+            final data = json.decode(message);
+            _updateJobFromWebSocket(jobId, data);
+          } catch (e) {
+            print('Error parsing WebSocket message: $e');
+          }
+        },
+        onError: (error) {
+          print('WebSocket error for job $jobId: $error');
+          // Clean up on error
+          _wsChannels.remove(jobId);
+          _wsSubscriptions[jobId]?.cancel();
+          _wsSubscriptions.remove(jobId);
+          
+          // Only reconnect if it's not a connection failure and job still active
+          if (!error.toString().contains('Failed host lookup') && 
+              !error.toString().contains('Connection refused') &&
+              !error.toString().contains('Connection reset')) {
+            Future.delayed(const Duration(seconds: 10), () {
+              if (state.jobs.any((job) => job.id == jobId && job.status == JobStatus.running)) {
+                connectToJob(jobId);
+              }
+            });
+          }
+        },
+        onDone: () {
+          print('WebSocket closed for job $jobId');
+          _wsChannels.remove(jobId);
+          _wsSubscriptions.remove(jobId);
+        },
+        cancelOnError: true,
+      );
+    } catch (e) {
+      print('Failed to connect to WebSocket for job $jobId: $e');
+      // Clean up on failure
+      _wsChannels.remove(jobId);
+      _wsSubscriptions[jobId]?.cancel();
+      _wsSubscriptions.remove(jobId);
+    }
+  }
+  
+  void disconnectFromJob(String jobId) {
+    _wsSubscriptions[jobId]?.cancel();
+    _wsChannels[jobId]?.sink.close();
+    _wsSubscriptions.remove(jobId);
+    _wsChannels.remove(jobId);
+  }
+
+  void _updateJobFromWebSocket(String jobId, Map<String, dynamic> data) {
+    final jobs = List<Job>.from(state.jobs);
+    final index = jobs.indexWhere((job) => job.id == jobId);
+    
+    if (index != -1) {
+      jobs[index] = Job(
+        id: jobId,
+        status: _parseJobStatus(data['status']),
+        processed: data['processed'] ?? jobs[index].processed,
+        total: data['total'] ?? jobs[index].total,
+        message: data['message'] ?? jobs[index].message,
+        industry: data['industry'] ?? jobs[index].industry,
+        location: data['location'] ?? jobs[index].location,
+        query: data['query'] ?? jobs[index].query,
+        timestamp: jobs[index].timestamp,
+        type: jobs[index].type,
+        totalCombinations: data['total_combinations'] ?? jobs[index].totalCombinations,
+        completedCombinations: data['completed_combinations'] ?? jobs[index].completedCombinations,
+      );
+      
+      // Remove completed jobs after a delay
+      if (jobs[index].status == JobStatus.done) {
+        Future.delayed(const Duration(seconds: 3), () {
+          removeJob(jobId);
+        });
+      }
+      
+      state = state.copyWith(jobs: jobs);
+    }
+  }
+
+  void removeJob(String jobId) {
+    final jobs = state.jobs.where((job) => job.id != jobId).toList();
+    state = state.copyWith(jobs: jobs);
+  }
+
+  JobStatus _parseJobStatus(String? status) {
+    switch (status) {
+      case 'pending':
+      case 'queued':
+        return JobStatus.pending;
+      case 'initializing':
+      case 'running':
+        return JobStatus.running;
+      case 'completed':
+      case 'done':
+        return JobStatus.done;
+      case 'error':
+      case 'failed':
+        return JobStatus.error;
+      case 'cancelled':
+        return JobStatus.cancelled;
+      default:
+        return JobStatus.pending;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    // Close all WebSocket connections
+    for (final jobId in _wsChannels.keys) {
+      disconnectFromJob(jobId);
+    }
+    super.dispose();
+  }
+}
+
+final activeJobsProvider = StateNotifierProvider<ActiveJobsNotifier, ActiveJobsState>((ref) {
+  final dio = ref.watch(dioProvider);
+  return ActiveJobsNotifier(dio);
+});
+
+// Import from existing provider
+final dioProvider = Provider<Dio>((ref) {
+  return Dio();
+});

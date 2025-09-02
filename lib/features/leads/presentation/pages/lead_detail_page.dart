@@ -21,6 +21,7 @@ import '../widgets/dynamic_pipeline_widget.dart';
 import '../widgets/call_tracking_dialog.dart';
 import '../widgets/quick_actions_bar.dart';
 import '../widgets/unified_screenshot_card.dart';
+import '../widgets/collapsible_screenshots.dart';
 import '../services/lead_actions_service.dart';
 import '../utils/lead_detail_utils.dart';
 import '../../data/datasources/pagespeed_datasource.dart';
@@ -44,6 +45,42 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     super.didChangeDependencies();
     _actionsService = LeadActionsService(ref: ref, context: context);
     _pageSpeedDataSource = PageSpeedDataSource();
+    
+    // Automatically transition NEW leads to VIEWED
+    _updateStatusToViewed();
+  }
+  
+  Future<void> _updateStatusToViewed() async {
+    try {
+      final lead = await ref.read(leadDetailProvider(widget.leadId).future);
+      
+      // Only update if the lead is NEW
+      if (lead.status == LeadStatus.new_) {
+        final repository = ref.read(leadsRepositoryProvider);
+        
+        // Update the lead status
+        final updatedLead = lead.copyWith(status: LeadStatus.viewed);
+        await repository.updateLead(updatedLead);
+        
+        // Add timeline entry
+        await repository.addTimelineEntry(lead.id, {
+          'type': 'STATUS_CHANGE',
+          'title': 'Status changed to VIEWED',
+          'description': 'Lead viewed for the first time',
+          'metadata': {
+            'auto_updated': true,
+            'triggered_by': 'page_view',
+            'previous_status': LeadStatus.new_.name,
+            'new_status': LeadStatus.viewed.name,
+          },
+        });
+        
+        // Refresh the lead details
+        ref.invalidate(leadDetailProvider(widget.leadId));
+      }
+    } catch (e) {
+      print('Failed to update status to VIEWED: $e');
+    }
   }
 
   @override
@@ -187,33 +224,59 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with business name and basic info
-          _buildHeaderSection(lead),
+          // Header with business name, info, and status - all in one place
+          _buildCompactHeaderSection(lead),
           const SizedBox(height: 16),
           
-          // Quick Actions Bar - Most common actions at the top
+          // Quick Actions Bar - Call, Schedule Callback, Do Not Convert - PRIORITY
           QuickActionsBar(
             lead: lead,
             onRefresh: () {
               ref.invalidate(leadDetailProvider(widget.leadId));
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           
-          // HIGH PRIORITY - Visual content above the fold
-          // Screenshots section - responsive layout
-          _buildScreenshotsSection(lead, isDesktop, isMobile),
-          const SizedBox(height: 16),
+          // Notes Section - MOVED UP for quick access during calls
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.elevatedSurface.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            child: const LeadNotesSection(),
+          ),
+          const SizedBox(height: 20),
           
-          // PageSpeed Score - Critical for website evaluation
-          if (lead.hasWebsite)
+          // Status Actions - Quick status changes and terminal actions
+          LeadStatusActions(lead: lead),
+          const SizedBox(height: 20),
+          
+          // Sales Pitch Section - For quick reference during calls
+          LeadSalesPitchSection(lead: lead),
+          const SizedBox(height: 20),
+          
+          // Screenshots - Collapsible to save space
+          CollapsibleScreenshots(
+            lead: lead,
+            defaultExpanded: true,
+          ),
+          const SizedBox(height: 20),
+          
+          // PageSpeed Score - Below screenshots
+          if (lead.hasWebsite) ...[
             PageSpeedScoreCard(
               lead: lead,
               onTestPressed: () => _runPageSpeedTest(lead),
             ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 20),
+          ],
           
-          // Dynamic Pipeline - Visual status tracking with multiple routes
+          // Dynamic Pipeline - Visual status tracking
           Container(
             height: 250,
             padding: EdgeInsets.symmetric(horizontal: isMobile ? 0 : 16),
@@ -228,24 +291,6 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           ),
           const SizedBox(height: 24),
           
-          // Business Information Section
-          _buildInfoSection(lead),
-          const SizedBox(height: 16),
-          _buildFlagsSection(lead),
-          const SizedBox(height: 24),
-          
-          // Sales and Follow-up Section
-          LeadSalesPitchSection(lead: lead),
-          const SizedBox(height: 24),
-          
-          // Notes and Communication
-          const LeadNotesSection(),
-          const SizedBox(height: 24),
-          
-          // Status Actions for terminal states
-          LeadStatusActions(lead: lead),
-          const SizedBox(height: 24),
-          
           // Timeline - Full history at the bottom
           LeadTimeline(
             lead: lead,
@@ -258,73 +303,6 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     );
   }
 
-  Widget _buildScreenshotsSection(Lead lead, bool isDesktop, bool isMobile) {
-    // For mobile: Stack screenshots vertically with consistent aspect ratio
-    if (isMobile) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Google Maps Screenshot Card
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: UnifiedScreenshotCard(
-              screenshotPath: lead.screenshotPath,
-              type: ScreenshotType.googleMaps,
-              lead: lead,
-              showInCard: true,
-            ),
-          ),
-          if (lead.hasWebsite && lead.websiteScreenshotPath != null) ...[
-            const SizedBox(height: 12),
-            // Website Screenshot Card
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: UnifiedScreenshotCard(
-                screenshotPath: lead.websiteScreenshotPath,
-                type: ScreenshotType.website,
-                lead: lead,
-                showInCard: true,
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-    
-    // For desktop/tablet: Side by side with consistent height
-    final hasWebsiteScreenshot = lead.hasWebsite && lead.websiteScreenshotPath != null;
-    
-    return SizedBox(
-      height: isDesktop ? 400 : 300,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Google Maps Screenshot
-          Expanded(
-            flex: hasWebsiteScreenshot ? 1 : 2,
-            child: UnifiedScreenshotCard(
-              screenshotPath: lead.screenshotPath,
-              type: ScreenshotType.googleMaps,
-              lead: lead,
-              showInCard: true,
-            ),
-          ),
-          // Website Screenshot if available
-          if (hasWebsiteScreenshot) ...[
-            const SizedBox(width: 16),
-            Expanded(
-              child: UnifiedScreenshotCard(
-                screenshotPath: lead.websiteScreenshotPath,
-                type: ScreenshotType.website,
-                lead: lead,
-                showInCard: true,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
   Widget _buildLoadingState() {
     return const Center(child: CircularProgressIndicator());
@@ -384,93 +362,261 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     );
   }
 
-  Widget _buildHeaderSection(Lead lead) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          lead.businessName,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+  Widget _buildCompactHeaderSection(Lead lead) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.elevatedSurface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
         ),
-        if (lead.rating != null && lead.rating! > 0) ...[
-          const SizedBox(height: 8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Business name and status
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.star, color: AppTheme.warningOrange, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                '${lead.rating!} (${lead.reviewCount ?? 0} reviews)',
-                style: TextStyle(color: Colors.white.withOpacity(0.8)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lead.businessName,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (lead.rating != null && lead.rating! > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.star, color: AppTheme.warningOrange, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${lead.rating!.toStringAsFixed(1)} (${lead.reviewCount ?? 0} reviews)',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Status badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(lead.status).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: _getStatusColor(lead.status).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getStatusIcon(lead.status),
+                      size: 12,
+                      color: _getStatusColor(lead.status),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _getStatusLabel(lead.status),
+                      style: TextStyle(
+                        color: _getStatusColor(lead.status),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+          
+          const SizedBox(height: 12),
+          Divider(color: Colors.white.withOpacity(0.1)),
+          const SizedBox(height: 12),
+          
+          // Contact info in a compact grid
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              // Phone
+              if (lead.phone.isNotEmpty)
+                _buildCompactInfoItem(
+                  icon: Icons.phone,
+                  text: lead.phone,
+                  onTap: () => _handlePhoneCall(lead),
+                  isClickable: true,
+                ),
+              
+              // Location
+              _buildCompactInfoItem(
+                icon: Icons.location_on,
+                text: lead.location,
+              ),
+              
+              // Industry
+              _buildCompactInfoItem(
+                icon: Icons.business,
+                text: lead.industry,
+              ),
+              
+              // Website
+              if (lead.websiteUrl != null && lead.websiteUrl!.isNotEmpty)
+                _buildCompactInfoItem(
+                  icon: Icons.language,
+                  text: 'Website',
+                  onTap: () => LeadDetailUtils.openWebsite(lead.websiteUrl!),
+                  isClickable: true,
+                ),
+              
+              // Google Maps
+              if (lead.profileUrl != null && lead.profileUrl!.isNotEmpty)
+                _buildCompactInfoItem(
+                  icon: Icons.map,
+                  text: 'Google Maps',
+                  onTap: () => LeadDetailUtils.openGoogleMapsProfile(lead.profileUrl!),
+                  isClickable: true,
+                ),
+            ],
+          ),
+          
+          // Callback info if scheduled
+          if (lead.status == LeadStatus.callbackScheduled && lead.followUpDate != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.purple.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.event,
+                    size: 16,
+                    color: Colors.purple,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Callback: ${_formatCallbackDate(lead.followUpDate!)}',
+                    style: TextStyle(
+                      color: Colors.purple,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+  
+  Widget _buildCompactInfoItem({
+    required IconData icon,
+    required String text,
+    VoidCallback? onTap,
+    bool isClickable = false,
+  }) {
+    final widget = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: isClickable ? AppTheme.primaryGold : Colors.white.withOpacity(0.5),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            color: isClickable ? AppTheme.primaryGold : Colors.white.withOpacity(0.7),
+            fontSize: 13,
+            decoration: isClickable ? TextDecoration.underline : null,
+          ),
+        ),
       ],
     );
+    
+    if (isClickable && onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: widget,
+      );
+    }
+    
+    return widget;
+  }
+  
+  String _formatCallbackDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = date.difference(now);
+    
+    if (difference.inDays == 0) {
+      // Today
+      final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+      final period = date.hour < 12 ? 'AM' : 'PM';
+      return 'Today at $hour:${date.minute.toString().padLeft(2, '0')} $period';
+    } else if (difference.inDays == 1) {
+      // Tomorrow
+      final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+      final period = date.hour < 12 ? 'AM' : 'PM';
+      return 'Tomorrow at $hour:${date.minute.toString().padLeft(2, '0')} $period';
+    } else if (difference.inDays < 7) {
+      // This week
+      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+      final period = date.hour < 12 ? 'AM' : 'PM';
+      return '${weekdays[date.weekday - 1]} at $hour:${date.minute.toString().padLeft(2, '0')} $period';
+    } else {
+      // Future date
+      return '${date.month}/${date.day} at ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    }
+  }
+  
+  Widget _buildHeaderSection(Lead lead) {
+    // Keeping old method for compatibility, but redirecting to new one
+    return _buildCompactHeaderSection(lead);
+  }
+  
+  IconData _getStatusIcon(LeadStatus status) {
+    switch (status) {
+      case LeadStatus.new_: return Icons.fiber_new;
+      case LeadStatus.viewed: return Icons.visibility;
+      case LeadStatus.called: return Icons.phone_in_talk;
+      case LeadStatus.callbackScheduled: return Icons.event;
+      case LeadStatus.interested: return Icons.star;
+      case LeadStatus.converted: return Icons.check_circle;
+      case LeadStatus.doNotCall: return Icons.phone_disabled;
+      case LeadStatus.didNotConvert: return Icons.cancel;
+    }
   }
 
-  Widget _buildInfoSection(Lead lead) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (lead.phone.isNotEmpty)
-          LeadInfoRow(
-            icon: Icons.phone,
-            text: lead.phone,
-            onTap: () => _handlePhoneCall(lead),
-          ),
-        if (lead.websiteUrl != null && lead.websiteUrl!.isNotEmpty)
-          LeadInfoRow(
-            icon: Icons.language,
-            text: lead.websiteUrl!,
-            onTap: () => LeadDetailUtils.openWebsite(lead.websiteUrl!),
-          ),
-        if (lead.profileUrl != null && lead.profileUrl!.isNotEmpty)
-          LeadInfoRow(
-            icon: Icons.map,
-            text: 'View on Google Maps',
-            onTap: () => LeadDetailUtils.openGoogleMapsProfile(lead.profileUrl!),
-          ),
-        LeadInfoRow(
-          icon: Icons.search,
-          text: 'Search Google',
-          onTap: () => LeadDetailUtils.searchOnGoogle(lead.businessName),
-        ),
-        LeadInfoRow(
-          icon: Icons.location_on,
-          text: lead.location,
-        ),
-        LeadInfoRow(
-          icon: Icons.business,
-          text: lead.industry,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFlagsSection(Lead lead) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        LeadFlagRow(
-          label: 'Has Website',
-          value: lead.hasWebsite,
-        ),
-        LeadFlagRow(
-          label: 'Candidate',
-          value: lead.isCandidate,
-          description: lead.isCandidate ? 'No website - potential client' : null,
-        ),
-        LeadFlagRow(
-          label: 'Meets Rating Threshold',
-          value: lead.meetsRatingThreshold,
-        ),
-      ],
-    );
-  }
 
   void _navigateBack() {
     if (Navigator.of(context).canPop()) {
@@ -592,6 +738,32 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           ),
         );
       }
+    }
+  }
+  
+  Color _getStatusColor(LeadStatus status) {
+    switch (status) {
+      case LeadStatus.new_: return const Color(0xFF007AFF);
+      case LeadStatus.viewed: return const Color(0xFF5856D6);
+      case LeadStatus.called: return const Color(0xFFFF9500);
+      case LeadStatus.interested: return const Color(0xFF34C759);
+      case LeadStatus.converted: return const Color(0xFF30D158);
+      case LeadStatus.didNotConvert: return const Color(0xFFFF3B30);
+      case LeadStatus.callbackScheduled: return const Color(0xFF5AC8FA);
+      case LeadStatus.doNotCall: return const Color(0xFF8E8E93);
+    }
+  }
+  
+  String _getStatusLabel(LeadStatus status) {
+    switch (status) {
+      case LeadStatus.new_: return 'NEW';
+      case LeadStatus.viewed: return 'VIEWED';
+      case LeadStatus.called: return 'CALLED';
+      case LeadStatus.interested: return 'INTERESTED';
+      case LeadStatus.converted: return 'WON';
+      case LeadStatus.didNotConvert: return 'LOST';
+      case LeadStatus.callbackScheduled: return 'CALLBACK';
+      case LeadStatus.doNotCall: return 'DNC';
     }
   }
 }

@@ -52,10 +52,10 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
           _buildQuickFilters(),
           if (showAdvancedFilters) ...[
             const SizedBox(height: 12),
-            buildAdvancedFilterSection(),
+            _buildAdvancedFilterSection(),
           ],
           const SizedBox(height: 8),
-          buildToggleButton(),
+          _buildToggleButton(),
         ],
       ),
     );
@@ -134,6 +134,67 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
       onSelected: onSelected,
       selectedColor: AppTheme.primaryGold.withValues(alpha: 0.2),
       checkmarkColor: AppTheme.primaryGold,
+    );
+  }
+
+  Widget _buildAdvancedFilterSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Advanced Filters',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Add more advanced filter options here
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildFilterChip('Candidates Only', ref.watch(candidatesOnlyProvider),
+                  (selected) => ref.read(candidatesOnlyProvider.notifier).state = selected),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleButton() {
+    return GestureDetector(
+      onTap: () => setState(() => showAdvancedFilters = !showAdvancedFilters),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              showAdvancedFilters ? Icons.expand_less : Icons.expand_more,
+              size: 20,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              showAdvancedFilters ? 'Hide Advanced' : 'Show Advanced',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

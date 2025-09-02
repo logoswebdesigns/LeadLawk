@@ -5,6 +5,7 @@ import '../../domain/entities/lead.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../services/unified_call_service.dart';
+import 'callback_scheduling_dialog.dart';
 
 
 // Did Not Convert reason codes
@@ -441,7 +442,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       case LeadStatus.called:
         actions.add(_buildStatusChip(LeadStatus.interested, 'Mark Interested'));
         actions.add(_buildStatusChip(LeadStatus.converted, 'Mark Converted'));
-        actions.add(_buildStatusChip(LeadStatus.callbackScheduled, 'Schedule Callback'));
+        actions.add(_buildCallbackChip());
         break;
       
       case LeadStatus.callbackScheduled:
@@ -481,6 +482,33 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       ),
       side: BorderSide(
         color: _getStatusColor(status).withOpacity(0.4),
+        width: 1,
+      ),
+    );
+  }
+  
+  Widget _buildCallbackChip() {
+    return ActionChip(
+      avatar: Icon(
+        Icons.event,
+        size: 16,
+        color: Colors.purple,
+      ),
+      label: const Text('Schedule Callback'),
+      onPressed: () async {
+        await showDialog(
+          context: context,
+          builder: (context) => CallbackSchedulingDialog(lead: widget.lead),
+        );
+      },
+      backgroundColor: Colors.purple.withOpacity(0.2),
+      labelStyle: TextStyle(
+        color: Colors.purple,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+      side: BorderSide(
+        color: Colors.purple.withOpacity(0.4),
         width: 1,
       ),
     );

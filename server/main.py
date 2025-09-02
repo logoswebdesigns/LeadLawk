@@ -26,7 +26,7 @@ from database import SessionLocal, init_db
 from sqlalchemy.orm import selectinload
 from models import Lead, LeadStatus, SalesPitch, LeadTimelineEntry, TimelineEntryType
 from schemas import (BrowserAutomationRequest, JobResponse, LeadResponse, LeadUpdate, 
-                    LeadTimelineEntryUpdate, ConversionModelResponse, ConversionScoringResponse,
+                    LeadTimelineEntryUpdate, LeadTimelineEntryCreate, ConversionModelResponse, ConversionScoringResponse,
                     SalesPitchResponse, SalesPitchCreate, SalesPitchUpdate, LeadUpdateRequest)
 
 # Import our refactored modules
@@ -469,6 +469,48 @@ async def update_timeline_entry(lead_id: str, entry_id: str, update_data: LeadTi
     if not lead:
         raise HTTPException(status_code=404, detail="Lead or timeline entry not found")
     return lead
+
+
+@app.post("/leads/{lead_id}/timeline", response_model=LeadResponse)
+async def add_timeline_entry_endpoint(lead_id: str, entry_data: LeadTimelineEntryCreate):
+    """Add a new timeline entry to a lead"""
+    db = SessionLocal()
+    try:
+        lead = db.query(Lead).options(selectinload(Lead.timeline_entries)).filter(Lead.id == lead_id).first()
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead not found")
+        
+        # Create new timeline entry
+        entry = LeadTimelineEntry(
+            id=str(uuid.uuid4()),
+            lead_id=lead_id,
+            type=TimelineEntryType(entry_data.type),
+            title=entry_data.title,
+            description=entry_data.description,
+            follow_up_date=entry_data.follow_up_date,
+            created_at=datetime.utcnow()
+        )
+        
+        db.add(entry)
+        
+        # If this is a status change, update the lead status
+        if entry_data.type == "STATUS_CHANGE" and entry_data.metadata:
+            new_status = entry_data.metadata.get("new_status")
+            if new_status:
+                lead.status = LeadStatus(new_status)
+        
+        # Update lead's updated_at timestamp
+        lead.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(lead)
+        
+        return LeadResponse.from_orm(lead)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to add timeline entry: {str(e)}")
+    finally:
+        db.close()
 
 
 # Admin Endpoints

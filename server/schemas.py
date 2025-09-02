@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -70,7 +70,6 @@ class LeadTimelineEntryResponse(BaseModel):
 
 
 class LeadTimelineEntryCreate(BaseModel):
-    id: str
     type: str
     title: str
     description: Optional[str] = None
@@ -80,6 +79,7 @@ class LeadTimelineEntryCreate(BaseModel):
     is_completed: bool = False
     completed_by: Optional[str] = None
     completed_at: Optional[datetime] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class LeadTimelineEntryUpdate(BaseModel):
