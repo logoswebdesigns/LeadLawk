@@ -8,6 +8,9 @@ import '../../domain/entities/lead.dart';
 import '../providers/job_provider.dart';
 import '../providers/pagespeed_websocket_provider.dart';
 import '../providers/server_status_provider.dart';
+import '../providers/paginated_leads_provider.dart';
+import '../providers/lead_statistics_provider.dart';
+import '../../data/datasources/leads_remote_datasource.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/conversion_pipeline.dart';
 import '../widgets/active_jobs_monitor.dart';
@@ -57,234 +60,8 @@ final groupByOptionProvider = StateProvider<GroupByOption>((ref) => GroupByOptio
 final expandedGroupsProvider = StateProvider<Set<String>>((ref) => {});
 final refreshTriggerProvider = StateProvider<int>((ref) => 0);
 
-// Main leads provider
-final leadsProvider = FutureProvider.autoDispose<List<Lead>>(
-  (ref) async {
-    print('🔄 leadsProvider: Fetching leads from repository...');
-    final repository = ref.watch(leadsRepositoryProvider);
-    
-    // Watch refresh trigger to force refresh
-    ref.watch(refreshTriggerProvider);
-    
-    // Get filter parameters
-    final status = ref.watch(statusFilterProvider);
-    final candidatesOnly = ref.watch(candidatesOnlyProvider);
-    
-    final result = await repository.getLeads(
-      status: status,
-      search: null,
-      candidatesOnly: candidatesOnly,
-    );
-    
-    return result.fold(
-      (failure) => throw Exception(failure.message),
-      (leads) {
-        print('✅ leadsProvider: Fetched ${leads.length} leads');
-        return _applyFiltersAndSort(leads, ref);
-      },
-    );
-  },
-);
-
-// Apply filters and sorting
-List<Lead> _applyFiltersAndSort(List<Lead> leads, Ref ref) {
-  var filteredLeads = List<Lead>.from(leads);
-  
-  // Apply all filters
-  final locationFilter = ref.watch(locationFilterProvider);
-  final industryFilter = ref.watch(industryFilterProvider);
-  final sourceFilter = ref.watch(sourceFilterProvider);
-  final searchFilter = ref.watch(searchFilterProvider);
-  final followUpFilter = ref.watch(followUpFilterProvider);
-  final hasWebsiteFilter = ref.watch(hasWebsiteFilterProvider);
-  final meetsRatingFilter = ref.watch(meetsRatingFilterProvider);
-  final hasRecentReviewsFilter = ref.watch(hasRecentReviewsFilterProvider);
-  final ratingRangeFilter = ref.watch(ratingRangeFilterProvider);
-  final reviewCountRangeFilter = ref.watch(reviewCountRangeFilterProvider);
-  final pageSpeedFilter = ref.watch(pageSpeedFilterProvider);
-  final sortOption = ref.watch(sortOptionProvider);
-  final sortAscending = ref.watch(sortAscendingProvider);
-  
-  // Location filter
-  if (locationFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.location == locationFilter).toList();
-  }
-  
-  // Industry filter
-  if (industryFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.industry == industryFilter).toList();
-  }
-  
-  // Source filter
-  if (sourceFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.source == sourceFilter).toList();
-  }
-  
-  // Search filter
-  if (searchFilter.isNotEmpty) {
-    final searchLower = searchFilter.toLowerCase();
-    filteredLeads = filteredLeads.where((lead) {
-      return lead.businessName.toLowerCase().contains(searchLower) ||
-             lead.phone.toLowerCase().contains(searchLower) ||
-             lead.location.toLowerCase().contains(searchLower) ||
-             lead.industry.toLowerCase().contains(searchLower);
-    }).toList();
-  }
-  
-  // Follow-up filter
-  if (followUpFilter != null) {
-    filteredLeads = filteredLeads.where((lead) {
-      if (followUpFilter == 'upcoming') {
-        return lead.hasUpcomingFollowUp;
-      } else if (followUpFilter == 'overdue') {
-        return lead.hasOverdueFollowUp;
-      }
-      return true;
-    }).toList();
-  }
-  
-  // Website filter
-  if (hasWebsiteFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.hasWebsite == hasWebsiteFilter).toList();
-  }
-  
-  // Rating filter
-  if (meetsRatingFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.meetsRatingThreshold == meetsRatingFilter).toList();
-  }
-  
-  // Recent reviews filter
-  if (hasRecentReviewsFilter != null) {
-    filteredLeads = filteredLeads.where((lead) => lead.hasRecentReviews == hasRecentReviewsFilter).toList();
-  }
-  
-  // Rating range filter
-  if (ratingRangeFilter != null) {
-    filteredLeads = filteredLeads.where((lead) {
-      final rating = lead.rating ?? 0;
-      switch (ratingRangeFilter) {
-        case '5':
-          return rating == 5.0;
-        case '4-5':
-          return rating >= 4.0 && rating <= 5.0;
-        case '3-4':
-          return rating >= 3.0 && rating < 4.0;
-        case '2-3':
-          return rating >= 2.0 && rating < 3.0;
-        case '1-2':
-          return rating >= 1.0 && rating < 2.0;
-        default:
-          return true;
-      }
-    }).toList();
-  }
-  
-  // Review count range filter
-  if (reviewCountRangeFilter != null) {
-    filteredLeads = filteredLeads.where((lead) {
-      final reviewCount = lead.reviewCount ?? 0;
-      switch (reviewCountRangeFilter) {
-        case '100+':
-          return reviewCount >= 100;
-        case '50-99':
-          return reviewCount >= 50 && reviewCount < 100;
-        case '20-49':
-          return reviewCount >= 20 && reviewCount < 50;
-        case '5-19':
-          return reviewCount >= 5 && reviewCount < 20;
-        case '1-4':
-          return reviewCount >= 1 && reviewCount < 5;
-        default:
-          return true;
-      }
-    }).toList();
-  }
-  
-  // PageSpeed filter
-  if (pageSpeedFilter != null) {
-    filteredLeads = filteredLeads.where((lead) {
-      final score = lead.pagespeedMobileScore ?? lead.pagespeedDesktopScore;
-      switch (pageSpeedFilter) {
-        case '90+':
-          return score != null && score >= 90;
-        case '50-89':
-          return score != null && score >= 50 && score < 90;
-        case '<50':
-          return score != null && score < 50;
-        case 'none':
-          return score == null;
-        default:
-          return true;
-      }
-    }).toList();
-  }
-  
-  // Apply sorting
-  filteredLeads.sort((a, b) {
-    int comparison = 0;
-    
-    switch (sortOption) {
-      case SortOption.newest:
-        comparison = b.createdAt.compareTo(a.createdAt);
-        break;
-      case SortOption.rating:
-        final aRating = a.rating ?? 0;
-        final bRating = b.rating ?? 0;
-        comparison = bRating.compareTo(aRating);
-        break;
-      case SortOption.reviews:
-        final aReviews = a.reviewCount ?? 0;
-        final bReviews = b.reviewCount ?? 0;
-        comparison = bReviews.compareTo(aReviews);
-        break;
-      case SortOption.alphabetical:
-        comparison = a.businessName.compareTo(b.businessName);
-        break;
-      case SortOption.pageSpeed:
-        final aScore = a.pagespeedMobileScore ?? a.pagespeedDesktopScore;
-        final bScore = b.pagespeedMobileScore ?? b.pagespeedDesktopScore;
-        
-        // Handle null values - always push them to the end
-        if (aScore == null && bScore == null) {
-          return 0; // Keep original order for both nulls
-        } else if (aScore == null) {
-          return 1; // a goes after b (always at end)
-        } else if (bScore == null) {
-          return -1; // b goes after a (always at end)
-        } else {
-          // Both have scores, compare normally with sort direction
-          return sortAscending 
-              ? aScore.compareTo(bScore)  // Ascending: lowest first
-              : bScore.compareTo(aScore); // Descending: highest first
-        }
-      case SortOption.conversion:
-        final aScore = a.conversionScore;
-        final bScore = b.conversionScore;
-        
-        // Handle null values - always push them to the end
-        if (aScore == null && bScore == null) {
-          return 0; // Keep original order for both nulls
-        } else if (aScore == null) {
-          return 1; // a goes after b (always at end)
-        } else if (bScore == null) {
-          return -1; // b goes after a (always at end)
-        } else {
-          // Both have scores, compare normally with sort direction
-          return sortAscending 
-              ? aScore.compareTo(bScore)  // Ascending: lowest first
-              : bScore.compareTo(aScore); // Descending: highest first
-        }
-    }
-    
-    // For newest, always sort newest first regardless of ascending flag
-    if (sortOption == SortOption.newest) {
-      return comparison;
-    }
-    return sortAscending ? comparison : -comparison;
-  });
-  
-  return filteredLeads;
-}
+// Page size provider for pagination
+final pageSizeProvider = StateProvider<int>((ref) => 25);
 
 // Main page widget
 class LeadsListPage extends ConsumerStatefulWidget {
@@ -302,6 +79,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   Timer? _debounceTimer;
   String? _lastIndustry;
   String? _lastLocation;
+  bool _isLoadingMore = false;
   
   @override
   void initState() {
@@ -317,11 +95,31 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     _loadLastScrapeContext();
     _initScrollController();
     
-    // Initialize WebSocket connection
+    // Initialize WebSocket connection and refresh statistics
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(pageSpeedWebSocketProvider);
       _refreshData();
+      // Force statistics refresh on page load
+      ref.invalidate(leadStatisticsProvider);
     });
+  }
+  
+  
+  String _getSortByField(SortOption option) {
+    switch (option) {
+      case SortOption.newest:
+        return 'created_at';
+      case SortOption.rating:
+        return 'rating';
+      case SortOption.reviews:
+        return 'review_count';
+      case SortOption.alphabetical:
+        return 'business_name';
+      case SortOption.pageSpeed:
+        return 'pagespeed_mobile_score';
+      case SortOption.conversion:
+        return 'conversion_score';
+    }
   }
   
   void _initScrollController() {
@@ -329,7 +127,23 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       if (_scrollController.position.pixels > 100) {
         _storeScrollPosition();
       }
+      
+      // Load more when reaching the bottom
+      if (_scrollController.position.pixels >= 
+          _scrollController.position.maxScrollExtent - 200) {
+        _loadMore();
+      }
     });
+  }
+  
+  void _loadMore() {
+    if (!_isLoadingMore) {
+      print('📱 UI: Scroll triggered load more');
+      setState(() => _isLoadingMore = true);
+      ref.read(paginatedLeadsProvider.notifier).loadMoreLeads().then((_) {
+        if (mounted) setState(() => _isLoadingMore = false);
+      });
+    }
   }
   
   Future<void> _loadLastScrapeContext() async {
@@ -343,7 +157,9 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   }
   
   void _refreshData() {
-    ref.invalidate(leadsProvider);
+    ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+    // Also refresh the statistics
+    ref.invalidate(leadStatisticsProvider);
   }
   
   Future<void> _storeScrollPosition() async {
@@ -363,6 +179,120 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   
   @override
   Widget build(BuildContext context) {
+    // Status filter listener
+    ref.listen(statusFilterProvider, (previous, next) {
+      if (previous != next) {
+        print('📱 UI: Status filter changed to $next');
+        // Get current state of all other filters
+        final search = ref.read(searchFilterProvider);
+        final candidatesOnly = ref.read(candidatesOnlyProvider);
+        final sortOption = ref.read(sortOptionProvider);
+        final sortBy = _getSortByField(sortOption);
+        final sortAscending = ref.read(sortAscendingProvider);
+        
+        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+          status: next,
+          search: search.isEmpty ? null : search,
+          candidatesOnly: candidatesOnly,
+          sortBy: sortBy,
+          sortAscending: sortAscending,
+        );
+      }
+    });
+    
+    // Search filter listener with debounce
+    ref.listen(searchFilterProvider, (previous, next) {
+      if (previous != next) {
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+          print('📱 UI: Search filter changed to "$next"');
+          // Get current state of all other filters
+          final status = ref.read(statusFilterProvider);
+          final candidatesOnly = ref.read(candidatesOnlyProvider);
+          final sortOption = ref.read(sortOptionProvider);
+          final sortBy = _getSortByField(sortOption);
+          final sortAscending = ref.read(sortAscendingProvider);
+          
+          ref.read(paginatedLeadsProvider.notifier).updateFilters(
+            status: status,
+            search: next.isEmpty ? null : next,
+            candidatesOnly: candidatesOnly,
+            sortBy: sortBy,
+            sortAscending: sortAscending,
+          );
+        });
+      }
+    });
+    
+    // Candidates only filter listener
+    ref.listen(candidatesOnlyProvider, (previous, next) {
+      if (previous != next) {
+        print('📱 UI: Candidates only filter changed to $next');
+        // Get current state of all other filters
+        final status = ref.read(statusFilterProvider);
+        final search = ref.read(searchFilterProvider);
+        final sortOption = ref.read(sortOptionProvider);
+        final sortBy = _getSortByField(sortOption);
+        final sortAscending = ref.read(sortAscendingProvider);
+        
+        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+          status: status,
+          search: search.isEmpty ? null : search,
+          candidatesOnly: next,
+          sortBy: sortBy,
+          sortAscending: sortAscending,
+        );
+      }
+    });
+    
+    // Sort option listener
+    ref.listen(sortOptionProvider, (previous, next) {
+      print('📱 UI DEBUG: sortOptionProvider changed from $previous to $next');
+      if (previous != next) {
+        final sortBy = _getSortByField(next);
+        final sortAscending = ref.read(sortAscendingProvider);
+        print('📱 UI: Sort option changed to $next (sortBy: $sortBy, ascending: $sortAscending)');
+        
+        // Get current state of all filters
+        final status = ref.read(statusFilterProvider);
+        final search = ref.read(searchFilterProvider);
+        final candidatesOnly = ref.read(candidatesOnlyProvider);
+        
+        print('📱 UI DEBUG: Calling updateFilters with status=$status, search=$search, candidatesOnly=$candidatesOnly, sortBy=$sortBy, sortAscending=$sortAscending');
+        
+        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+          status: status,
+          search: search.isEmpty ? null : search,
+          candidatesOnly: candidatesOnly,
+          sortBy: sortBy,
+          sortAscending: sortAscending,
+        );
+      }
+    });
+    
+    // Sort ascending listener
+    ref.listen(sortAscendingProvider, (previous, next) {
+      print('📱 UI DEBUG: sortAscendingProvider listener triggered - previous: $previous, next: $next');
+      if (previous != next) {
+        final sortOption = ref.read(sortOptionProvider);
+        final sortBy = _getSortByField(sortOption);
+        print('📱 UI: Sort direction changed to ${next ? "ascending" : "descending"} (sortBy: $sortBy)');
+        
+        // Get current state of all filters
+        final status = ref.read(statusFilterProvider);
+        final search = ref.read(searchFilterProvider);
+        final candidatesOnly = ref.read(candidatesOnlyProvider);
+        
+        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+          status: status,
+          search: search.isEmpty ? null : search,
+          candidatesOnly: candidatesOnly,
+          sortBy: sortBy,
+          sortAscending: next,
+        );
+      }
+    });
+    
     // Watch WebSocket state for new leads
     final wsState = ref.watch(pageSpeedWebSocketProvider);
     
@@ -375,11 +305,16 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       if (actuallyNewLeads.isNotEmpty) {
         print('🆕 New leads detected: $actuallyNewLeads');
         print('🔄 Forcing leads refresh...');
-        Future.microtask(() => ref.invalidate(leadsProvider));
+        Future.microtask(() {
+          _refreshData();
+          // Also refresh the statistics
+          ref.invalidate(leadStatisticsProvider);
+        });
       }
     });
     
-    final leadsAsync = ref.watch(leadsProvider);
+    final paginatedState = ref.watch(paginatedLeadsProvider);
+    final pageSize = ref.watch(pageSizeProvider);
     final serverState = ref.watch(serverStatusProvider);
     
     return Scaffold(
@@ -388,40 +323,98 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         children: [
           Column(
             children: [
-              // Pipeline at the top - most prominent
-              leadsAsync.when(
-                data: (leads) => ConversionPipeline(leads: leads),
-                loading: () => const SizedBox(height: 200),
-                error: (_, __) => const SizedBox(height: 200),
-              ),
+              // Pipeline at the top - shows overall statistics
+              const ConversionPipeline(),
               // Active jobs monitor
               const ActiveJobsMonitor(),
-              // Filter bar
-              const FilterBar(),
+              // Filter bar with page size selector
+              Column(
+                children: [
+                  const FilterBar(),
+                  // Page size selector
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    color: AppTheme.elevatedSurface,
+                    child: Row(
+                      children: [
+                        Text(
+                          'Show:',
+                          style: TextStyle(
+                            color: AppTheme.mediumGray,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.backgroundDark,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              value: pageSize,
+                              dropdownColor: AppTheme.elevatedSurface,
+                              icon: Icon(Icons.arrow_drop_down, color: AppTheme.mediumGray),
+                              style: const TextStyle(color: Colors.white, fontSize: 14),
+                              items: [25, 50, 100, 500].map((size) {
+                                return DropdownMenuItem(
+                                  value: size,
+                                  child: Text('$size per page'),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  print('📱 UI: User changed page size to $value');
+                                  ref.read(pageSizeProvider.notifier).state = value;
+                                  // Update the notifier with new page size
+                                  ref.read(paginatedLeadsProvider.notifier).updatePageSize(value);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        if (paginatedState.total > 0)
+                          Text(
+                            'Total: ${paginatedState.total} leads',
+                            style: TextStyle(
+                              color: AppTheme.mediumGray,
+                              fontSize: 14,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               // Sort bar OR Selection action bar (mutually exclusive)
               const SortBar(),
               const SelectionActionBar(),
               // Leads list
               Expanded(
-                child: leadsAsync.when(
-                  data: (leads) => _buildLeadsList(context, leads),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text('Error: $error', textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _refreshData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                child: paginatedState.isLoading && paginatedState.leads.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : paginatedState.error != null && paginatedState.leads.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                                const SizedBox(height: 16),
+                                Text('Error: ${paginatedState.error}', textAlign: TextAlign.center),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _refreshData,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _buildLeadsList(context, paginatedState.leads, paginatedState.isLoadingMore),
               ),
             ],
           ),
@@ -431,7 +424,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     );
   }
   
-  Widget _buildLeadsList(BuildContext context, List<Lead> leads) {
+  Widget _buildLeadsList(BuildContext context, List<Lead> leads, bool isLoadingMore) {
     if (leads.isEmpty) {
       return Center(
         child: Column(
@@ -483,8 +476,17 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: leads.length,
+      itemCount: leads.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
+        if (index == leads.length) {
+          // Loading indicator at the bottom
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
         final lead = leads[index];
         return LeadTile(lead: lead);
       },

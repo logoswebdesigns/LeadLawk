@@ -12,22 +12,24 @@ import time
 import uuid
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.encoders import jsonable_encoder
 from logging.handlers import RotatingFileHandler
 from sqlalchemy import func
 
 # Local imports
 from database import SessionLocal, init_db
 from sqlalchemy.orm import selectinload
-from models import Lead, LeadStatus, SalesPitch, LeadTimelineEntry, TimelineEntryType
+from models import Lead, LeadStatus, SalesPitch, LeadTimelineEntry, TimelineEntryType, EmailTemplate
 from schemas import (BrowserAutomationRequest, JobResponse, LeadResponse, LeadUpdate, 
                     LeadTimelineEntryUpdate, LeadTimelineEntryCreate, ConversionModelResponse, ConversionScoringResponse,
-                    SalesPitchResponse, SalesPitchCreate, SalesPitchUpdate, LeadUpdateRequest)
+                    SalesPitchResponse, SalesPitchCreate, SalesPitchUpdate, LeadUpdateRequest,
+                    EmailTemplateResponse, EmailTemplateCreate, EmailTemplateUpdate, LeadStatisticsResponse)
 
 # Import our refactored modules
 from job_management import (
@@ -380,8 +382,10 @@ async def export_leads_excel(
 
 
 # Lead Management Endpoints
-@app.get("/leads", response_model=list[LeadResponse])
+@app.get("/leads")
 async def get_leads(
+    page: int = 1,
+    per_page: int = 20,
     status: Optional[str] = None,
     industry: Optional[str] = None,
     location: Optional[str] = None,
@@ -390,11 +394,23 @@ async def get_leads(
     max_pagespeed_mobile: Optional[int] = None,
     min_pagespeed_desktop: Optional[int] = None,
     max_pagespeed_desktop: Optional[int] = None,
-    pagespeed_tested: Optional[bool] = None
+    pagespeed_tested: Optional[bool] = None,
+    sort_by: str = "created_at",
+    sort_ascending: bool = False,
+    search: Optional[str] = None,
+    candidates_only: Optional[bool] = None
 ):
-    """Get all leads with optional filtering"""
+    """Get paginated leads with optional filtering and sorting"""
+    # Log sorting parameters
+    logger.info(f"🔄 BACKEND SORT: sort_by={sort_by}, ascending={sort_ascending}")
+    logger.info(f"📊 BACKEND FILTERS: status={status}, search={search}, candidates_only={candidates_only}")
+    
     db = SessionLocal()
     try:
+        # Limit per_page to prevent abuse
+        per_page = min(per_page, 100)
+        page = max(page, 1)
+        
         query = db.query(Lead).options(
             selectinload(Lead.timeline_entries),
             selectinload(Lead.sales_pitch)
@@ -413,6 +429,19 @@ async def get_leads(
             else:
                 query = query.filter(Lead.website_url.is_(None))
         
+        # Search filter
+        if search:
+            search_pattern = f"%{search}%"
+            query = query.filter(
+                (Lead.business_name.ilike(search_pattern)) |
+                (Lead.phone.ilike(search_pattern)) |
+                (Lead.location.ilike(search_pattern))
+            )
+        
+        # Candidates only filter
+        if candidates_only:
+            query = query.filter(Lead.is_candidate == True)
+        
         # PageSpeed filters
         if min_pagespeed_mobile is not None:
             query = query.filter(Lead.pagespeed_mobile_score >= min_pagespeed_mobile)
@@ -428,8 +457,97 @@ async def get_leads(
             else:
                 query = query.filter(Lead.pagespeed_tested_at.is_(None))
         
-        leads = query.order_by(Lead.created_at.desc()).all()
-        return [LeadResponse.from_orm(lead) for lead in leads]
+        # Apply sorting with proper null handling
+        from sqlalchemy import nulls_last, nulls_first, desc, asc
+        
+        # Map sort fields to database columns
+        sort_field_map = {
+            "created_at": Lead.created_at,
+            "business_name": Lead.business_name,
+            "rating": Lead.rating,
+            "review_count": Lead.review_count,
+            "pagespeed_mobile_score": Lead.pagespeed_mobile_score,
+            "pagespeed_desktop_score": Lead.pagespeed_desktop_score,
+            "conversion_score": Lead.conversion_score,
+        }
+        
+        # Get the sort column
+        sort_column = sort_field_map.get(sort_by, Lead.created_at)
+        
+        # For nullable fields (rating, review_count, pagespeed scores, conversion_score),
+        # we want to show non-null values first, then nulls at the end
+        nullable_fields = ["rating", "review_count", "pagespeed_mobile_score", 
+                          "pagespeed_desktop_score", "conversion_score"]
+        
+        # Log which sorting strategy is being used
+        if sort_by in nullable_fields:
+            logger.info(f"🔄 BACKEND: Sorting by {sort_by} (nullable field) - non-null values first, {'ascending' if sort_ascending else 'descending'}")
+        else:
+            logger.info(f"🔄 BACKEND: Sorting by {sort_by} (non-nullable field) - {'ascending' if sort_ascending else 'descending'}")
+        
+        if sort_by in nullable_fields:
+            # For nullable fields, always show non-null values first
+            if sort_ascending:
+                # Ascending: Show lowest non-null values first, then nulls
+                query = query.order_by(nulls_last(asc(sort_column)))
+            else:
+                # Descending: Show highest non-null values first, then nulls
+                query = query.order_by(nulls_last(desc(sort_column)))
+        else:
+            # For non-nullable fields, sort normally
+            if sort_ascending:
+                query = query.order_by(asc(sort_column))
+            else:
+                query = query.order_by(desc(sort_column))
+        
+        # Always return paginated response
+        # Get total count for pagination
+        total = query.count()
+        
+        # Calculate pagination
+        offset = (page - 1) * per_page
+        total_pages = (total + per_page - 1) // per_page
+        
+        # Get paginated results
+        leads = query.offset(offset).limit(per_page).all()
+        
+        # Return paginated response
+        return {
+            "items": [LeadResponse.from_orm(lead) for lead in leads],
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+    finally:
+        db.close()
+
+
+@app.get("/leads/statistics/all", response_model=LeadStatisticsResponse)
+async def get_lead_statistics():
+    """Get overall lead statistics by status"""
+    db = SessionLocal()
+    try:
+        # Get total count
+        total = db.query(Lead).count()
+        
+        # Count leads by status
+        by_status = {}
+        for status in LeadStatus:
+            count = db.query(Lead).filter(Lead.status == status).count()
+            by_status[status.value] = count
+        
+        # Calculate conversion rate
+        converted = by_status.get(LeadStatus.converted.value, 0)
+        conversion_rate = (converted / total * 100) if total > 0 else 0.0
+        
+        return LeadStatisticsResponse(
+            total=total,
+            by_status=by_status,
+            conversion_rate=conversion_rate
+        )
     finally:
         db.close()
 
@@ -1202,6 +1320,239 @@ def get_pitch_analytics():
             "overall_conversion_rate": (sum(p["conversions"] for p in analytics) / 
                                        max(sum(p["attempts"] for p in analytics), 1)) * 100
         }
+    finally:
+        db.close()
+
+
+# Email Template endpoints
+@app.get("/email-templates", response_model=List[EmailTemplateResponse])
+def get_email_templates(active_only: bool = False):
+    """Get all email templates"""
+    db = SessionLocal()
+    try:
+        query = db.query(EmailTemplate)
+        if active_only:
+            query = query.filter(EmailTemplate.is_active == True)
+        templates = query.order_by(EmailTemplate.created_at.desc()).all()
+        return templates
+    finally:
+        db.close()
+
+
+@app.get("/email-templates/{template_id}", response_model=EmailTemplateResponse)
+def get_email_template(template_id: str):
+    """Get a specific email template"""
+    db = SessionLocal()
+    try:
+        template = db.query(EmailTemplate).filter(EmailTemplate.id == template_id).first()
+        if not template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        return template
+    finally:
+        db.close()
+
+
+@app.post("/email-templates", response_model=EmailTemplateResponse)
+def create_email_template(template: EmailTemplateCreate):
+    """Create a new email template"""
+    db = SessionLocal()
+    try:
+        # Check if template name already exists
+        existing = db.query(EmailTemplate).filter(EmailTemplate.name == template.name).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Template with this name already exists")
+        
+        db_template = EmailTemplate(
+            id=str(uuid.uuid4()),
+            name=template.name,
+            subject=template.subject,
+            body=template.body,
+            description=template.description,
+            is_active=template.is_active
+        )
+        db.add(db_template)
+        db.commit()
+        db.refresh(db_template)
+        return db_template
+    finally:
+        db.close()
+
+
+@app.put("/email-templates/{template_id}", response_model=EmailTemplateResponse)
+def update_email_template(template_id: str, template: EmailTemplateUpdate):
+    """Update an email template"""
+    db = SessionLocal()
+    try:
+        db_template = db.query(EmailTemplate).filter(EmailTemplate.id == template_id).first()
+        if not db_template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        # Check if new name conflicts with existing template
+        if template.name and template.name != db_template.name:
+            existing = db.query(EmailTemplate).filter(
+                EmailTemplate.name == template.name,
+                EmailTemplate.id != template_id
+            ).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="Template with this name already exists")
+        
+        update_data = template.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_template, field, value)
+        
+        db_template.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(db_template)
+        return db_template
+    finally:
+        db.close()
+
+
+@app.delete("/email-templates/{template_id}")
+def delete_email_template(template_id: str):
+    """Delete an email template"""
+    db = SessionLocal()
+    try:
+        template = db.query(EmailTemplate).filter(EmailTemplate.id == template_id).first()
+        if not template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        db.delete(template)
+        db.commit()
+        return {"message": "Template deleted successfully"}
+    finally:
+        db.close()
+
+
+@app.post("/email-templates/initialize-defaults")
+def initialize_default_templates():
+    """Initialize default email templates if none exist"""
+    db = SessionLocal()
+    try:
+        # Check if any templates exist
+        existing_count = db.query(EmailTemplate).count()
+        if existing_count > 0:
+            return {"message": f"Templates already exist ({existing_count} found)", "created": 0}
+        
+        # Create default templates
+        default_templates = [
+            {
+                "name": "Initial Outreach",
+                "subject": "Website Performance Opportunity for {{businessName}}",
+                "body": """Hi {{businessName}},
+
+I noticed your business in {{location}} and wanted to reach out about your online presence.
+
+Your current rating of {{rating}} with {{reviewCount}} reviews shows you're doing great work in the {{industry}} industry. However, I noticed some opportunities to improve your website's performance that could help you attract more customers.
+
+Would you be interested in a brief conversation about how we can help improve your online visibility and website speed?
+
+Best regards""",
+                "description": "First contact email for new leads"
+            },
+            {
+                "name": "Follow-up After Call",
+                "subject": "Following Up - {{businessName}}",
+                "body": """Hi {{businessName}},
+
+Thank you for taking the time to speak with me today. As discussed, I wanted to follow up with some information about how we can help improve your online presence.
+
+Based on our conversation, here are the key areas where we can help:
+- Improve website loading speed
+- Enhance mobile user experience  
+- Boost local search visibility
+
+I'll send over a detailed proposal shortly. Please let me know if you have any questions in the meantime.
+
+Best regards""",
+                "description": "Send after initial phone call"
+            },
+            {
+                "name": "Website Improvement Proposal",
+                "subject": "Website Improvement Proposal for {{businessName}}",
+                "body": """Hi {{businessName}},
+
+As promised, I'm sending over our website improvement proposal for your {{industry}} business in {{location}}.
+
+[PAGESPEED_SUMMARY]
+
+[PAGESPEED_DETAILS]
+
+[PERFORMANCE_ISSUES]
+
+Our proposed improvements will:
+[IMPROVEMENT_AREAS]
+
+Additional benefits:
+- Increase conversion rates by 20-40%
+- Improve search engine rankings
+- Enhance user experience across all devices
+- Reduce bounce rates
+
+Investment: Starting at $X,XXX
+Timeline: 2-3 weeks
+
+Would you like to schedule a call to discuss this proposal in detail?
+
+Best regards""",
+                "description": "Detailed proposal with PageSpeed data"
+            },
+            {
+                "name": "PageSpeed Results",
+                "subject": "Website Performance Analysis for {{businessName}}",
+                "body": """Hi {{businessName}},
+
+I've completed a performance analysis of your website and wanted to share the results with you.
+
+[PAGESPEED_SUMMARY]
+
+[PERFORMANCE_ISSUES]
+
+The good news is that these issues are fixable! With some targeted optimizations, we can:
+[IMPROVEMENT_AREAS]
+
+Current scores:
+- Mobile Performance: {{mobileScore}}/100
+- Desktop Performance: {{desktopScore}}/100
+- SEO Score: {{seoScore}}/100
+- Accessibility: {{accessibilityScore}}/100
+
+Would you like to discuss how we can improve these scores and boost your online presence?
+
+Best regards""",
+                "description": "Share PageSpeed test results"
+            },
+            {
+                "name": "Thank You - Not Interested",
+                "subject": "Thank You {{businessName}}",
+                "body": """Hi {{businessName}},
+
+Thank you for taking the time to consider our services. I understand that now might not be the right time for website improvements.
+
+I'll keep your information on file, and please don't hesitate to reach out if your needs change in the future. We're always here to help businesses in {{location}} improve their online presence.
+
+Wishing you continued success with your {{industry}} business.
+
+Best regards""",
+                "description": "Polite follow-up for leads that decline"
+            }
+        ]
+        
+        created_count = 0
+        for template_data in default_templates:
+            db_template = EmailTemplate(
+                id=str(uuid.uuid4()),
+                name=template_data["name"],
+                subject=template_data["subject"],
+                body=template_data["body"],
+                description=template_data["description"],
+                is_active=True
+            )
+            db.add(db_template)
+            created_count += 1
+        
+        db.commit()
+        return {"message": f"Default templates created successfully", "created": created_count}
     finally:
         db.close()
 

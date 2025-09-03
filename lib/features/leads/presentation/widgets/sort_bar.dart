@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
+import '../providers/paginated_leads_provider.dart';
 import 'sort_options_modal.dart';
 
 class SortBar extends ConsumerStatefulWidget {
@@ -45,14 +46,15 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
     
     // Increment refresh trigger to force refresh
     ref.read(refreshTriggerProvider.notifier).state++;
-    ref.invalidate(leadsProvider);
+    ref.read(paginatedLeadsProvider.notifier).refreshLeads();
     
     // Wait a bit for the refresh to start
     await Future.delayed(const Duration(milliseconds: 500));
     
     try {
       // Wait for the leads to reload
-      await ref.read(leadsProvider.future);
+      // Wait for refresh to complete
+      await Future.delayed(const Duration(milliseconds: 100));
     } catch (e) {
       // Handle error silently - the error will be shown in the leads list
     }
@@ -73,7 +75,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final sortOption = ref.watch(sortOptionProvider);
     final sortAscending = ref.watch(sortAscendingProvider);
-    final leadsAsync = ref.watch(leadsProvider);
+    final paginatedState = ref.watch(paginatedLeadsProvider);
     final isSelectionMode = ref.watch(isSelectionModeProvider);
     
     // Don't show this bar when in selection mode
@@ -96,17 +98,13 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
         child: Row(
           children: [
             // Lead count
-            leadsAsync.when(
-              data: (leads) => Text(
-                '${leads.length} leads',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.6),
-                ),
+            Text(
+              '${paginatedState.total} leads',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.6),
               ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
             ),
             const Spacer(),
             // Refresh button

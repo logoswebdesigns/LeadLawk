@@ -21,6 +21,14 @@ class FilterBarState extends ConsumerState<FilterBar> {
   bool showFilters = false;
 
   @override
+  void initState() {
+    super.initState();
+    searchController.addListener(() {
+      setState(() {}); // Rebuild to update suffix icon visibility
+    });
+  }
+
+  @override
   void dispose() {
     debounceTimer?.cancel();
     searchController.dispose();
@@ -61,56 +69,61 @@ class FilterBarState extends ConsumerState<FilterBar> {
   }
 
   Widget _buildSearchField() {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
+    return TextField(
+      controller: searchController,
+      style: const TextStyle(
+        fontSize: 16,
+        color: Colors.white,
+        fontWeight: FontWeight.w400,
       ),
-      child: TextField(
-        controller: searchController,
-        style: const TextStyle(
+      decoration: InputDecoration(
+        hintText: 'Search leads...',
+        hintStyle: TextStyle(
           fontSize: 16,
-          color: Colors.white,
+          color: Colors.white.withOpacity(0.4),
           fontWeight: FontWeight.w400,
         ),
-        decoration: InputDecoration(
-          hintText: 'Search leads...',
-          hintStyle: TextStyle(
-            fontSize: 16,
-            color: Colors.white.withValues(alpha: 0.4),
-            fontWeight: FontWeight.w400,
-          ),
-          prefixIcon: Icon(
-            CupertinoIcons.search,
-            color: Colors.white.withValues(alpha: 0.4),
-            size: 20,
-          ),
-          suffixIcon: searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    CupertinoIcons.xmark_circle_fill,
-                    color: Colors.white.withValues(alpha: 0.3),
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    searchController.clear();
-                    ref.read(searchFilterProvider.notifier).state = '';
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        prefixIcon: Icon(
+          CupertinoIcons.search,
+          color: AppTheme.primaryGold,
+          size: 20,
         ),
-        onChanged: (value) {
-          debounceTimer?.cancel();
-          debounceTimer = Timer(const Duration(milliseconds: 300), () {
-            if (mounted) {
-              ref.read(searchFilterProvider.notifier).state = value;
-            }
-          });
-        },
+        suffixIcon: searchController.text.isNotEmpty
+            ? IconButton(
+                icon: Icon(
+                  CupertinoIcons.xmark_circle_fill,
+                  color: Colors.white.withOpacity(0.3),
+                  size: 18,
+                ),
+                onPressed: () {
+                  searchController.clear();
+                  ref.read(searchFilterProvider.notifier).state = '';
+                },
+              )
+            : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppTheme.primaryGold),
+        ),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.05),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
+      onChanged: (value) {
+        debounceTimer?.cancel();
+        debounceTimer = Timer(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            ref.read(searchFilterProvider.notifier).state = value;
+          }
+        });
+      },
     );
   }
 

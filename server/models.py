@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, Text, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 import uuid
 
@@ -52,8 +52,8 @@ class Lead(Base):
     notes = Column(Text, nullable=True)
     screenshot_path = Column(String, nullable=True)  # Google Maps business screenshot
     website_screenshot_path = Column(String, nullable=True)  # Website homepage screenshot from PageSpeed
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     follow_up_date = Column(DateTime, nullable=True)
     
     # PageSpeed Insights fields
@@ -111,7 +111,7 @@ class LeadTimelineEntry(Base):
     description = Column(Text, nullable=True)
     previous_status = Column(SQLEnum(LeadStatus), nullable=True)
     new_status = Column(SQLEnum(LeadStatus), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     follow_up_date = Column(DateTime, nullable=True)
     is_completed = Column(Boolean, default=False)
     completed_by = Column(String, nullable=True)
@@ -130,7 +130,7 @@ class ConversionModel(Base):
     feature_importance = Column(Text, nullable=True)  # JSON of feature importance scores
     model_accuracy = Column(Float, nullable=True)
     training_samples = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
     
     # Model statistics
@@ -151,8 +151,8 @@ class SalesPitch(Base):
     name = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # A/B testing metrics
     conversions = Column(Integer, default=0)
@@ -161,3 +161,16 @@ class SalesPitch(Base):
     
     leads = relationship("Lead", back_populates="sales_pitch")
     call_logs = relationship("CallLog", back_populates="sales_pitch")
+
+
+class EmailTemplate(Base):
+    __tablename__ = "email_templates"
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String, nullable=False, unique=True)
+    subject = Column(String, nullable=False)
+    body = Column(Text, nullable=False)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

@@ -60,7 +60,9 @@ class SortOptionsModal extends ConsumerWidget {
                     // Direction toggle
                     GestureDetector(
                       onTap: () {
+                        print('🔄 SORT MODAL: Toggling sort direction from ${isAscending ? "ascending" : "descending"} to ${!isAscending ? "ascending" : "descending"}');
                         ref.read(sortAscendingProvider.notifier).state = !isAscending;
+                        print('🔄 SORT MODAL: Sort direction toggled');
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -122,8 +124,10 @@ class SortOptionsModal extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
+          print('🔄 SORT MODAL: Selected sort option: $option');
           // Update the sort option
           ref.read(sortOptionProvider.notifier).state = option;
+          print('🔄 SORT MODAL: Sort option updated, closing modal');
           // Close the modal
           Navigator.of(context).pop();
           // The leads list will automatically update due to watching sortOptionProvider

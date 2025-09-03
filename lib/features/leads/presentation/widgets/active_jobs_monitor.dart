@@ -6,11 +6,56 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/active_jobs_provider.dart';
 import '../../domain/entities/job.dart';
 
-class ActiveJobsMonitor extends ConsumerWidget {
+class ActiveJobsMonitor extends ConsumerStatefulWidget {
   const ActiveJobsMonitor({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ActiveJobsMonitor> createState() => _ActiveJobsMonitorState();
+}
+
+class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor> 
+    with SingleTickerProviderStateMixin {
+  late bool _isExpanded;
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = true; // Default to expanded
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    
+    if (_isExpanded) {
+      _animationController.value = 1.0;
+    }
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+  
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final activeJobsState = ref.watch(activeJobsProvider);
     
     if (activeJobsState.jobs.isEmpty) {
@@ -18,13 +63,13 @@ class ActiveJobsMonitor extends ConsumerWidget {
     }
     
     // Get parent jobs (type == 'parent') and individual jobs
-    // Limit display to prevent UI overload
+    // Updated to show all active jobs (up to 10 for parallel processing)
     final allParentJobs = activeJobsState.jobs.where((job) => job.type == 'parent').toList();
     final allIndividualJobs = activeJobsState.jobs.where((job) => job.type != 'parent').toList();
     
-    // Show max 1 parent job and 3 individual jobs
+    // Show max 1 parent job and up to 10 individual jobs (matching parallel executor capacity)
     final parentJobs = allParentJobs.take(1).toList();
-    final individualJobs = allIndividualJobs.take(3).toList();
+    final individualJobs = allIndividualJobs.take(10).toList();
     final totalJobs = activeJobsState.jobs.length;
         
     return Container(
@@ -47,81 +92,129 @@ class ActiveJobsMonitor extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: AppTheme.successGreen,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.successGreen.withValues(alpha: 0.5),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
+                // Header - Now clickable for collapse/expand
+                InkWell(
+                  onTap: _toggleExpanded,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppTheme.successGreen,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.successGreen.withValues(alpha: 0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        totalJobs == 1 
-                            ? 'Active Job'
-                            : totalJobs > 10
-                                ? 'Active Jobs (${totalJobs.toString().replaceAllMapped(
-                                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                                    (Match m) => '${m[1]},'
-                                  )})'
-                                : 'Active Jobs ($totalJobs)',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.9),
+                        const SizedBox(width: 8),
+                        Text(
+                          totalJobs == 1 
+                              ? 'Active Job'
+                              : totalJobs > 10
+                                  ? 'Active Jobs (${totalJobs.toString().replaceAllMapped(
+                                      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                      (Match m) => '${m[1]},'
+                                    )})'
+                                  : 'Active Jobs ($totalJobs)',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Job cards - show parent jobs first, then individual jobs
-                ...parentJobs.map((job) => Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                  child: _JobCard(
-                    job: job,
-                    isParentJob: true,
-                    onComplete: () {
-                      ref.read(activeJobsProvider.notifier).removeJob(job.id);
-                    },
-                  ),
-                )),
-                ...individualJobs.map((job) => Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                  child: _JobCard(
-                    job: job,
-                    isParentJob: false,
-                    onComplete: () {
-                      ref.read(activeJobsProvider.notifier).removeJob(job.id);
-                    },
-                  ),
-                )),
-                if (allIndividualJobs.length > 3)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                    child: Text(
-                      '+ ${(allIndividualJobs.length - 3).toString().replaceAllMapped(
-                        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                        (Match m) => '${m[1]},'
-                      )} more jobs running...',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
+                        const Spacer(),
+                        AnimatedRotation(
+                          turns: _isExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                const SizedBox(height: 8),
+                ),
+                // Collapsible content with max height constraint
+                SizeTransition(
+                  sizeFactor: _expandAnimation,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.4, // Max 40% of screen height
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Parent jobs (full width)
+                        ...parentJobs.map((job) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _JobCard(
+                            job: job,
+                            isParentJob: true,
+                            onComplete: () {
+                              ref.read(activeJobsProvider.notifier).removeJob(job.id);
+                            },
+                          ),
+                        )),
+                        // Individual jobs in responsive wrap
+                        if (individualJobs.isNotEmpty)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Calculate how many tiles fit horizontally
+                              // Each tile needs ~200px minimum width + 8px gap
+                              const tileMinWidth = 200.0;
+                              const gap = 8.0;
+                              final availableWidth = constraints.maxWidth;
+                              final tilesPerRow = (availableWidth / (tileMinWidth + gap)).floor().clamp(1, 4);
+                              final tileWidth = (availableWidth - (gap * (tilesPerRow - 1))) / tilesPerRow;
+                              
+                              return Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: individualJobs.map((job) => SizedBox(
+                                  width: tileWidth,
+                                  child: _JobCard(
+                                    job: job,
+                                    isParentJob: false,
+                                    compact: tilesPerRow > 2, // Use compact mode for more tiles
+                                    onComplete: () {
+                                      ref.read(activeJobsProvider.notifier).removeJob(job.id);
+                                    },
+                                  ),
+                                )).toList(),
+                              );
+                            },
+                          ),
+                        if (allIndividualJobs.length > 10)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '+ ${(allIndividualJobs.length - 10).toString().replaceAllMapped(
+                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                (Match m) => '${m[1]},'
+                              )} more jobs running...',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -132,11 +225,13 @@ class ActiveJobsMonitor extends ConsumerWidget {
 class _JobCard extends StatefulWidget {
   final Job job;
   final bool isParentJob;
+  final bool compact;
   final VoidCallback onComplete;
   
   const _JobCard({
     required this.job, 
     this.isParentJob = false,
+    this.compact = false,
     required this.onComplete,
   });
 
@@ -434,9 +529,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
             child: GestureDetector(
               onTap: () => context.go('/browser/monitor/${job.id}'),
               child: Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(widget.compact ? 10 : 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
@@ -472,7 +565,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                             ? 'Failed: $displayText'
                             : displayText,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: widget.compact ? 12 : 13,
                       fontWeight: FontWeight.w600,
                       color: job.status == JobStatus.done 
                           ? AppTheme.successGreen
@@ -493,9 +586,9 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      leadsFound > 0 ? '$leadsFound leads found' : 'Searching...',
+                      leadsFound > 0 ? '$leadsFound leads' : 'Searching...',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: widget.compact ? 10 : 11,
                         color: Colors.white.withValues(alpha: 0.5),
                       ),
                     ),
@@ -504,7 +597,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                           ? 'Active' 
                           : '${(progress * 100).toInt()}%',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: widget.compact ? 10 : 11,
                         fontWeight: FontWeight.w600,
                         color: job.status == JobStatus.running && progress == 0
                             ? AppTheme.warningOrange

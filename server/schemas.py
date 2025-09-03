@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer, ConfigDict
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class BrowserAutomationRequest(BaseModel):
@@ -35,6 +35,10 @@ class JobResponse(BaseModel):
 
 
 class LeadTimelineEntryResponse(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+    
     id: str
     lead_id: str
     type: str
@@ -50,6 +54,12 @@ class LeadTimelineEntryResponse(BaseModel):
 
     @staticmethod
     def from_orm(obj):
+        # Helper to ensure datetime is timezone-aware (UTC)
+        def ensure_utc(dt):
+            if dt and not dt.tzinfo:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+            
         return LeadTimelineEntryResponse(
             id=obj.id,
             lead_id=obj.lead_id,
@@ -58,15 +68,13 @@ class LeadTimelineEntryResponse(BaseModel):
             description=obj.description,
             previous_status=obj.previous_status.value if obj.previous_status else None,
             new_status=obj.new_status.value if obj.new_status else None,
-            created_at=obj.created_at,
-            follow_up_date=obj.follow_up_date,
+            created_at=ensure_utc(obj.created_at),
+            follow_up_date=ensure_utc(obj.follow_up_date),
             is_completed=obj.is_completed,
             completed_by=obj.completed_by,
-            completed_at=obj.completed_at,
+            completed_at=ensure_utc(obj.completed_at),
         )
 
-    class Config:
-        from_attributes = True
 
 
 class LeadTimelineEntryCreate(BaseModel):
@@ -99,6 +107,10 @@ class LeadUpdate(BaseModel):
 
 
 class LeadResponse(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+    
     id: str
     business_name: str
     phone: str
@@ -149,9 +161,24 @@ class LeadResponse(BaseModel):
     # Sales pitch tracking
     sales_pitch_id: Optional[str] = None
     sales_pitch_name: Optional[str] = None
+    
+    @field_serializer('created_at', 'updated_at', 'follow_up_date', 'last_review_date', 'pagespeed_tested_at', 'conversion_score_calculated_at')
+    def serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
+        if dt:
+            # Ensure timezone-aware and return with Z suffix for UTC
+            if not dt.tzinfo:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.isoformat().replace('+00:00', 'Z')
+        return None
 
     @staticmethod
     def from_orm(obj):
+        # Helper to ensure datetime is timezone-aware (UTC)
+        def ensure_utc(dt):
+            if dt and not dt.tzinfo:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+        
         return LeadResponse(
             id=obj.id,
             business_name=obj.business_name,
@@ -160,7 +187,7 @@ class LeadResponse(BaseModel):
             profile_url=obj.profile_url,
             rating=obj.rating,
             review_count=obj.review_count,
-            last_review_date=obj.last_review_date,
+            last_review_date=ensure_utc(obj.last_review_date),
             platform_hint=obj.platform_hint,
             industry=obj.industry,
             location=obj.location,
@@ -173,9 +200,9 @@ class LeadResponse(BaseModel):
             notes=obj.notes,
             screenshot_path=obj.screenshot_path,
             website_screenshot_path=obj.website_screenshot_path,
-            created_at=obj.created_at,
-            updated_at=obj.updated_at,
-            follow_up_date=obj.follow_up_date,
+            created_at=ensure_utc(obj.created_at),
+            updated_at=ensure_utc(obj.updated_at),
+            follow_up_date=ensure_utc(obj.follow_up_date),
             timeline=[LeadTimelineEntryResponse.from_orm(entry) for entry in obj.timeline_entries] if hasattr(obj, 'timeline_entries') else [],
             # PageSpeed fields
             pagespeed_mobile_score=obj.pagespeed_mobile_score,
@@ -191,19 +218,27 @@ class LeadResponse(BaseModel):
             pagespeed_accessibility_score=obj.pagespeed_accessibility_score,
             pagespeed_best_practices_score=obj.pagespeed_best_practices_score,
             pagespeed_seo_score=obj.pagespeed_seo_score,
-            pagespeed_tested_at=obj.pagespeed_tested_at,
+            pagespeed_tested_at=ensure_utc(obj.pagespeed_tested_at),
             pagespeed_test_error=obj.pagespeed_test_error,
             # Conversion scoring fields
             conversion_score=obj.conversion_score,
-            conversion_score_calculated_at=obj.conversion_score_calculated_at,
+            conversion_score_calculated_at=ensure_utc(obj.conversion_score_calculated_at),
             conversion_score_factors=obj.conversion_score_factors,
             # Sales pitch tracking
             sales_pitch_id=obj.sales_pitch_id,
             sales_pitch_name=obj.sales_pitch.name if obj.sales_pitch else None,
         )
 
+
+class LeadStatisticsResponse(BaseModel):
+    """Response for overall lead statistics by status"""
+    total: int
+    by_status: Dict[str, int]
+    conversion_rate: float
+    
     class Config:
-        from_attributes = True
+        protected_namespaces = ()
+
 
 class ConversionModelResponse(BaseModel):
     """Response for conversion model information"""
@@ -260,8 +295,50 @@ class SalesPitchResponse(SalesPitchBase):
     attempts: int
     conversion_rate: float
     
-    class Config:
-        from_attributes = True
+
+
+class EmailTemplateBase(BaseModel):
+    name: str
+    subject: str
+    body: str
+    description: Optional[str] = None
+    is_active: bool = True
+
+
+class EmailTemplateCreate(EmailTemplateBase):
+    pass
+
+
+class EmailTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class PaginatedResponse(BaseModel):
+    """Generic paginated response wrapper"""
+    items: List[Any]
+    total: int
+    page: int
+    per_page: int
+    total_pages: int
+    has_next: bool
+    has_prev: bool
+    
+
+
+class EmailTemplateResponse(BaseModel):
+    id: str
+    name: str
+    subject: str
+    body: str
+    description: Optional[str]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    
 
 
 class LeadUpdateRequest(BaseModel):

@@ -3,20 +3,23 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
+import '../providers/lead_statistics_provider.dart';
 import 'pipeline_stage.dart';
 
 class ConversionPipeline extends ConsumerWidget {
-  final List<Lead> leads;
-  
-  const ConversionPipeline({super.key, required this.leads});
+  const ConversionPipeline({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final statisticsAsync = ref.watch(leadStatisticsProvider);
     final stages = _getStages();
-    final maxCount = stages.map((s) => _getLeadsForStatus(s.status, leads).length)
-        .fold(0, (a, b) => a > b ? a : b);
     
-    return Container(
+    return statisticsAsync.when(
+      data: (statistics) {
+        final maxCount = statistics.byStatus.values
+            .fold(0, (a, b) => a > b ? a : b);
+    
+        return Container(
       height: 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -53,7 +56,7 @@ class ConversionPipeline extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${leads.length} leads',
+                    '${statistics.total} leads',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -62,7 +65,7 @@ class ConversionPipeline extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                _buildConversionRate(),
+                _buildConversionRate(statistics),
               ],
             ),
           ),
@@ -76,12 +79,12 @@ class ConversionPipeline extends ConsumerWidget {
               separatorBuilder: (context, index) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final stage = stages[index];
-                final stageLeads = _getLeadsForStatus(stage.status, leads);
+                final leadCount = statistics.byStatus[stage.status] ?? 0;
                 return PipelineStage(
                   stage: stage,
-                  leadCount: stageLeads.length,
-                  leads: stageLeads,
-                  totalLeads: leads.length,
+                  leadCount: leadCount,
+                  leads: [], // Empty list since we're using statistics
+                  totalLeads: statistics.total,
                   maxCount: maxCount,
                 );
               },
@@ -91,11 +94,51 @@ class ConversionPipeline extends ConsumerWidget {
         ],
       ),
     );
+      },
+      loading: () => Container(
+        height: 200,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppTheme.backgroundDark,
+              AppTheme.backgroundDark.withValues(alpha: 0.95),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.primaryGold,
+          ),
+        ),
+      ),
+      error: (error, stack) => Container(
+        height: 200,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppTheme.backgroundDark,
+              AppTheme.backgroundDark.withValues(alpha: 0.95),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            'Failed to load statistics',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _buildConversionRate() {
-    final converted = leads.where((l) => l.status == LeadStatus.converted).length;
-    final rate = leads.isNotEmpty ? (converted / leads.length * 100) : 0.0;
+  Widget _buildConversionRate(LeadStatistics statistics) {
+    final rate = statistics.conversionRate;
     
     return Row(
       children: [
@@ -126,9 +169,6 @@ class ConversionPipeline extends ConsumerWidget {
     ];
   }
 
-  List<Lead> _getLeadsForStatus(LeadStatus status, List<Lead> allLeads) {
-    return allLeads.where((lead) => lead.status == status).toList();
-  }
 
 }
 

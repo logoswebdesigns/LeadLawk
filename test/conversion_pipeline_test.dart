@@ -57,13 +57,13 @@ void main() {
     }
 
     testWidgets('renders without errors', (WidgetTester tester) async {
-      final leads = createTestLeads();
+      // ConversionPipeline now uses provider data instead of direct leads
       
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: ConversionPipeline(leads: leads),
+              body: ConversionPipeline(),
             ),
           ),
         ),
@@ -75,13 +75,13 @@ void main() {
     });
 
     testWidgets('displays all pipeline stages', (WidgetTester tester) async {
-      final leads = createTestLeads();
+      // ConversionPipeline now uses provider data instead of direct leads
       
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: ConversionPipeline(leads: leads),
+              body: ConversionPipeline(),
             ),
           ),
         ),
@@ -99,13 +99,13 @@ void main() {
     });
 
     testWidgets('shows correct lead counts per stage', (WidgetTester tester) async {
-      final leads = createTestLeads();
+      // ConversionPipeline now uses provider data instead of direct leads
       
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: ConversionPipeline(leads: leads),
+              body: ConversionPipeline(),
             ),
           ),
         ),
@@ -120,13 +120,13 @@ void main() {
     });
 
     testWidgets('displays percentage for each stage', (WidgetTester tester) async {
-      final leads = createTestLeads();
+      // ConversionPipeline now uses provider data instead of direct leads
       
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: ConversionPipeline(leads: leads),
+              body: ConversionPipeline(),
             ),
           ),
         ),
@@ -140,13 +140,13 @@ void main() {
     });
 
     testWidgets('horizontal scrolling works', (WidgetTester tester) async {
-      final leads = createTestLeads();
+      // ConversionPipeline now uses provider data instead of direct leads
       
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: ConversionPipeline(leads: leads),
+              body: ConversionPipeline(),
             ),
           ),
         ),

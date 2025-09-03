@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    build: .
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../db:/app/db
+      - ./screenshots:/app/screenshots
+      - ./website_screenshots:/app/website_screenshots
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444/wd/hub
+      - MAX_PARALLEL_BROWSERS=10
+    restart: unless-stopped
+    depends_on:
+      - selenium-chrome
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'      # API doesn't need much CPU
+          memory: 3G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  selenium-chrome:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+      - "7900:7900"  # VNC port for debugging
+    volumes:
+      - ./screenshots:/screenshots
+      - ./website_screenshots:/website_screenshots
+    environment:
+      - SE_NODE_MAX_SESSIONS=10
+      - SE_NODE_SESSION_TIMEOUT=120
+      - SE_VNC_PASSWORD=secret
+      - SE_NODE_MAX_INSTANCES=10
+      - SE_OPTS=--max-sessions 10
+      # JVM optimization for 10 parallel sessions
+      - SE_JAVA_OPTS=-Xmx4g -Xms1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication
+      # Chrome flags for better performance
+      - SE_SCREEN_WIDTH=1280
+      - SE_SCREEN_HEIGHT=720
+      - START_XVFB=false  # Disable if not needed
+    shm_size: '6gb'  # Increased shared memory for 10 Chrome instances
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '10'     # 10 cores for 10 parallel jobs (1 core per job)
+          memory: 10G    # 1GB per Chrome instance
+        reservations:
+          cpus: '8'      # Guarantee 8 cores minimum
+          memory: 6G
+
+networks:
+  leadloq-network:
+    driver: bridge

@@ -1,0 +1,177 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    build: .
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/db
+      - ./screenshots:/app/screenshots
+      - ./website_screenshots:/app/website_screenshots
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-hub:4444/wd/hub
+      # High throughput settings
+      - MAX_PARALLEL_BROWSERS=8     # Increase parallel browsers
+      - BROWSER_TIMEOUT=30          # Fast timeout
+      - RETRY_ATTEMPTS=1            # Minimal retries
+      - BATCH_SIZE=50               # Process in larger batches
+    restart: unless-stopped
+    depends_on:
+      - selenium-hub
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+
+  # Selenium Hub for managing multiple nodes
+  selenium-hub:
+    image: selenium/hub:latest
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+      - "4442:4442"
+      - "4443:4443"
+    environment:
+      - SE_SESSION_REQUEST_TIMEOUT=300
+      - SE_SESSION_RETRY_INTERVAL=2
+      - GRID_MAX_SESSION=20            # Support 20 concurrent sessions
+      - GRID_BROWSER_TIMEOUT=30
+      - GRID_TIMEOUT=30
+      - GRID_CLEAN_UP_CYCLE=5000
+      - SE_JAVA_OPTS=-Xmx2g -XX:+UseG1GC
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  # Chrome Node 1 - Handles 5 sessions
+  chrome-node-1:
+    image: selenium/node-chromium:latest
+    container_name: chrome-node-1
+    volumes:
+      - ./screenshots:/screenshots
+      - /dev/shm:/dev/shm
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=30
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_JAVA_OPTS=-Xmx1g -XX:+UseG1GC
+      - SE_OPTS=--override-max-sessions 5
+      - START_XVFB=false
+    shm_size: '2gb'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # Chrome Node 2 - Handles 5 sessions
+  chrome-node-2:
+    image: selenium/node-chromium:latest
+    container_name: chrome-node-2
+    volumes:
+      - ./screenshots:/screenshots
+      - /dev/shm:/dev/shm
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=30
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_JAVA_OPTS=-Xmx1g -XX:+UseG1GC
+      - SE_OPTS=--override-max-sessions 5
+      - START_XVFB=false
+    shm_size: '2gb'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # Chrome Node 3 - Handles 5 sessions
+  chrome-node-3:
+    image: selenium/node-chromium:latest
+    container_name: chrome-node-3
+    volumes:
+      - ./screenshots:/screenshots
+      - /dev/shm:/dev/shm
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=30
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_JAVA_OPTS=-Xmx1g -XX:+UseG1GC
+      - SE_OPTS=--override-max-sessions 5
+      - START_XVFB=false
+    shm_size: '2gb'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # Chrome Node 4 - Handles 5 sessions
+  chrome-node-4:
+    image: selenium/node-chromium:latest
+    container_name: chrome-node-4
+    volumes:
+      - ./screenshots:/screenshots
+      - /dev/shm:/dev/shm
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=5
+      - SE_NODE_SESSION_TIMEOUT=30
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_JAVA_OPTS=-Xmx1g -XX:+UseG1GC
+      - SE_OPTS=--override-max-sessions 5
+      - START_XVFB=false
+    shm_size: '2gb'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+networks:
+  leadloq-network:
+    driver: bridge

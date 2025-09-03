@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Data files
+*.db
+*.sqlite
+*.sqlite3
+screenshots/
+website_screenshots/
+db/
+logs/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Docs
+*.md
+docs/
+
+# Tests
+test_*.py
+tests/
+*_test.py
+
+# Large data files
+*.json
+*.csv
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf

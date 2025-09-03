@@ -188,9 +188,26 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                       'Call Notes',
                       TextField(
                         controller: _notesController,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
                           labelText: 'Notes',
+                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                           hintText: 'Key points from the conversation...',
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.05),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                          ),
                         ),
                         maxLines: 4,
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/pagespeed_websocket_provider.dart';
@@ -42,6 +43,33 @@ class _LeadTileState extends ConsumerState<LeadTile>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+  
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    // Get the absolute difference to handle timezone issues
+    final absDifference = difference.abs();
+    
+    if (absDifference.inDays == 0) {
+      if (absDifference.inHours == 0) {
+        if (absDifference.inMinutes < 2) {
+          return 'Just now';
+        }
+        return '${absDifference.inMinutes}m ago';
+      }
+      return '${absDifference.inHours}h ago';
+    } else if (absDifference.inDays == 1) {
+      return 'Yesterday';
+    } else if (absDifference.inDays < 7) {
+      return '${absDifference.inDays}d ago';
+    } else if (absDifference.inDays < 30) {
+      final weeks = (absDifference.inDays / 7).floor();
+      return '${weeks}w ago';
+    } else {
+      return DateFormat('MMM d').format(date);
+    }
   }
   
   @override
@@ -162,14 +190,24 @@ class _LeadTileState extends ConsumerState<LeadTile>
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            widget.lead.location,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.lead.location.isNotEmpty 
+                                      ? '${widget.lead.location} • ${_formatDate(widget.lead.createdAt)}'
+                                      : _formatDate(widget.lead.createdAt),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 6),
                           _buildMetricsRow(),

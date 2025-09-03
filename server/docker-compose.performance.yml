@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  leadloq-api:
+    build: .
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/db
+      - ./screenshots:/app/screenshots
+      - ./website_screenshots:/app/website_screenshots
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444/wd/hub
+      # Optimize parallel processing
+      - MAX_PARALLEL_BROWSERS=2  # Limit concurrent browser instances
+      - BROWSER_TIMEOUT=60       # Faster timeout for stuck pages
+      - RETRY_ATTEMPTS=2          # Reduce retries to prevent bottlenecks
+    restart: unless-stopped
+    depends_on:
+      - selenium-chrome
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '3'     # Give API more CPU for processing
+          memory: 3G
+        reservations:
+          cpus: '1.5'
+          memory: 1G
+
+  selenium-chrome:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    volumes:
+      - ./screenshots:/screenshots
+      - ./website_screenshots:/website_screenshots
+    environment:
+      # Optimize Selenium Grid settings
+      - SE_NODE_MAX_SESSIONS=2        # Reduce from 3 to prevent overload
+      - SE_NODE_SESSION_TIMEOUT=60    # Reduce from 120 to free resources faster
+      - SE_VNC_PASSWORD=secret
+      - SE_NODE_MAX_INSTANCES=2       # Match max sessions
+      - SE_OPTS=--max-sessions 2
+      # Chrome optimization flags
+      - SE_START_XVFB=false           # Disable if not needed for screenshots
+      - SE_SCREEN_WIDTH=1280          # Reduce from 1920
+      - SE_SCREEN_HEIGHT=720          # Reduce from 1080
+      # JVM memory optimization for Selenium server
+      - SE_JAVA_OPTS=-Xmx2g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+    shm_size: '2gb'  # Reduced from 4gb since we're running fewer sessions
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '8'      # Increase from 4 to 8 cores (66% of system)
+          memory: 6G     # Increase memory for better performance
+        reservations:
+          cpus: '4'      # Guarantee 4 cores minimum
+          memory: 3G
+
+  # Optional: Add Redis for job queue management
+  redis:
+    image: redis:7-alpine
+    container_name: leadloq-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  leadloq-network:
+    driver: bridge
+
+volumes:
+  redis-data:

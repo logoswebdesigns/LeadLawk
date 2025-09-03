@@ -1,10 +1,14 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/services/calendar_service.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
+import '../providers/email_settings_provider.dart';
 
 class CallbackSchedulingDialog extends ConsumerStatefulWidget {
   final Lead lead;
@@ -22,7 +26,10 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   final _notesController = TextEditingController();
+  final _emailController = TextEditingController();
   bool _isLoading = false;
+  bool _addToCalendar = false;
+  bool _sendEmailInvite = false;
   
   @override
   void initState() {
@@ -36,6 +43,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
   @override
   void dispose() {
     _notesController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
   
@@ -168,16 +176,104 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
         (_) => print('✅ Timeline entry added successfully'),
       );
       
+      // Handle calendar options
+      bool calendarAdded = false;
+      bool inviteSent = false;
+      
+      if (_addToCalendar) {
+        print('📅 Adding to native calendar...');
+        calendarAdded = await CalendarService.addToNativeCalendar(
+          lead: widget.lead,
+          callbackDateTime: callbackDateTime,
+          notes: _notesController.text,
+        );
+        if (calendarAdded) {
+          print('✅ Added to native calendar');
+        } else {
+          print('⚠️ Could not add to native calendar');
+        }
+      }
+      
+      if (_sendEmailInvite && _emailController.text.isNotEmpty) {
+        print('📧 Sending calendar invite to ${_emailController.text}...');
+        try {
+          // Get email settings
+          final emailSettings = ref.read(emailSettingsProvider);
+          
+          if (emailSettings.enabled && 
+              emailSettings.smtpHost != null && 
+              emailSettings.smtpUsername != null && 
+              emailSettings.smtpPassword != null) {
+            // Send actual email with configured SMTP
+            inviteSent = await CalendarService.sendCalendarInvite(
+              lead: widget.lead,
+              callbackDateTime: callbackDateTime,
+              recipientEmail: _emailController.text,
+              notes: _notesController.text,
+              smtpHost: emailSettings.smtpHost,
+              smtpPort: emailSettings.smtpPort,
+              smtpUsername: emailSettings.smtpUsername,
+              smtpPassword: emailSettings.smtpPassword,
+            );
+            
+            if (inviteSent) {
+              print('✅ Calendar invite sent to ${_emailController.text}');
+            } else {
+              print('⚠️ Failed to send calendar invite');
+            }
+          } else {
+            // Fallback: Just create the ICS file
+            final icsFile = await CalendarService.createICSFile(
+              lead: widget.lead,
+              callbackDateTime: callbackDateTime,
+              notes: _notesController.text,
+              recipientEmail: _emailController.text,
+            );
+            
+            print('✅ ICS file created: ${icsFile.path}');
+            print('ℹ️ Configure email settings to send invites automatically');
+            
+            // Show a message to configure email settings
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('ICS file created. Configure email settings to send invites.'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 5),
+                ),
+              );
+            }
+          }
+        } catch (e) {
+          print('❌ Failed to send calendar invite: $e');
+        }
+      }
+      
       // Refresh the lead details
       print('🔄 Refreshing lead details');
       ref.invalidate(leadDetailProvider(widget.lead.id));
       
       if (mounted) {
         Navigator.of(context).pop();
+        
+        // Build success message based on what was done
+        String message = 'Callback scheduled for ${_formatDateTime(callbackDateTime)}';
+        if (calendarAdded) {
+          if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
+            message += '\n✅ Added to your calendar';
+          } else {
+            message += '\n✅ Calendar file opened - add to your calendar app';
+          }
+        }
+        if (inviteSent) {
+          message += '\n✅ Calendar invite prepared';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Callback scheduled for ${_formatDateTime(callbackDateTime)}'),
+            content: Text(message),
             backgroundColor: AppTheme.successGreen,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -209,6 +305,16 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
     final minute = dateTime.minute.toString().padLeft(2, '0');
     
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year} at $hour:$minute $period';
+  }
+  
+  String _getCalendarSubtitle() {
+    if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
+      return 'Add this callback to your device calendar';
+    } else if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      return 'Download ICS file to add to your calendar';
+    } else {
+      return 'Create calendar file for this callback';
+    }
   }
   
   @override
@@ -352,18 +458,157 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               decoration: InputDecoration(
                 hintText: 'Add any notes about this callback...',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.primaryGold),
+                  borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
                 ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Calendar Options Section
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: AppTheme.primaryGold,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Calendar Options',
+                        style: TextStyle(
+                          color: AppTheme.primaryGold,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Add to my calendar option
+                  CheckboxListTile(
+                    value: _addToCalendar,
+                    onChanged: (value) {
+                      setState(() {
+                        _addToCalendar = value ?? false;
+                      });
+                    },
+                    title: Text(
+                      'Add to my calendar',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 13,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _getCalendarSubtitle(),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 11,
+                      ),
+                    ),
+                    activeColor: AppTheme.primaryGold,
+                    checkColor: Colors.black,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  
+                  const Divider(color: Colors.white12),
+                  
+                  // Send email invite option
+                  CheckboxListTile(
+                    value: _sendEmailInvite,
+                    onChanged: (value) {
+                      setState(() {
+                        _sendEmailInvite = value ?? false;
+                      });
+                    },
+                    title: Text(
+                      'Send calendar invite to lead',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 13,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Email a calendar invite to the lead (requires email)',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 11,
+                      ),
+                    ),
+                    activeColor: AppTheme.primaryGold,
+                    checkColor: Colors.black,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  
+                  // Email field (shown only when send invite is checked)
+                  if (_sendEmailInvite) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _emailController,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Lead Email Address',
+                        labelStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                        hintText: 'Enter lead\'s email...',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 12,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: Colors.white.withOpacity(0.5),
+                          size: 18,
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             

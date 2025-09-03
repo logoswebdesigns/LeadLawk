@@ -84,7 +84,16 @@ server/db/*.db
 
 # Screenshots (generated during automation)
 screenshots/
+**/screenshots/
+website_screenshots/
+**/website_screenshots/
 server/screenshots/
+server/website_screenshots/
+*.png
+!assets/**/*.png
+!ios/**/*.png
+!macos/**/*.png
+!android/**/*.png
 
 # macOS
 .DS_Store

@@ -9,20 +9,94 @@ def save_lead_to_database(business_details, job_id=None, enable_pagespeed=False,
         from database import SessionLocal
         from models import Lead, LeadStatus
         from datetime import datetime
+        from sqlalchemy import and_, or_, func
         
         db = SessionLocal()
         try:
-            # Create the lead record
+            # Normalize data for duplicate checking
+            business_name = business_details.get('name', 'Unknown Business').strip()
+            location = business_details.get('location', 'Unknown').strip().lower()
+            phone = (business_details.get('phone') or 'No phone').strip()
+            profile_url = business_details.get('url', '').strip()
+            
+            # Check for duplicates using multiple strategies
+            # Strategy 1: Exact match on business_name + location (case-insensitive)
+            existing_lead = db.query(Lead).filter(
+                and_(
+                    func.lower(Lead.business_name) == func.lower(business_name),
+                    func.lower(Lead.location) == func.lower(location)
+                )
+            ).first()
+            
+            # Strategy 2: If no exact match, check profile URL (Google Maps URL is unique)
+            if not existing_lead and profile_url:
+                existing_lead = db.query(Lead).filter(
+                    Lead.profile_url == profile_url
+                ).first()
+            
+            # Strategy 3: Check phone number if it's not "No phone" and location matches
+            if not existing_lead and phone != 'No phone':
+                existing_lead = db.query(Lead).filter(
+                    and_(
+                        Lead.phone == phone,
+                        func.lower(Lead.location) == func.lower(location)
+                    )
+                ).first()
+            
+            if existing_lead:
+                print(f"    ⚠️ Duplicate lead found: {business_name} in {location}")
+                print(f"       Existing ID: {existing_lead.id}, Status: {existing_lead.status}")
+                
+                # Update certain fields if they're better in the new data
+                updated = False
+                
+                # Update website if we found one and didn't have it before
+                if not existing_lead.website_url and business_details.get('website'):
+                    existing_lead.website_url = business_details.get('website')
+                    existing_lead.has_website = True
+                    updated = True
+                    print(f"       ✅ Updated website URL: {business_details.get('website')}")
+                
+                # Update phone if we have a better one
+                if existing_lead.phone == 'No phone' and phone != 'No phone':
+                    existing_lead.phone = phone
+                    updated = True
+                    print(f"       ✅ Updated phone: {phone}")
+                
+                # Update screenshot if we have a new one
+                if business_details.get('screenshot_filename') and not existing_lead.screenshot_path:
+                    existing_lead.screenshot_path = business_details.get('screenshot_filename')
+                    updated = True
+                    print(f"       ✅ Updated screenshot")
+                
+                # Update ratings/reviews if they're newer
+                if business_details.get('rating') and business_details.get('reviews'):
+                    new_rating = float(business_details.get('rating', 0.0))
+                    new_reviews = int(business_details.get('reviews', 0))
+                    if new_reviews > (existing_lead.review_count or 0):
+                        existing_lead.rating = new_rating
+                        existing_lead.review_count = new_reviews
+                        updated = True
+                        print(f"       ✅ Updated rating/reviews: {new_rating}★ ({new_reviews} reviews)")
+                
+                if updated:
+                    existing_lead.updated_at = datetime.utcnow()
+                    db.commit()
+                    print(f"       💾 Updated existing lead with new information")
+                
+                return existing_lead
+            
+            # No duplicate found, create new lead
             lead = Lead(
-                business_name=business_details.get('name', 'Unknown Business'),
+                business_name=business_name,
                 industry=business_details.get('industry', 'Unknown'),
                 rating=float(business_details.get('rating', 0.0)),
                 review_count=int(business_details.get('reviews', 0)),
                 website_url=business_details.get('website'),
                 has_website=business_details.get('has_website', False),
-                phone=business_details.get('phone') or 'No phone',
-                profile_url=business_details.get('url'),  # Google Maps URL
-                location=business_details.get('location', 'Unknown'),
+                phone=phone,
+                profile_url=profile_url,
+                location=location,
                 status=LeadStatus.new,
                 has_recent_reviews=business_details.get('has_recent_reviews', True),
                 screenshot_path=business_details.get('screenshot_filename')

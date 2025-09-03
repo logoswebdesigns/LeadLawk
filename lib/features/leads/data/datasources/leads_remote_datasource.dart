@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/lead_model.dart';
+import '../models/paginated_response.dart';
 import '../../domain/usecases/browser_automation_usecase.dart';
 
 abstract class LeadsRemoteDataSource {
@@ -8,6 +9,15 @@ abstract class LeadsRemoteDataSource {
     String? status,
     String? search,
     bool? candidatesOnly,
+  });
+  Future<PaginatedResponse<LeadModel>> getLeadsPaginated({
+    required int page,
+    required int perPage,
+    String? status,
+    String? search,
+    bool? candidatesOnly,
+    String? sortBy,
+    bool? sortAscending,
   });
   Future<LeadModel> getLead(String id);
   Future<LeadModel> updateLead(LeadModel lead);
@@ -28,7 +38,16 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   LeadsRemoteDataSourceImpl({
     required this.dio,
     String? baseUrl,
-  }) : baseUrl = baseUrl ?? dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+  }) : baseUrl = baseUrl ?? _getBaseUrl();
+  
+  static String _getBaseUrl() {
+    try {
+      return dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+    } catch (_) {
+      // In tests, dotenv might not be initialized
+      return 'http://localhost:8000';
+    }
+  }
 
   @override
   Future<List<LeadModel>> getLeads({
@@ -37,7 +56,9 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     bool? candidatesOnly,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{
+        'pagination': false,  // Maintain backwards compatibility
+      };
       if (status != null) queryParams['status'] = status;
       if (search != null) queryParams['search'] = search;
       if (candidatesOnly == true) queryParams['candidates_only'] = true;
@@ -52,6 +73,57 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
           .toList();
     } on DioException catch (e) {
       throw Exception('Failed to get leads: ${e.message}');
+    }
+  }
+
+  @override
+  Future<PaginatedResponse<LeadModel>> getLeadsPaginated({
+    required int page,
+    required int perPage,
+    String? status,
+    String? search,
+    bool? candidatesOnly,
+    String? sortBy,
+    bool? sortAscending,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+        'pagination': true,
+      };
+      
+      if (status != null) queryParams['status'] = status;
+      if (search != null) queryParams['search'] = search;
+      if (candidatesOnly == true) queryParams['candidates_only'] = true;
+      if (sortBy != null) queryParams['sort_by'] = sortBy;
+      if (sortAscending != null) queryParams['sort_ascending'] = sortAscending;
+
+      print('🌐 API REQUEST: GET $baseUrl/leads');
+      print('🌐 API PARAMS: $queryParams');
+      
+      // Highlight sorting parameters
+      if (sortBy != null || sortAscending != null) {
+        print('🔄 SORT REQUEST: Sorting by $sortBy (${sortAscending == true ? "ascending" : "descending"})');
+      }
+      
+      final response = await dio.get(
+        '$baseUrl/leads',
+        queryParameters: queryParams,
+      );
+
+      print('🌐 API RESPONSE: Status ${response.statusCode}');
+      print('🌐 API RESPONSE: ${response.data['items']?.length ?? 0} items, total: ${response.data['total']}, pages: ${response.data['total_pages']}');
+      
+      // Parse paginated response
+      return PaginatedResponse<LeadModel>.fromJson(
+        response.data,
+        (json) => LeadModel.fromJson(json as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      print('🌐 API ERROR: Failed to get paginated leads - ${e.message}');
+      print('🌐 API ERROR: Response data: ${e.response?.data}');
+      throw Exception('Failed to get paginated leads: ${e.message}');
     }
   }
 

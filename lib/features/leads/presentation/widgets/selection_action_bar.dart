@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
-import '../providers/job_provider.dart' show leadsRepositoryProvider;
+import '../providers/paginated_leads_provider.dart';
 
 class SelectionActionBar extends ConsumerStatefulWidget {
   const SelectionActionBar({super.key});
@@ -18,165 +18,184 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
   @override
   Widget build(BuildContext context) {
     final selectedLeads = ref.watch(selectedLeadsProvider);
-    final leadsAsync = ref.watch(leadsProvider);
     final isSelectionMode = ref.watch(isSelectionModeProvider);
+    final paginatedState = ref.watch(paginatedLeadsProvider);
+    final hasSelection = selectedLeads.isNotEmpty;
     
-    if (!isSelectionMode) {
+    // Calculate selected leads data
+    final selectedData = paginatedState.leads.where((lead) => selectedLeads.contains(lead.id)).toList();
+    
+    if (!isSelectionMode || !hasSelection) {
       return const SizedBox.shrink();
     }
     
     return Container(
-      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppTheme.backgroundDark,
+        color: AppTheme.elevatedSurface,
         border: Border(
           bottom: BorderSide(
-            color: AppTheme.primaryGold.withValues(alpha: 0.3),
-            width: 1.5,
+            color: Colors.white.withValues(alpha: 0.05),
           ),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: [
-            // Cancel button
-            GestureDetector(
-              onTap: () {
-                ref.read(isSelectionModeProvider.notifier).state = false;
-                ref.read(selectedLeadsProvider.notifier).state = {};
-              },
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.primaryGold,
-                ),
+      child: Row(
+        children: [
+          // Selection count
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${selectedLeads.length} selected',
+              style: const TextStyle(
+                color: AppTheme.primaryGold,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 20),
-            // Selected count
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${selectedLeads.length} selected',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryGold,
-                ),
-              ),
+          ),
+          const SizedBox(width: 12),
+          
+          // Select All button
+          TextButton.icon(
+            onPressed: () {
+              final allLeadIds = paginatedState.leads.map((lead) => lead.id).toSet();
+              ref.read(selectedLeadsProvider.notifier).state = allLeadIds;
+            },
+            icon: const Icon(Icons.select_all, size: 18),
+            label: const Text('Select All'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             ),
-            const Spacer(),
-            // Select all button
-            if (leadsAsync.hasValue)
-              GestureDetector(
-                onTap: () {
-                  final allLeadIds = leadsAsync.value!.map((lead) => lead.id).toSet();
-                  if (selectedLeads.length == allLeadIds.length) {
-                    // Deselect all
-                    ref.read(selectedLeadsProvider.notifier).state = {};
-                  } else {
-                    // Select all
-                    ref.read(selectedLeadsProvider.notifier).state = allLeadIds;
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        selectedLeads.length == leadsAsync.value!.length
-                            ? CupertinoIcons.checkmark_square
-                            : CupertinoIcons.square,
-                        size: 16,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        selectedLeads.length == leadsAsync.value!.length
-                            ? 'Deselect All'
-                            : 'Select All',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(width: 8),
-            // Delete button
-            GestureDetector(
-              onTap: selectedLeads.isEmpty || _isDeleting
-                  ? null
-                  : () => _showDeleteConfirmation(context),
+          ),
+          
+          // Clear Selection button
+          TextButton.icon(
+            onPressed: () {
+              ref.read(selectedLeadsProvider.notifier).state = {};
+              ref.read(isSelectionModeProvider.notifier).state = false;
+            },
+            icon: const Icon(Icons.clear, size: 18),
+            label: const Text('Clear'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // Action buttons
+          if (!_isDeleting) ...[
+            // Status update button
+            PopupMenuButton<String>(
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: selectedLeads.isEmpty || _isDeleting
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : AppTheme.errorRed.withValues(alpha: 0.15),
+                  color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: _isDeleting
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        CupertinoIcons.trash,
-                        size: 18,
-                        color: selectedLeads.isEmpty
-                            ? Colors.white.withValues(alpha: 0.3)
-                            : AppTheme.errorRed,
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 16, color: AppTheme.primaryBlue),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Status',
+                      style: TextStyle(
+                        color: AppTheme.primaryBlue,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'new', child: Text('New')),
+                const PopupMenuItem(value: 'viewed', child: Text('Viewed')),
+                const PopupMenuItem(value: 'called', child: Text('Called')),
+                const PopupMenuItem(value: 'interested', child: Text('Interested')),
+                const PopupMenuItem(value: 'converted', child: Text('Converted')),
+                const PopupMenuItem(value: 'did_not_convert', child: Text('Did Not Convert')),
+                const PopupMenuItem(value: 'callback_scheduled', child: Text('Callback Scheduled')),
+                const PopupMenuItem(value: 'do_not_call', child: Text('Do Not Call')),
+              ],
+              onSelected: (status) => _updateSelectedStatus(status),
+            ),
+            
+            const SizedBox(width: 8),
+            
+            // Delete button
+            GestureDetector(
+              onTap: _showDeleteConfirmation,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 16, color: AppTheme.errorRed),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Delete',
+                      style: TextStyle(
+                        color: AppTheme.errorRed,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            // Deleting indicator
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.errorRed),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Deleting...',
+              style: TextStyle(
+                color: AppTheme.errorRed,
+                fontSize: 13,
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
-
-  void _showDeleteConfirmation(BuildContext context) {
-    final selectedLeads = ref.read(selectedLeadsProvider);
+  
+  void _showDeleteConfirmation() {
+    final selectedCount = ref.read(selectedLeadsProvider).length;
     
     showCupertinoDialog(
       context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: Text('Delete ${selectedLeads.length} Lead${selectedLeads.length > 1 ? 's' : ''}?'),
-        content: const Text(
-          'This action cannot be undone. All selected leads will be permanently deleted.',
-        ),
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Delete Leads'),
+        content: Text('Are you sure you want to delete $selectedCount lead${selectedCount > 1 ? 's' : ''}? This action cannot be undone.'),
         actions: [
           CupertinoDialogAction(
-            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _deleteSelectedLeads();
+              Navigator.of(context).pop();
+              _deleteSelected();
             },
             child: const Text('Delete'),
           ),
@@ -184,77 +203,50 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
       ),
     );
   }
-
-  Future<void> _deleteSelectedLeads() async {
-    if (!mounted) return;
-    
+  
+  Future<void> _deleteSelected() async {
     setState(() {
       _isDeleting = true;
     });
     
     final selectedLeads = ref.read(selectedLeadsProvider);
     final selectedCount = selectedLeads.length;
-    final repository = ref.read(leadsRepositoryProvider);
+    final dataSource = ref.read(leadsRemoteDataSourceProvider);
     
     try {
       // Delete all selected leads
-      final result = await repository.deleteLeads(selectedLeads.toList());
+      await dataSource.deleteLeads(selectedLeads.toList());
       
       if (!mounted) return;
       
-      result.fold(
-        (failure) {
-          // Handle error
-          print('❌ Failed to delete leads: ${failure.message}');
-          if (mounted) {
-            setState(() {
-              _isDeleting = false;
-            });
-            
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to delete leads: ${failure.message}'),
-                backgroundColor: AppTheme.errorRed,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            );
-          }
-        },
-        (_) {
-          print('✅ Successfully deleted $selectedCount leads');
-          
-          // Clear selection and exit selection mode
-          ref.read(selectedLeadsProvider.notifier).state = {};
-          ref.read(isSelectionModeProvider.notifier).state = false;
-          
-          // Force refresh the leads list using refresh trigger
-          ref.read(refreshTriggerProvider.notifier).state++;
-          ref.invalidate(leadsProvider);
-          
-          if (mounted) {
-            setState(() {
-              _isDeleting = false;
-            });
-            
-            // Show success message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Successfully deleted $selectedCount lead${selectedCount > 1 ? 's' : ''}'),
-                backgroundColor: AppTheme.successGreen,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-      );
+      print('✅ Successfully deleted $selectedCount leads');
+      
+      // Clear selection and exit selection mode
+      ref.read(selectedLeadsProvider.notifier).state = {};
+      ref.read(isSelectionModeProvider.notifier).state = false;
+      
+      // Force refresh the leads list
+      ref.read(refreshTriggerProvider.notifier).state++;
+      ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+      
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully deleted $selectedCount lead${selectedCount > 1 ? 's' : ''}'),
+            backgroundColor: AppTheme.successGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       print('❌ Error during deletion: $e');
       if (mounted) {
@@ -275,5 +267,15 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
         );
       }
     }
+  }
+  
+  Future<void> _updateSelectedStatus(String status) async {
+    // TODO: Implement batch status update
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Status update coming soon'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 }

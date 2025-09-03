@@ -183,8 +183,8 @@ class ParallelJobExecutor:
             update_job_status(job_id, "running", 
                             message=f"Searching {params.industry} in {params.location}")
             
-            # Create browser automation instance
-            automation = BrowserAutomation(job_id=job_id)
+            # Create browser automation instance - always use headless for parallel jobs
+            automation = BrowserAutomation(job_id=job_id, headless=True)
             
             # Connect to the shared Selenium Grid (no container spawning)
             if not automation.setup_browser():
@@ -278,5 +278,5 @@ class ParallelJobExecutor:
 # max_workers determines how many jobs can be in flight at once
 # Set to 50 to match Selenium Grid capacity
 # Initialize with reasonable defaults for parallel execution
-# 3 concurrent sessions is a good balance for most systems
-parallel_executor = ParallelJobExecutor(max_workers=3)
+# Increased to 10 concurrent sessions to match Selenium capacity
+parallel_executor = ParallelJobExecutor(max_workers=10)

@@ -16,42 +16,32 @@ class BrowserSetup:
         self.driver = None
 
     def setup_browser(self):
-        """Setup Chrome browser using official Selenium Docker guidance"""
+        """Setup Chrome browser - let ChromeDriver manage temp profiles"""
         print("🚀 Setting up Chrome browser...")
         
-        # Configure Chrome options
+        # Configure Chrome options - minimal for stability
         options = Options()
         
+        # Safe flags for Chrome in Docker (required)
         if self.headless:
-            options.add_argument("--headless")
+            options.add_argument("--headless=new")  # Use new headless mode
             print("👻 Running in headless mode")
         else:
             print("👀 Running in visible mode")
-        
-        # Standard Chrome options for containerized environment
-        options.add_argument('--ignore-ssl-errors=yes')
-        options.add_argument('--ignore-certificate-errors')
+            
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
+        
+        # Optional: reduce crashes/noise
+        options.add_argument("--remote-allow-origins=*")
         options.add_argument("--window-size=1920,1080")
         
-        # Safe performance optimizations that won't break Google Maps
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--disable-default-apps")
-        options.add_argument("--disable-features=TranslateUI")
-        
-        # Memory optimizations - keep conservative to ensure stability
-        options.add_argument("--memory-pressure-off")
-        options.add_argument("--max_old_space_size=4096")
-        
-        # Hub URL for Selenium standalone-chrome container
-        hub_url = os.environ.get('SELENIUM_HUB_URL', 'http://selenium-chrome:4444/wd/hub')
+        # Hub URL for Selenium 4 (no /wd/hub needed)
+        hub_url = os.environ.get('SELENIUM_HUB_URL', 'http://selenium-chrome:4444')
         print(f"🐳 Connecting to Selenium Hub at: {hub_url}")
         
         try:
-            # Use official webdriver.Remote approach
+            # Create Remote driver - ChromeDriver manages temp profiles
             self.driver = webdriver.Remote(
                 command_executor=hub_url,
                 options=options

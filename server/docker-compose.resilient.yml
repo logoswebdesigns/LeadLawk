@@ -1,0 +1,190 @@
+version: '3.8'
+
+services:
+  # Redis for job queue and caching
+  redis:
+    image: redis:7-alpine
+    container_name: leadloq-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+  # Main API with resilience
+  leadloq-api:
+    build: .
+    container_name: leadloq-api
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+      - MAX_WORKERS=3
+      - HEALTH_CHECK_INTERVAL=30
+    volumes:
+      - ./db:/app/db
+      - ./screenshots:/app/screenshots
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      selenium-chrome:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  # Celery worker for background jobs
+  celery-worker:
+    build: .
+    container_name: celery-worker
+    command: celery -A celery_app worker --loglevel=info --concurrency=4 --max-tasks-per-child=100
+    environment:
+      - USE_DOCKER=1
+      - SELENIUM_HUB_URL=http://selenium-chrome:4444
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./db:/app/db
+      - ./screenshots:/app/screenshots
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - selenium-chrome
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      replicas: 2  # Run 2 worker instances
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # Celery beat for scheduled tasks
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    command: celery -A celery_app beat --loglevel=info
+    environment:
+      - USE_DOCKER=1
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./db:/app/db
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+  # Celery flower for monitoring
+  celery-flower:
+    image: mher/flower:2.0
+    container_name: celery-flower
+    command: celery flower --broker=redis://redis:6379 --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379
+      - FLOWER_BASIC_AUTH=admin:leadloq123  # Change in production
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+  # Selenium with increased resources
+  selenium-chrome:
+    image: selenium/standalone-chromium:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    shm_size: 2g
+    environment:
+      - SE_NODE_MAX_SESSIONS=3
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_VNC_PASSWORD=secret
+      - SE_SCREEN_WIDTH=1920
+      - SE_SCREEN_HEIGHT=1080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/status"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 3G
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=leadloq123  # Change in production
+      - GF_INSTALL_PLUGINS=redis-datasource
+    restart: unless-stopped
+    networks:
+      - leadloq-network
+
+networks:
+  leadloq-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  prometheus-data:
+  grafana-data:

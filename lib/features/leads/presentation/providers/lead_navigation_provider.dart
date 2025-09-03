@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart' show leadsProvider;
+import 'paginated_leads_provider.dart';
 
 class LeadNavigationContext {
   final Lead currentLead;
@@ -20,7 +20,8 @@ class LeadNavigationContext {
 
 final leadNavigationProvider = FutureProvider.family<LeadNavigationContext, String>(
   (ref, currentLeadId) async {
-    final leads = await ref.watch(leadsProvider.future);
+    final paginatedState = ref.watch(paginatedLeadsProvider);
+    final leads = paginatedState.leads;
     
     final currentIndex = leads.indexWhere((lead) => lead.id == currentLeadId);
     if (currentIndex == -1) {

@@ -160,6 +160,13 @@ When files exceed 100 lines, refactor into smaller, focused modules. Extract rel
 - Clean up deprecated files immediately to prevent technical debt
 - Use git for version history, not file naming conventions
 
+**Naming Standards:**
+- **NEVER use "legacy", "old", "new", "v2", or version numbers in file names, class names, or variable names**
+- **No temporal naming**: Avoid names that imply age or version (legacy, deprecated, old, new)
+- **Use descriptive names**: Name things based on what they do, not when they were created
+- **Refactor in place**: When updating systems, refactor the existing code rather than creating parallel versions
+- **Clean transitions**: If you must maintain two implementations temporarily, use feature flags or configuration, not naming
+
 ## Testing Standards
 
 ### Component Testing Requirements

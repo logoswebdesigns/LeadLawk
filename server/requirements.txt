@@ -14,3 +14,20 @@ numpy==1.26.4
 # Browser automation dependencies  
 selenium==4.22.0
 beautifulsoup4==4.12.3
+
+# Resilience and job queue dependencies
+celery[redis]==5.3.4
+redis==4.6.0
+flower==2.0.1
+
+# Monitoring dependencies
+prometheus-client==0.19.0
+
+# Circuit breaker and retry patterns
+tenacity==8.2.3
+circuitbreaker==2.0.0
+
+# Additional utilities
+python-dotenv==1.1.1
+pyyaml==6.0.1
+requests==2.32.3

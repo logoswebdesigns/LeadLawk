@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import '../pages/leads_list_page.dart';
+import 'paginated_leads_provider.dart';
 
 class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> {
   WebSocketChannel? _channel;
@@ -88,7 +89,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         print('PageSpeed scores received for lead $leadId: Mobile=${data['mobile_score']}, Desktop=${data['desktop_score']}');
         // Only refresh if this lead is not pending deletion
         if (!state.pendingDeletions.contains(leadId)) {
-          ref.invalidate(leadsProvider);
+          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
         }
         break;
         
@@ -121,7 +122,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
           );
           
           // Now refresh to remove the deleted lead
-          ref.invalidate(leadsProvider);
+          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
           _animationTimers.remove(leadId);
         });
         break;
@@ -143,7 +144,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         // Force refresh the leads provider after a small delay to ensure database is updated
         Future.delayed(const Duration(milliseconds: 100), () {
           print('🔄 Invalidating leadsProvider to fetch new lead');
-          ref.invalidate(leadsProvider);
+          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
         });
         
         // Cancel any existing timer for this lead
