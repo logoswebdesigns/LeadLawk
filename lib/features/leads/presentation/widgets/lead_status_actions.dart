@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
+import '../providers/goals_provider.dart';
 import '../services/unified_call_service.dart';
 import 'callback_scheduling_dialog.dart';
 
@@ -87,6 +88,11 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       
       // Refresh the lead details
       ref.invalidate(leadDetailProvider(widget.lead.id));
+      
+      // Refresh goals metrics when status changes (especially for CALLED status)
+      if (newStatus == LeadStatus.called || newStatus == LeadStatus.converted) {
+        ref.read(goalsProvider.notifier).refreshMetrics();
+      }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

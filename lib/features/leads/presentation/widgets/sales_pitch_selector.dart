@@ -51,7 +51,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final pitchesAsync = ref.watch(salesPitchesProvider);
+    final pitches = ref.watch(salesPitchesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,11 +59,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
         _buildHeader(),
         if (_isExpanded) ...[
           const SizedBox(height: 12),
-          pitchesAsync.when(
-            data: (pitches) => _buildPitchCards(pitches),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Error loading pitches: $error'),
-          ),
+          _buildPitchCards(pitches),
         ],
       ],
     );
@@ -186,19 +182,6 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     ),
                   ),
                 ),
-                if (pitch.attempts > 0) ...[
-                  _buildStatChip(
-                    '${pitch.conversionRate.toStringAsFixed(1)}%',
-                    Icons.trending_up,
-                    AppTheme.successGreen,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                    '${pitch.attempts} calls',
-                    Icons.phone,
-                    AppTheme.accentPurple,
-                  ),
-                ],
               ],
             ),
           ),

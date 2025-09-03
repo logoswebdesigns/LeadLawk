@@ -17,6 +17,8 @@ import '../widgets/active_jobs_monitor.dart';
 import '../widgets/lead_tile.dart';
 import '../widgets/sort_bar.dart';
 import '../widgets/selection_action_bar.dart';
+import '../widgets/goals_tracking_card.dart';
+import '../providers/goals_provider.dart';
 
 // Sorting options
 enum SortOption {
@@ -160,6 +162,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     ref.read(paginatedLeadsProvider.notifier).refreshLeads();
     // Also refresh the statistics
     ref.invalidate(leadStatisticsProvider);
+    // Refresh goals metrics
+    ref.read(goalsProvider.notifier).refreshMetrics();
   }
   
   Future<void> _storeScrollPosition() async {
@@ -309,6 +313,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
           _refreshData();
           // Also refresh the statistics
           ref.invalidate(leadStatisticsProvider);
+          // Refresh goals metrics
+          ref.read(goalsProvider.notifier).refreshMetrics();
         });
       }
     });
@@ -325,6 +331,11 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
             children: [
               // Pipeline at the top - shows overall statistics
               const ConversionPipeline(),
+              // Goals tracking card - shows daily call and monthly conversion goals
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: GoalsTrackingCard(),
+              ),
               // Active jobs monitor
               const ActiveJobsMonitor(),
               // Filter bar with page size selector

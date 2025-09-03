@@ -32,23 +32,17 @@ void main() {
           id: 'pitch-1',
           name: 'Test Pitch 1',
           content: 'This is a test pitch for [Business Name] in [Location]',
-          isActive: true,
+          isDefault: true,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          conversions: 5,
-          attempts: 10,
-          conversionRate: 50.0,
         ),
         SalesPitch(
           id: 'pitch-2',
           name: 'Test Pitch 2',
           content: 'Another test pitch for [Business Name]',
-          isActive: true,
+          isDefault: false,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          conversions: 3,
-          attempts: 8,
-          conversionRate: 37.5,
         ),
       ];
 
@@ -56,7 +50,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            salesPitchesProvider.overrideWith((ref) async => mockPitches),
+            salesPitchesProvider.overrideWith((ref) => SalesPitchesNotifier()),
           ],
           child: MaterialApp(
             theme: ThemeData.dark(),
