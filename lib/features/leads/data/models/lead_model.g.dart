@@ -72,6 +72,11 @@ LeadModel _$LeadModelFromJson(Map<String, dynamic> json) => LeadModel(
       conversionScoreFactors: json['conversion_score_factors'] as String?,
       salesPitchId: json['sales_pitch_id'] as String?,
       salesPitchName: json['sales_pitch_name'] as String?,
+      conversionFailureReason: json['conversion_failure_reason'] as String?,
+      conversionFailureNotes: json['conversion_failure_notes'] as String?,
+      conversionFailureDate: json['conversion_failure_date'] == null
+          ? null
+          : DateTime.parse(json['conversion_failure_date'] as String),
     );
 
 Map<String, dynamic> _$LeadModelToJson(LeadModel instance) => <String, dynamic>{
@@ -123,4 +128,8 @@ Map<String, dynamic> _$LeadModelToJson(LeadModel instance) => <String, dynamic>{
       'conversion_score_factors': instance.conversionScoreFactors,
       'sales_pitch_id': instance.salesPitchId,
       'sales_pitch_name': instance.salesPitchName,
+      'conversion_failure_reason': instance.conversionFailureReason,
+      'conversion_failure_notes': instance.conversionFailureNotes,
+      'conversion_failure_date':
+          instance.conversionFailureDate?.toIso8601String(),
     };

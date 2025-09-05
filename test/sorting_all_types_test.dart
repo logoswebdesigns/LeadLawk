@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:leadloq/features/leads/presentation/providers/paginated_leads_provider.dart';
+import 'package:leadloq/features/leads/presentation/providers/job_provider.dart' show leadsRemoteDataSourceProvider;
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:leadloq/features/leads/data/models/paginated_response.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';

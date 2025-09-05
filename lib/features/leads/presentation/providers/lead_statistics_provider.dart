@@ -18,7 +18,9 @@ class LeadStatistics {
     final byStatusMap = <LeadStatus, int>{};
     
     if (json['by_status'] != null) {
-      (json['by_status'] as Map<String, dynamic>).forEach((key, value) {
+      // Safely cast the dynamic map to Map<String, dynamic>
+      final byStatusData = Map<String, dynamic>.from(json['by_status'] as Map);
+      byStatusData.forEach((key, value) {
         // Map the string key to LeadStatus enum
         LeadStatus? status;
         switch (key) {
@@ -53,10 +55,8 @@ class LeadStatistics {
             print('⚠️ Unknown status key: $key with value: $value');
             return; // Skip this iteration
         }
-        if (status != null) {
-          byStatusMap[status] = value as int;
-          print('📊 Mapped $key -> $status = $value');
-        }
+        byStatusMap[status] = value as int;
+        print('📊 Mapped $key -> $status = $value');
       });
     }
 
@@ -88,20 +88,57 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
     baseUrl = 'http://localhost:8000';
   }
   
+  // Add timeout to prevent blocking forever
+  dio.options.connectTimeout = const Duration(seconds: 5);
+  dio.options.receiveTimeout = const Duration(seconds: 10);
+  
   try {
     print('📊 Fetching lead statistics from $baseUrl/leads/statistics/all');
-    final response = await dio.get('$baseUrl/leads/statistics/all');
+    
+    // Add explicit timeout to the request
+    final response = await dio.get(
+      '$baseUrl/leads/statistics/all',
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        print('📊 Statistics request timed out after 10 seconds');
+        // Return empty statistics on timeout rather than throwing
+        return Response(
+          requestOptions: RequestOptions(path: ''),
+          data: {
+            'total': 0,
+            'by_status': {},
+            'conversion_rate': 0.0,
+          },
+          statusCode: 200,
+        );
+      },
+    );
     
     if (response.statusCode == 200) {
-      final stats = LeadStatistics.fromJson(response.data);
+      // Safely cast response.data to Map<String, dynamic>
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final stats = LeadStatistics.fromJson(data);
       print('📊 Statistics loaded: ${stats.total} total leads');
       return stats;
     } else {
       throw Exception('Failed to load lead statistics');
     }
   } on DioException catch (e) {
-    throw Exception('Network error: ${e.message}');
+    print('📊 Network error loading statistics: ${e.message}');
+    // Return empty statistics on error rather than crashing
+    return LeadStatistics(
+      total: 0,
+      byStatus: {},
+      conversionRate: 0.0,
+    );
   } catch (e) {
-    throw Exception('Error loading statistics: $e');
+    print('📊 Error loading statistics: $e');
+    // Return empty statistics on error rather than crashing
+    return LeadStatistics(
+      total: 0,
+      byStatus: {},
+      conversionRate: 0.0,
+    );
   }
 });

@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../domain/entities/lead.dart';
-import '../../domain/entities/lead_timeline_entry.dart';
-import '../../data/datasources/leads_remote_datasource.dart';
-import 'paginated_leads_provider.dart';
 import 'lead_statistics_provider.dart';
 
 class GoalsState {
@@ -55,7 +54,12 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     lastResetDate: DateTime.now(),
   )) {
     _loadGoals();
-    _calculateMetrics();
+    // Defer metrics loading to avoid blocking initial render
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _loadTodayMetrics();
+      }
+    });
   }
 
   Future<void> _loadGoals() async {
@@ -81,70 +85,67 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
     state = state.copyWith(monthlyConversionGoal: goal);
   }
 
-  void _calculateMetrics() async {
+  Future<void> _loadTodayMetrics() async {
     try {
-      // For now, let's use a simpler approach - just count by status
-      // We can fetch leads with CALLED status specifically
-      final dataSource = ref.read(leadsRemoteDataSourceProvider);
-      
-      // Get leads with CALLED status (API expects lowercase)
-      final paginatedResponse = await dataSource.getLeadsPaginated(
-        page: 1,
-        perPage: 1000,  // Get many to ensure we catch all recent calls
-        status: 'called',
-      );
-      
-      final calledLeads = paginatedResponse.items;
-      
-      final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final monthStart = DateTime(now.year, now.month, 1);
-
-      int todaysCalls = 0;
-      int monthConversions = 0;
-      
-      print('📊 Goals: Found ${calledLeads.length} leads with CALLED status');
-      
-      // For immediate fix - just count all leads with CALLED status as today's calls
-      // This is a simplified approach but will show the metric working
-      todaysCalls = calledLeads.length;
-      
-      // Also check for converted leads (API expects lowercase)
-      final convertedResponse = await dataSource.getLeadsPaginated(
-        page: 1,
-        perPage: 1000,
-        status: 'converted',
-      );
-      
-      monthConversions = convertedResponse.items.length;
-
-      print('📊 Goals: Metrics calculated - Calls today: $todaysCalls, Conversions this month: $monthConversions');
-      
-      state = state.copyWith(
-        todaysCalls: todaysCalls,
-        thisMonthsConversions: monthConversions,
-      );
-    } catch (e) {
-      print('📊 Goals: Error calculating metrics: $e');
-      // As a fallback, use the statistics we already have
+      final dio = Dio();
+      String baseUrl;
       try {
-        final statistics = await ref.read(leadStatisticsProvider.future);
-        final calledCount = statistics.byStatus[LeadStatus.called] ?? 0;
-        final convertedCount = statistics.byStatus[LeadStatus.converted] ?? 0;
+        baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
+      } catch (_) {
+        baseUrl = 'http://localhost:8000';
+      }
+      
+      // Fetch today's statistics from the new endpoint
+      final response = await dio.get('$baseUrl/leads/statistics/today');
+      
+      if (response.data != null) {
+        final todaysCalls = response.data['calls_today'] ?? 0;
+        final conversionsToday = response.data['conversions_today'] ?? 0;
         
-        print('📊 Goals: Using statistics - Calls: $calledCount, Conversions: $convertedCount');
+        print('📊 Goals: Today\'s calls: $todaysCalls');
+        print('📊 Goals: Today\'s conversions: $conversionsToday');
+        
+        // Also get month's conversions from general statistics
+        final statisticsAsync = ref.read(leadStatisticsProvider);
+        statisticsAsync.whenData((statistics) {
+          final monthConversions = statistics.byStatus[LeadStatus.converted] ?? 0;
+          
+          state = state.copyWith(
+            todaysCalls: todaysCalls,
+            thisMonthsConversions: monthConversions,
+          );
+        });
+      }
+    } catch (e) {
+      print('📊 Goals: Error fetching today\'s metrics: $e');
+      // Fall back to general statistics if today endpoint fails
+      _fallbackToGeneralStatistics();
+    }
+  }
+  
+  void _fallbackToGeneralStatistics() {
+    try {
+      final statisticsAsync = ref.read(leadStatisticsProvider);
+      statisticsAsync.whenData((statistics) {
+        // This is the old behavior as a fallback
+        final calledCount = statistics.byStatus[LeadStatus.called] ?? 0;
+        final interestedCount = statistics.byStatus[LeadStatus.interested] ?? 0;
+        final convertedCount = statistics.byStatus[LeadStatus.converted] ?? 0;
+        final todaysCalls = calledCount + interestedCount + convertedCount;
+        final monthConversions = convertedCount;
         
         state = state.copyWith(
-          todaysCalls: calledCount,
-          thisMonthsConversions: convertedCount,
+          todaysCalls: todaysCalls,
+          thisMonthsConversions: monthConversions,
         );
-      } catch (statsError) {
-        print('📊 Goals: Error getting statistics: $statsError');
-      }
+      });
+    } catch (e) {
+      print('📊 Goals: Error reading statistics: $e');
     }
   }
 
   void refreshMetrics() {
-    _calculateMetrics();
+    // Don't block - just trigger an async update
+    Future.microtask(() => _loadTodayMetrics());
   }
 }

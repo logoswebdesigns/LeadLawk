@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/lead_statistics_provider.dart';
-import 'pipeline_stage.dart';
 
 class ConversionPipeline extends ConsumerWidget {
   const ConversionPipeline({super.key});
@@ -14,12 +13,15 @@ class ConversionPipeline extends ConsumerWidget {
     final statisticsAsync = ref.watch(leadStatisticsProvider);
     final stages = _getStages();
     
-    return statisticsAsync.when(
-      data: (statistics) {
-        final maxCount = statistics.byStatus.values
-            .fold(0, (a, b) => a > b ? a : b);
+    // Always show the pipeline structure immediately
+    // Don't block on loading - show empty/placeholder data
+    final statistics = statisticsAsync.valueOrNull;
+    final isLoading = statisticsAsync.isLoading && statistics == null;
     
-        return Container(
+    final maxCount = statistics?.byStatus.values
+        .fold(0, (a, b) => a > b ? a : b) ?? 1;
+
+    return Container(
       height: 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -39,7 +41,7 @@ class ConversionPipeline extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Pipeline',
                   style: TextStyle(
                     fontSize: 28,
@@ -48,92 +50,150 @@ class ConversionPipeline extends ConsumerWidget {
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
+                Icon(
+                  CupertinoIcons.chart_bar_alt_fill,
+                  color: AppTheme.primaryGold,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${statistics.total} leads',
+                    statistics?.total.toString() ?? (isLoading ? '...' : '0'),
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryGold,
                     ),
                   ),
                 ),
                 const Spacer(),
-                _buildConversionRate(statistics),
+                if (statistics != null) 
+                  _buildConversionRate(statistics)
+                else if (isLoading)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.primaryGold.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          // Pipeline Visualization
+          // Pipeline Stages
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: stages.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final stage = stages[index];
-                final leadCount = statistics.byStatus[stage.status] ?? 0;
-                return PipelineStage(
-                  stage: stage,
-                  leadCount: leadCount,
-                  leads: [], // Empty list since we're using statistics
-                  totalLeads: statistics.total,
-                  maxCount: maxCount,
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  for (int i = 0; i < stages.length; i++)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: i < stages.length - 1 ? 8 : 0,
+                        ),
+                        child: _buildPipelineStage(
+                          stage: stages[i],
+                          count: statistics?.byStatus[stages[i].status] ?? 0,
+                          maxCount: maxCount,
+                          isFirst: i == 0,
+                          isLast: i == stages.length - 1,
+                          isLoading: isLoading,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
         ],
       ),
     );
-      },
-      loading: () => Container(
-        height: 200,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.backgroundDark,
-              AppTheme.backgroundDark.withValues(alpha: 0.95),
-            ],
+  }
+
+  Widget _buildPipelineStage({
+    required StageData stage,
+    required int count,
+    required int maxCount,
+    required bool isFirst,
+    required bool isLast,
+    required bool isLoading,
+  }) {
+    final heightFraction = maxCount > 0 ? count / maxCount : 0.0;
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        // Count badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: stage.color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-            color: AppTheme.primaryGold,
-          ),
-        ),
-      ),
-      error: (error, stack) => Container(
-        height: 200,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.backgroundDark,
-              AppTheme.backgroundDark.withValues(alpha: 0.95),
-            ],
-          ),
-        ),
-        child: Center(
           child: Text(
-            'Failed to load statistics',
+            isLoading && count == 0 ? '...' : count.toString(),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: stage.color,
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 8),
+        // Bar
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                AnimatedFractionallySizedBox(
+                  duration: const Duration(milliseconds: 500),
+                  heightFactor: heightFraction,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          stage.color.withValues(alpha: 0.8),
+                          stage.color.withValues(alpha: 0.6),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Label
+        Text(
+          stage.label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -142,41 +202,94 @@ class ConversionPipeline extends ConsumerWidget {
     
     return Row(
       children: [
-        Icon(Icons.trending_up, size: 16, color: AppTheme.successGreen),
-        const SizedBox(width: 4),
-        Text(
-          '${rate.toStringAsFixed(1)}% conversion',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.successGreen,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: rate > 0 
+                ? AppTheme.successGreen.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: rate > 0 
+                  ? AppTheme.successGreen.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                rate > 0 ? Icons.trending_up : Icons.trending_flat,
+                color: rate > 0 
+                    ? AppTheme.successGreen 
+                    : Colors.white.withValues(alpha: 0.5),
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${rate.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: rate > 0 
+                      ? AppTheme.successGreen 
+                      : Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  List<StageInfo> _getStages() {
+  List<StageData> _getStages() {
     return [
-      StageInfo(LeadStatus.new_, 'New', const Color(0xFF007AFF), Icons.fiber_new),
-      StageInfo(LeadStatus.viewed, 'Viewed', const Color(0xFF5856D6), Icons.visibility),
-      StageInfo(LeadStatus.called, 'Called', const Color(0xFFFF9500), Icons.phone_in_talk),
-      StageInfo(LeadStatus.interested, 'Interest', const Color(0xFF34C759), Icons.star),
-      StageInfo(LeadStatus.callbackScheduled, 'Callback', const Color(0xFF5AC8FA), Icons.schedule),
-      StageInfo(LeadStatus.converted, 'Won', const Color(0xFF30D158), Icons.check_circle),
-      StageInfo(LeadStatus.didNotConvert, 'Lost', const Color(0xFFFF3B30), Icons.cancel),
-      StageInfo(LeadStatus.doNotCall, 'DNC', const Color(0xFF8E8E93), Icons.block),
+      StageData(
+        label: 'New',
+        status: LeadStatus.new_,
+        color: const Color(0xFF007AFF),
+        icon: Icons.fiber_new,
+      ),
+      StageData(
+        label: 'Viewed',
+        status: LeadStatus.viewed,
+        color: const Color(0xFF5856D6),
+        icon: Icons.visibility,
+      ),
+      StageData(
+        label: 'Contacted',
+        status: LeadStatus.called,
+        color: const Color(0xFFFF9500),
+        icon: Icons.phone_in_talk,
+      ),
+      StageData(
+        label: 'Interested',
+        status: LeadStatus.interested,
+        color: const Color(0xFF34C759),
+        icon: Icons.thumb_up,
+      ),
+      StageData(
+        label: 'Converted',
+        status: LeadStatus.converted,
+        color: const Color(0xFF30D158),
+        icon: Icons.check_circle,
+      ),
     ];
   }
-
-
 }
 
-class StageInfo {
-  final LeadStatus status;
+class StageData {
   final String label;
+  final LeadStatus status;
   final Color color;
   final IconData icon;
 
-  StageInfo(this.status, this.label, this.color, this.icon);
+  const StageData({
+    required this.label,
+    required this.status,
+    required this.color,
+    required this.icon,
+  });
 }

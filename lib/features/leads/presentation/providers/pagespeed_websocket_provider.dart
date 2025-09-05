@@ -5,6 +5,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import '../pages/leads_list_page.dart';
 import 'paginated_leads_provider.dart';
+import 'auto_refresh_provider.dart';
 
 class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> {
   WebSocketChannel? _channel;
@@ -87,9 +88,17 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
       case 'score_received':
         // Refresh leads list to show new scores
         print('PageSpeed scores received for lead $leadId: Mobile=${data['mobile_score']}, Desktop=${data['desktop_score']}');
-        // Only refresh if this lead is not pending deletion
+        // Only refresh if this lead is not pending deletion AND auto-refresh is enabled
         if (!state.pendingDeletions.contains(leadId)) {
-          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          final autoRefresh = ref.read(autoRefreshLeadsProvider);
+          if (autoRefresh) {
+            ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          } else {
+            // Increment pending updates counter for PageSpeed scores
+            final currentPending = ref.read(pendingLeadsUpdateProvider);
+            ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + 1;
+            print('📦 Auto-refresh disabled, PageSpeed score update pending');
+          }
         }
         break;
         
@@ -121,8 +130,16 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
             deletionReasons: updatedDeletionReasons,
           );
           
-          // Now refresh to remove the deleted lead
-          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          // Now refresh to remove the deleted lead (only if auto-refresh is enabled)
+          final autoRefresh = ref.read(autoRefreshLeadsProvider);
+          if (autoRefresh) {
+            ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          } else {
+            // Increment pending updates counter for deleted lead
+            final currentPending = ref.read(pendingLeadsUpdateProvider);
+            ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + 1;
+            print('📦 Auto-refresh disabled, lead deletion pending refresh');
+          }
           _animationTimers.remove(leadId);
         });
         break;
@@ -141,10 +158,16 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         final newLeadsList = Set<String>.from(state.newLeads)..add(leadId);
         state = state.copyWith(newLeads: newLeadsList);
         
-        // Force refresh the leads provider after a small delay to ensure database is updated
+        // Force refresh the leads provider after a small delay to ensure database is updated (only if auto-refresh is enabled)
         Future.delayed(const Duration(milliseconds: 100), () {
-          print('🔄 Invalidating leadsProvider to fetch new lead');
-          ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          final autoRefresh = ref.read(autoRefreshLeadsProvider);
+          if (autoRefresh) {
+            print('🔄 Auto-refresh enabled, fetching new lead');
+            ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+          } else {
+            // Don't increment pending counter here as it's already handled in leads_list_page.dart
+            print('📦 Auto-refresh disabled, new lead will be shown on manual refresh');
+          }
         });
         
         // Cancel any existing timer for this lead

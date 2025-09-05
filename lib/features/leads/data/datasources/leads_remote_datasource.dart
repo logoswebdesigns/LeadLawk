@@ -19,6 +19,10 @@ abstract class LeadsRemoteDataSource {
     String? sortBy,
     bool? sortAscending,
   });
+  Future<PaginatedResponse<LeadModel>> getLeadsCalledToday({
+    required int page,
+    required int perPage,
+  });
   Future<LeadModel> getLead(String id);
   Future<LeadModel> updateLead(LeadModel lead);
   Future<LeadModel> updateTimelineEntry(String leadId, String entryId, Map<String, dynamic> updates);
@@ -124,6 +128,50 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
       print('🌐 API ERROR: Failed to get paginated leads - ${e.message}');
       print('🌐 API ERROR: Response data: ${e.response?.data}');
       throw Exception('Failed to get paginated leads: ${e.message}');
+    }
+  }
+
+  @override
+  Future<PaginatedResponse<LeadModel>> getLeadsCalledToday({
+    required int page,
+    required int perPage,
+  }) async {
+    try {
+      print('📡 Fetching leads called today - page $page, per_page $perPage');
+      
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+      };
+      
+      final response = await dio.get(
+        '$baseUrl/leads/called-today',
+        queryParameters: queryParams,
+      );
+      
+      // Parse the response
+      final leads = (response.data['leads'] as List)
+          .map((json) => LeadModel.fromJson(json))
+          .toList();
+      
+      final total = response.data['total'] ?? 0;
+      final totalPages = response.data['total_pages'] ?? 1;
+      final hasNext = page < totalPages;
+      
+      print('📡 Called today response: ${leads.length} leads (page $page of $totalPages)');
+      
+      return PaginatedResponse(
+        items: leads,
+        page: page,
+        perPage: perPage,
+        total: total,
+        totalPages: totalPages,
+        hasNext: hasNext,
+        hasPrev: page > 1,
+      );
+    } on DioException catch (e) {
+      print('❌ Failed to get leads called today: ${e.message}');
+      throw Exception('Failed to get leads called today: ${e.message}');
     }
   }
 

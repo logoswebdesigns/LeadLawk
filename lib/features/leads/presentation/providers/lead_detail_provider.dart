@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/lead.dart';
 import 'paginated_leads_provider.dart';
+import 'job_provider.dart' show leadsRemoteDataSourceProvider;
 
 final leadDetailProvider = FutureProvider.family<Lead, String>(
   (ref, id) async {

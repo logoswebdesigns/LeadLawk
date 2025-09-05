@@ -19,6 +19,7 @@ import '../widgets/sort_bar.dart';
 import '../widgets/selection_action_bar.dart';
 import '../widgets/goals_tracking_card.dart';
 import '../providers/goals_provider.dart';
+import '../providers/auto_refresh_provider.dart';
 
 // Sorting options
 enum SortOption {
@@ -42,11 +43,14 @@ enum GroupByOption {
 
 // Filter providers
 final statusFilterProvider = StateProvider<String?>((ref) => null);
+// New provider for multi-select status filtering (stores hidden statuses)
+final hiddenStatusesProvider = StateProvider<Set<String>>((ref) => {});
 final locationFilterProvider = StateProvider<String?>((ref) => null);
 final industryFilterProvider = StateProvider<String?>((ref) => null);
 final sourceFilterProvider = StateProvider<String?>((ref) => null);
 final searchFilterProvider = StateProvider<String>((ref) => '');
 final candidatesOnlyProvider = StateProvider<bool>((ref) => false);
+final calledTodayProvider = StateProvider<bool>((ref) => false);
 final followUpFilterProvider = StateProvider<String?>((ref) => null);
 final hasWebsiteFilterProvider = StateProvider<bool?>((ref) => null);
 final meetsRatingFilterProvider = StateProvider<bool?>((ref) => null);
@@ -97,12 +101,17 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     _loadLastScrapeContext();
     _initScrollController();
     
-    // Initialize WebSocket connection and refresh statistics
+    // Initialize WebSocket connection
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(pageSpeedWebSocketProvider);
-      _refreshData();
-      // Force statistics refresh on page load
-      ref.invalidate(leadStatisticsProvider);
+      // Load leads first, statistics will load via the ConversionPipeline widget
+      ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+      // Delay goals refresh to avoid blocking
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          ref.read(goalsProvider.notifier).refreshMetrics();
+        }
+      });
     });
   }
   
@@ -249,6 +258,29 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       }
     });
     
+    // Called today filter listener
+    ref.listen(calledTodayProvider, (previous, next) {
+      if (previous != next) {
+        print('📱 UI: Called today filter changed to $next');
+        // Get current state of all other filters
+        final status = ref.read(statusFilterProvider);
+        final search = ref.read(searchFilterProvider);
+        final candidatesOnly = ref.read(candidatesOnlyProvider);
+        final sortOption = ref.read(sortOptionProvider);
+        final sortBy = _getSortByField(sortOption);
+        final sortAscending = ref.read(sortAscendingProvider);
+        
+        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+          status: status,
+          search: search.isEmpty ? null : search,
+          candidatesOnly: candidatesOnly,
+          calledToday: next,
+          sortBy: sortBy,
+          sortAscending: sortAscending,
+        );
+      }
+    });
+    
     // Sort option listener
     ref.listen(sortOptionProvider, (previous, next) {
       print('📱 UI DEBUG: sortOptionProvider changed from $previous to $next');
@@ -308,18 +340,26 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       
       if (actuallyNewLeads.isNotEmpty) {
         print('🆕 New leads detected: $actuallyNewLeads');
-        print('🔄 Forcing leads refresh...');
-        Future.microtask(() {
-          _refreshData();
-          // Also refresh the statistics
-          ref.invalidate(leadStatisticsProvider);
-          // Refresh goals metrics
-          ref.read(goalsProvider.notifier).refreshMetrics();
-        });
+        
+        // Check if auto-refresh is enabled
+        final autoRefresh = ref.read(autoRefreshLeadsProvider);
+        
+        if (autoRefresh) {
+          print('🔄 Auto-refresh enabled, refreshing leads...');
+          Future.microtask(() {
+            _refreshData();
+          });
+        } else {
+          // Increment pending updates counter
+          final currentPending = ref.read(pendingLeadsUpdateProvider);
+          ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + actuallyNewLeads.length;
+          print('📦 Auto-refresh disabled, ${actuallyNewLeads.length} new leads pending (total: ${currentPending + actuallyNewLeads.length})');
+        }
       }
     });
     
-    final paginatedState = ref.watch(paginatedLeadsProvider);
+    // Use filtered provider that applies hidden statuses
+    final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
     final pageSize = ref.watch(pageSizeProvider);
     final serverState = ref.watch(serverStatusProvider);
     

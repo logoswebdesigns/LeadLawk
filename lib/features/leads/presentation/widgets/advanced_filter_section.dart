@@ -31,6 +31,9 @@ class AdvancedFilterSection extends ConsumerWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
+              _buildQuickFilter('Called Today', ref.watch(calledTodayProvider),
+                  (val) => ref.read(calledTodayProvider.notifier).state = val, ref,
+                  icon: Icons.phone_in_talk),
               _buildQuickFilter('Has Website', ref.watch(hasWebsiteFilterProvider) == true,
                   (val) => ref.read(hasWebsiteFilterProvider.notifier).state = val ? true : null, ref),
               _buildQuickFilter('No Website', ref.watch(hasWebsiteFilterProvider) == false,
@@ -67,7 +70,7 @@ class AdvancedFilterSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickFilter(String label, bool isSelected, Function(bool) onTap, WidgetRef ref) {
+  Widget _buildQuickFilter(String label, bool isSelected, Function(bool) onTap, WidgetRef ref, {IconData? icon}) {
     return GestureDetector(
       onTap: () => onTap(!isSelected),
       child: Container(
@@ -83,15 +86,30 @@ class AdvancedFilterSection extends ConsumerWidget {
                 : Colors.transparent,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isSelected
-                ? AppTheme.primaryGold
-                : Colors.white.withValues(alpha: 0.7),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected
+                    ? AppTheme.primaryGold
+                    : Colors.white.withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? AppTheme.primaryGold
+                    : Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
         ),
       ),
     );

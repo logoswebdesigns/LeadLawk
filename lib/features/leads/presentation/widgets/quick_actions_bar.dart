@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/job_provider.dart';
 import 'email_template_dialog.dart';
 import 'callback_scheduling_dialog.dart';
+import 'lead_status_actions.dart';
 
 class QuickActionsBar extends ConsumerWidget {
   final Lead lead;
   final VoidCallback? onRefresh;
+  final VoidCallback? onNavigateNext;
 
   const QuickActionsBar({
     super.key,
     required this.lead,
     this.onRefresh,
+    this.onNavigateNext,
   });
 
   @override
@@ -41,6 +45,16 @@ class QuickActionsBar extends ConsumerWidget {
                     onPressed: lead.status == LeadStatus.doNotCall
                         ? null
                         : () => _handleDNC(context, ref),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    context: context,
+                    icon: Icons.cancel,
+                    label: 'Did Not Convert',
+                    color: Colors.deepOrange,
+                    onPressed: lead.status == LeadStatus.didNotConvert
+                        ? null
+                        : () => _handleDidNotConvert(context, ref),
                   ),
                   const SizedBox(width: 8),
                   _buildActionButton(
@@ -136,6 +150,137 @@ class QuickActionsBar extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleDidNotConvert(BuildContext context, WidgetRef ref) async {
+    ConversionFailureReason? selectedReason;
+    String additionalNotes = '';
+    
+    final result = await showDialog<Map<String, dynamic>?>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppTheme.elevatedSurface,
+          title: Text(
+            'Mark as Did Not Convert',
+            style: TextStyle(color: AppTheme.warningOrange),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select a reason why ${lead.businessName} did not convert:',
+                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<ConversionFailureReason>(
+                  value: selectedReason,
+                  decoration: InputDecoration(
+                    labelText: 'Reason Code *',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                  ),
+                  dropdownColor: AppTheme.elevatedSurface,
+                  items: ConversionFailureReason.values.map((reason) => DropdownMenuItem(
+                    value: reason,
+                    child: Text(
+                      '${reason.label} (${reason.code})',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  )).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReason = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  initialValue: additionalNotes,
+                  onChanged: (value) {
+                    additionalNotes = value;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Additional Notes (Optional)',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: selectedReason != null ? () {
+                Navigator.of(context).pop({
+                  'reason': selectedReason,
+                  'notes': additionalNotes,
+                });
+              } : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.warningOrange,
+              ),
+              child: const Text('Mark Did Not Convert'),
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    if (result != null && result['reason'] != null) {
+      final repository = ref.read(leadsRepositoryProvider);
+      final reason = result['reason'] as ConversionFailureReason;
+      
+      // Update the lead with status and conversion failure details
+      final updatedLead = lead.copyWith(
+        status: LeadStatus.didNotConvert,
+        conversionFailureReason: reason.code,
+        conversionFailureNotes: result['notes'] as String?,
+        conversionFailureDate: DateTime.now(),
+      );
+      await repository.updateLead(updatedLead);
+      
+      // Add timeline entry with reason code
+      await repository.addTimelineEntry(lead.id, {
+        'type': 'STATUS_CHANGE',
+        'title': 'Status changed to DID NOT CONVERT',
+        'description': result['notes'] ?? '',
+        'metadata': {
+          'reason': reason.label,
+          'reason_code': reason.code,
+          'notes': result['notes'],
+        },
+      });
+      
+      onRefresh?.call();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${lead.businessName} marked as Did Not Convert - ${reason.label}'),
+            backgroundColor: AppTheme.warningOrange,
+          ),
+        );
+        
+        // Add a small delay before navigation to ensure UI updates complete
+        await Future.delayed(const Duration(milliseconds: 100));
+        
+        // Navigate to next lead after successful submission
+        if (context.mounted) {
+          onNavigateNext?.call();
+        }
+      }
+    }
   }
 
   Future<void> _handleDNC(BuildContext context, WidgetRef ref) async {

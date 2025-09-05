@@ -5,7 +5,7 @@ import '../../domain/entities/lead.dart';
 import 'conversion_pipeline.dart';
 
 class PipelineStage extends StatelessWidget {
-  final StageInfo stage;
+  final StageData stage;
   final int leadCount;
   final List<Lead> leads;
   final int totalLeads;

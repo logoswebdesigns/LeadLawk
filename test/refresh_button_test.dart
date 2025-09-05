@@ -40,10 +40,18 @@ void main() {
         ),
       );
 
-      // Check all three buttons are present
+      // Check all buttons are present
       expect(find.text('Refresh'), findsOneWidget);
       expect(find.text('Select'), findsOneWidget);
-      expect(find.text('Newest'), findsOneWidget); // Default sort option
+      expect(find.text('Manual'), findsOneWidget); // Auto-refresh toggle (default off)
+      // Sort button contains "Newest" text
+      final sortButtonText = find.byWidgetPredicate((widget) {
+        if (widget is Text && widget.data == 'Newest') {
+          return true;
+        }
+        return false;
+      });
+      expect(sortButtonText, findsOneWidget);
     });
   });
 }

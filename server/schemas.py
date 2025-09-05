@@ -162,7 +162,12 @@ class LeadResponse(BaseModel):
     sales_pitch_id: Optional[str] = None
     sales_pitch_name: Optional[str] = None
     
-    @field_serializer('created_at', 'updated_at', 'follow_up_date', 'last_review_date', 'pagespeed_tested_at', 'conversion_score_calculated_at')
+    # Conversion failure tracking
+    conversion_failure_reason: Optional[str] = None
+    conversion_failure_notes: Optional[str] = None
+    conversion_failure_date: Optional[datetime] = None
+    
+    @field_serializer('created_at', 'updated_at', 'follow_up_date', 'last_review_date', 'pagespeed_tested_at', 'conversion_score_calculated_at', 'conversion_failure_date')
     def serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
         if dt:
             # Ensure timezone-aware and return with Z suffix for UTC
@@ -346,3 +351,6 @@ class LeadUpdateRequest(BaseModel):
     notes: Optional[str] = None
     sales_pitch_id: Optional[str] = None
     follow_up_date: Optional[datetime] = None
+    conversion_failure_reason: Optional[str] = None
+    conversion_failure_notes: Optional[str] = None
+    conversion_failure_date: Optional[datetime] = None

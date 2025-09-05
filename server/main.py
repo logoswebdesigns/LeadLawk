@@ -12,7 +12,7 @@ import time
 import uuid
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,6 +44,20 @@ from scraper_runner import run_scraper, _scrape_prerequisites
 from websocket_manager import job_websocket_manager, log_websocket_manager, pagespeed_websocket_manager
 from analytics_engine import AnalyticsEngine
 from parallel_job_executor import parallel_executor
+
+
+# Simple in-memory cache for statistics
+statistics_cache = {
+    "data": None,
+    "timestamp": None,
+    "ttl_seconds": 30  # Cache for 30 seconds
+}
+
+def invalidate_statistics_cache():
+    """Invalidate the statistics cache when leads are modified"""
+    statistics_cache["data"] = None
+    statistics_cache["timestamp"] = None
+    logger.info("Statistics cache invalidated")
 
 
 # Initialize FastAPI app
@@ -382,6 +396,72 @@ async def export_leads_excel(
 
 
 # Lead Management Endpoints
+@app.get("/leads/called-today")
+async def get_leads_called_today(
+    page: int = 1,
+    per_page: int = 20
+):
+    """Get leads that were called today - optimized with pagination and efficient queries"""
+    db = SessionLocal()
+    try:
+        from datetime import date
+        from sqlalchemy import func, and_, or_, text
+        import time
+        
+        start_time = time.time()
+        
+        # Use timezone-aware datetime
+        today_start = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
+        today_end = datetime.combine(date.today(), datetime.max.time(), tzinfo=timezone.utc)
+        
+        # Optimized query using EXISTS subquery for better performance
+        # This avoids the IN clause which can be slow with large datasets
+        base_query = db.query(Lead).filter(
+            or_(
+                # Has phone call today
+                db.query(LeadTimelineEntry).filter(
+                    and_(
+                        LeadTimelineEntry.lead_id == Lead.id,
+                        LeadTimelineEntry.type == 'phone_call',
+                        LeadTimelineEntry.created_at >= today_start,
+                        LeadTimelineEntry.created_at <= today_end
+                    )
+                ).exists(),
+                # Has status change to called/interested/converted today
+                db.query(LeadTimelineEntry).filter(
+                    and_(
+                        LeadTimelineEntry.lead_id == Lead.id,
+                        LeadTimelineEntry.type == 'status_change',
+                        LeadTimelineEntry.new_status.in_(['called', 'interested', 'converted']),
+                        LeadTimelineEntry.created_at >= today_start,
+                        LeadTimelineEntry.created_at <= today_end
+                    )
+                ).exists()
+            )
+        )
+        
+        # Count total for pagination
+        total = base_query.count()
+        
+        # Apply pagination
+        offset = (page - 1) * per_page
+        leads = base_query.order_by(Lead.updated_at.desc()).offset(offset).limit(per_page).all()
+        
+        query_time = time.time() - start_time
+        logger.info(f"Called-today query took {query_time:.3f} seconds for {len(leads)} leads")
+        
+        return {
+            "leads": [LeadResponse.from_orm(lead) for lead in leads],
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (total + per_page - 1) // per_page,
+            "query_time_ms": round(query_time * 1000, 2)
+        }
+    finally:
+        db.close()
+
+
 @app.get("/leads")
 async def get_leads(
     page: int = 1,
@@ -527,27 +607,159 @@ async def get_leads(
 
 @app.get("/leads/statistics/all", response_model=LeadStatisticsResponse)
 async def get_lead_statistics():
-    """Get overall lead statistics by status"""
+    """Get overall lead statistics by status - optimized version with caching"""
+    
+    # Check cache first
+    now = datetime.now(timezone.utc)
+    if (statistics_cache["data"] is not None and 
+        statistics_cache["timestamp"] is not None and
+        (now - statistics_cache["timestamp"]).total_seconds() < statistics_cache["ttl_seconds"]):
+        logger.info("Returning cached statistics")
+        return statistics_cache["data"]
+    
+    logger.info("Cache miss, fetching fresh statistics")
     db = SessionLocal()
     try:
-        # Get total count
-        total = db.query(Lead).count()
+        # Use a single query with GROUP BY for better performance
+        from sqlalchemy import func
         
-        # Count leads by status
+        start_time = time.time()
+        
+        # Get counts grouped by status in a single query
+        status_counts = db.query(
+            Lead.status,
+            func.count(Lead.id).label('count')
+        ).group_by(Lead.status).all()
+        
+        query_time = time.time() - start_time
+        logger.info(f"Statistics query took {query_time:.3f} seconds")
+        
+        # Build the by_status dictionary
         by_status = {}
+        total = 0
+        for status_row in status_counts:
+            by_status[status_row.status.value] = status_row.count
+            total += status_row.count
+        
+        # Fill in any missing statuses with 0
         for status in LeadStatus:
-            count = db.query(Lead).filter(Lead.status == status).count()
-            by_status[status.value] = count
+            if status.value not in by_status:
+                by_status[status.value] = 0
         
         # Calculate conversion rate
         converted = by_status.get(LeadStatus.converted.value, 0)
         conversion_rate = (converted / total * 100) if total > 0 else 0.0
         
-        return LeadStatisticsResponse(
+        response = LeadStatisticsResponse(
             total=total,
             by_status=by_status,
             conversion_rate=conversion_rate
         )
+        
+        # Update cache
+        statistics_cache["data"] = response
+        statistics_cache["timestamp"] = now
+        
+        return response
+    finally:
+        db.close()
+
+
+# Cache for today's statistics with TTL
+today_stats_cache = {
+    "data": None,
+    "timestamp": None,
+    "date": None,
+    "ttl_seconds": 60  # 1 minute cache for today stats
+}
+
+@app.get("/leads/statistics/today", response_model=dict)
+async def get_today_statistics():
+    """Get statistics for today's activities - optimized with caching and efficient queries"""
+    from datetime import date
+    from sqlalchemy import func, and_, or_, text
+    
+    # Check cache first
+    now = datetime.now(timezone.utc)
+    today_date = date.today()
+    
+    if (today_stats_cache["data"] is not None and 
+        today_stats_cache["date"] == today_date and
+        today_stats_cache["timestamp"] is not None and
+        (now - today_stats_cache["timestamp"]).total_seconds() < today_stats_cache["ttl_seconds"]):
+        logger.info("Returning cached today's statistics")
+        return today_stats_cache["data"]
+    
+    logger.info("Fetching fresh today's statistics")
+    db = SessionLocal()
+    try:
+        import time
+        start_time = time.time()
+        
+        # Use timezone-aware datetime for consistency
+        today_start = datetime.combine(today_date, datetime.min.time(), tzinfo=timezone.utc)
+        today_end = datetime.combine(today_date, datetime.max.time(), tzinfo=timezone.utc)
+        
+        # Single optimized query using UNION to get all call-related activities
+        # This query leverages indexes on (type, created_at) and (new_status, created_at)
+        calls_query = text("""
+            SELECT COUNT(DISTINCT lead_id) as count
+            FROM (
+                SELECT lead_id
+                FROM lead_timeline_entries
+                WHERE type = 'phone_call'
+                  AND created_at >= :today_start
+                  AND created_at <= :today_end
+                
+                UNION
+                
+                SELECT lead_id
+                FROM lead_timeline_entries
+                WHERE type = 'status_change'
+                  AND new_status IN ('called', 'interested', 'converted')
+                  AND created_at >= :today_start
+                  AND created_at <= :today_end
+            ) as today_calls
+        """)
+        
+        result = db.execute(calls_query, {
+            'today_start': today_start,
+            'today_end': today_end
+        })
+        today_calls = result.scalar() or 0
+        
+        # Separate optimized query for conversions
+        conversions_query = text("""
+            SELECT COUNT(DISTINCT lead_id) as count
+            FROM lead_timeline_entries
+            WHERE type = 'status_change'
+              AND new_status = 'converted'
+              AND created_at >= :today_start
+              AND created_at <= :today_end
+        """)
+        
+        result = db.execute(conversions_query, {
+            'today_start': today_start,
+            'today_end': today_end
+        })
+        conversions_today = result.scalar() or 0
+        
+        query_time = time.time() - start_time
+        logger.info(f"Today's statistics query took {query_time:.3f} seconds")
+        
+        response = {
+            "calls_today": today_calls,
+            "conversions_today": conversions_today,
+            "date": today_date.isoformat(),
+            "query_time_ms": round(query_time * 1000, 2)
+        }
+        
+        # Update cache
+        today_stats_cache["data"] = response
+        today_stats_cache["timestamp"] = now
+        today_stats_cache["date"] = today_date
+        
+        return response
     finally:
         db.close()
 
@@ -599,10 +811,18 @@ async def add_timeline_entry_endpoint(lead_id: str, entry_data: LeadTimelineEntr
             raise HTTPException(status_code=404, detail="Lead not found")
         
         # Create new timeline entry
+        # Convert type to lowercase to match enum values
+        try:
+            entry_type = TimelineEntryType(entry_data.type.lower())
+        except ValueError:
+            # If the type doesn't match any enum value, default to NOTE
+            print(f"Warning: Unknown timeline entry type '{entry_data.type}', defaulting to NOTE")
+            entry_type = TimelineEntryType.NOTE
+        
         entry = LeadTimelineEntry(
             id=str(uuid.uuid4()),
             lead_id=lead_id,
-            type=TimelineEntryType(entry_data.type),
+            type=entry_type,
             title=entry_data.title,
             description=entry_data.description,
             follow_up_date=entry_data.follow_up_date,

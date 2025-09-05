@@ -10,6 +10,7 @@ class PrimaryFilterRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentStatus = ref.watch(statusFilterProvider);
+    final searchFilter = ref.watch(searchFilterProvider);
     
     return Container(
       height: 44,
@@ -18,6 +19,11 @@ class PrimaryFilterRow extends ConsumerWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
+            // Search filter chip (if active)
+            if (searchFilter.isNotEmpty) ...[
+              _buildSearchChip(searchFilter, ref),
+              const SizedBox(width: 8),
+            ],
             _buildStatusChip('All', null, currentStatus, ref),
             ...LeadStatus.values.map((status) {
               final label = _getStatusLabel(status);
@@ -31,6 +37,50 @@ class PrimaryFilterRow extends ConsumerWidget {
             }),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchChip(String searchTerm, WidgetRef ref) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryGold.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryGold.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.search,
+            size: 14,
+            color: AppTheme.primaryGold,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '"$searchTerm"',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primaryGold,
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () {
+              ref.read(searchFilterProvider.notifier).state = '';
+            },
+            child: Icon(
+              Icons.close,
+              size: 14,
+              color: AppTheme.primaryGold,
+            ),
+          ),
+        ],
       ),
     );
   }

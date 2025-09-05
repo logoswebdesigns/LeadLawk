@@ -28,20 +28,7 @@ class UnifiedCallService {
       }
       
       // Save the pitch selection to the lead
-      final dataSource = ref.read(salesPitchDataSourceProvider);
-      try {
-        await dataSource.assignPitchToLead(lead.id, selectedPitchId);
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to save pitch selection: $e'),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
-        }
-        return;
-      }
+      // This will be saved when updating the lead status below
     }
     
     // Step 2: Initiate the phone call
@@ -117,13 +104,13 @@ class UnifiedCallService {
     WidgetRef ref,
     Lead lead,
   ) async {
-    final pitches = await ref.read(salesPitchesProvider.future);
+    final pitches = ref.read(salesPitchesProvider);
     
-    if (pitches.length < 2) {
+    if (pitches.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please add at least 2 sales pitches in account settings'),
+            content: const Text('Please add sales pitches in account settings'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -273,45 +260,6 @@ class UnifiedCallService {
                                         ),
                                       ),
                                     ),
-                                    if (pitch.attempts > 0) ...[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.successGreen.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.trending_up,
-                                              size: 14,
-                                              color: AppTheme.successGreen,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${pitch.conversionRate.toStringAsFixed(1)}%',
-                                              style: TextStyle(
-                                                color: AppTheme.successGreen,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${pitch.attempts} calls',
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(0.5),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 12),

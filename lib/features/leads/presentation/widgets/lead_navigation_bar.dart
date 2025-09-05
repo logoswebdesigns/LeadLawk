@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/lead_navigation_provider.dart';
 
-class LeadNavigationBar extends StatelessWidget {
+class LeadNavigationBar extends ConsumerWidget {
   final LeadNavigationContext navigation;
 
   const LeadNavigationBar({
@@ -13,7 +14,7 @@ class LeadNavigationBar extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -31,6 +32,7 @@ class LeadNavigationBar extends StatelessWidget {
             child: _NavigationButton(
               lead: navigation.previousLead,
               isNext: false,
+              hasMore: false,
               onTap: navigation.previousLead != null 
                 ? () => _navigateToLead(context, navigation.previousLead!.id)
                 : null,
@@ -44,8 +46,14 @@ class LeadNavigationBar extends StatelessWidget {
             child: _NavigationButton(
               lead: navigation.nextLead,
               isNext: true,
-              onTap: navigation.nextLead != null 
-                ? () => _navigateToLead(context, navigation.nextLead!.id)
+              hasMore: navigation.nextLead != null || navigation.totalCount > navigation.currentIndex,
+              onTap: (navigation.nextLead != null || navigation.totalCount > navigation.currentIndex)
+                ? () async {
+                    final nextId = await ref.read(leadNavigationActionsProvider).navigateToNext(navigation.currentLead.id);
+                    if (nextId != null && context.mounted) {
+                      _navigateToLead(context, nextId);
+                    }
+                  }
                 : null,
             ),
           ),
@@ -81,7 +89,7 @@ class _CurrentLeadInfo extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${navigation.currentIndex + 1} of ${navigation.totalCount}',
+          '${navigation.currentIndex} of ${navigation.totalCount}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Colors.white.withOpacity(0.7),
           ),
@@ -95,21 +103,32 @@ class _CurrentLeadInfo extends StatelessWidget {
 class _NavigationButton extends StatelessWidget {
   final Lead? lead;
   final bool isNext;
+  final bool hasMore;
   final VoidCallback? onTap;
 
   const _NavigationButton({
     required this.lead,
     required this.isNext,
+    this.hasMore = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    // If we have more leads to navigate to (even if not loaded), show button as enabled
+    if (lead == null && hasMore && onTap != null) {
+      return _buildLoadMoreButton(context);
+    }
     if (lead == null) return _buildDisabledButton(context);
     return _buildActiveButton(context);
   }
 
   Widget _buildDisabledButton(BuildContext context) {
+    // If there are more leads to load, show as enabled even without a lead
+    if (hasMore && onTap != null) {
+      return _buildLoadMoreButton(context);
+    }
+    
     return Container(
       height: 56,
       alignment: isNext ? Alignment.centerRight : Alignment.centerLeft,
@@ -124,6 +143,34 @@ class _NavigationButton extends StatelessWidget {
           isNext ? Icons.chevron_right : Icons.chevron_left,
           color: Theme.of(context).disabledColor.withOpacity(0.3),
           size: 28,
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildLoadMoreButton(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 56,
+        alignment: isNext ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGold.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppTheme.primaryGold.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            isNext ? Icons.chevron_right : Icons.chevron_left,
+            color: AppTheme.primaryGold,
+            size: 28,
+          ),
         ),
       ),
     );

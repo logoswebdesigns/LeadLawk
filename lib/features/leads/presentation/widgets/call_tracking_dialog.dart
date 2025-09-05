@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/constants/timeline_constants.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../providers/sales_pitch_provider.dart';
 
@@ -49,7 +50,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
     try {
       // Add timeline entry for the call
       final timelineData = {
-        'type': 'PHONE_CALL',
+        'type': TimelineEntryTypes.phoneCall,
         'title': 'Call completed - $_selectedOutcome',
         'description': _notesController.text.trim(),
         'metadata': {
@@ -305,18 +306,18 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
     final pitchId = widget.salesPitchId ?? widget.lead.salesPitchId;
     if (pitchId == null) return const SizedBox.shrink();
     
-    final pitchesAsync = ref.watch(salesPitchesProvider);
+    final pitches = ref.watch(salesPitchesProvider);
     
-    return pitchesAsync.when(
-      data: (pitches) {
-        final selectedPitch = pitches.firstWhere(
-          (p) => p.id == pitchId,
-          orElse: () => pitches.first,
-        );
-        
-        return _buildSection(
-          'Sales Pitch Used',
-          Container(
+    if (pitches.isEmpty) return const SizedBox.shrink();
+    
+    final selectedPitch = pitches.firstWhere(
+      (p) => p.id == pitchId,
+      orElse: () => pitches.first,
+    );
+    
+    return _buildSection(
+      'Sales Pitch Used',
+      Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withOpacity(0.05),
@@ -434,9 +435,5 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
             ),
           ),
         );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
-    );
   }
 }

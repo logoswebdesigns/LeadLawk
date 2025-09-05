@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
 import '../providers/paginated_leads_provider.dart';
+import '../providers/auto_refresh_provider.dart';
 import 'sort_options_modal.dart';
+import 'unified_filter_modal.dart';
 
 class SortBar extends ConsumerStatefulWidget {
   const SortBar({super.key});
@@ -75,8 +77,19 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final sortOption = ref.watch(sortOptionProvider);
     final sortAscending = ref.watch(sortAscendingProvider);
-    final paginatedState = ref.watch(paginatedLeadsProvider);
+    final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
     final isSelectionMode = ref.watch(isSelectionModeProvider);
+    final autoRefresh = ref.watch(autoRefreshLeadsProvider);
+    final pendingUpdates = ref.watch(pendingLeadsUpdateProvider);
+    
+    // Calculate active filter count
+    final searchFilter = ref.watch(searchFilterProvider);
+    final hiddenStatuses = ref.watch(hiddenStatusesProvider);
+    final candidatesOnly = ref.watch(candidatesOnlyProvider);
+    int activeFilterCount = 0;
+    if (searchFilter.isNotEmpty) activeFilterCount++;
+    if (hiddenStatuses.isNotEmpty) activeFilterCount++;
+    if (candidatesOnly) activeFilterCount++;
     
     // Don't show this bar when in selection mode
     if (isSelectionMode) {
@@ -141,6 +154,137 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: _isRefreshing 
+                            ? AppTheme.primaryGold
+                            : Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Auto-refresh toggle
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                ref.read(autoRefreshLeadsProvider.notifier).state = !autoRefresh;
+                
+                // If turning on auto-refresh and there are pending updates, refresh immediately
+                if (!autoRefresh && pendingUpdates > 0) {
+                  ref.read(pendingLeadsUpdateProvider.notifier).state = 0;
+                  ref.read(paginatedLeadsProvider.notifier).refreshLeads();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: autoRefresh 
+                      ? AppTheme.primaryGold.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: autoRefresh 
+                      ? Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        Icon(
+                          autoRefresh ? CupertinoIcons.bolt_fill : CupertinoIcons.bolt,
+                          size: 14,
+                          color: autoRefresh 
+                              ? AppTheme.primaryGold
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                        if (pendingUpdates > 0 && !autoRefresh)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorRed,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.backgroundDark, width: 1),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      autoRefresh ? 'Auto' : 'Manual',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: autoRefresh 
+                            ? AppTheme.primaryGold
+                            : Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Filter button  
+            GestureDetector(
+              onTap: () => UnifiedFilterModal.show(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: activeFilterCount > 0
+                      ? AppTheme.primaryGold.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: activeFilterCount > 0
+                      ? Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1)
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        Icon(
+                          CupertinoIcons.slider_horizontal_3,
+                          size: 14,
+                          color: activeFilterCount > 0
+                              ? AppTheme.primaryGold
+                              : Colors.white.withValues(alpha: 0.7),
+                        ),
+                        if (activeFilterCount > 0)
+                          Positioned(
+                            right: -4,
+                            top: -4,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGold,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                activeFilterCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Filter',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: activeFilterCount > 0
                             ? AppTheme.primaryGold
                             : Colors.white.withValues(alpha: 0.9),
                       ),

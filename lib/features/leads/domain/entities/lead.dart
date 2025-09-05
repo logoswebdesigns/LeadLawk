@@ -63,6 +63,11 @@ class Lead extends Equatable {
   // Sales pitch tracking
   final String? salesPitchId;
   final String? salesPitchName;
+  
+  // Conversion failure tracking
+  final String? conversionFailureReason;  // Reason code (e.g., 'NI', 'TE', 'COMP')
+  final String? conversionFailureNotes;   // Additional notes about why they didn't convert
+  final DateTime? conversionFailureDate;  // When they were marked as did not convert
 
   const Lead({
     required this.id,
@@ -109,6 +114,9 @@ class Lead extends Equatable {
     this.conversionScoreFactors,
     this.salesPitchId,
     this.salesPitchName,
+    this.conversionFailureReason,
+    this.conversionFailureNotes,
+    this.conversionFailureDate,
   });
 
   Lead copyWith({
@@ -156,6 +164,9 @@ class Lead extends Equatable {
     String? conversionScoreFactors,
     String? salesPitchId,
     String? salesPitchName,
+    String? conversionFailureReason,
+    String? conversionFailureNotes,
+    DateTime? conversionFailureDate,
   }) {
     return Lead(
       id: id ?? this.id,
@@ -202,6 +213,9 @@ class Lead extends Equatable {
       conversionScoreFactors: conversionScoreFactors ?? this.conversionScoreFactors,
       salesPitchId: salesPitchId ?? this.salesPitchId,
       salesPitchName: salesPitchName ?? this.salesPitchName,
+      conversionFailureReason: conversionFailureReason ?? this.conversionFailureReason,
+      conversionFailureNotes: conversionFailureNotes ?? this.conversionFailureNotes,
+      conversionFailureDate: conversionFailureDate ?? this.conversionFailureDate,
     );
   }
 
@@ -251,6 +265,9 @@ class Lead extends Equatable {
         conversionScoreFactors,
         salesPitchId,
         salesPitchName,
+        conversionFailureReason,
+        conversionFailureNotes,
+        conversionFailureDate,
       ];
 
   // Helper methods

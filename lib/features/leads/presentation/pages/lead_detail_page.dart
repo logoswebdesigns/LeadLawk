@@ -39,6 +39,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   late final LeadActionsService _actionsService;
   late final PageSpeedDataSource _pageSpeedDataSource;
   bool _isTestingPageSpeed = false;
+  String? _lastUpdatedLeadId; // Track which lead we've already updated
 
   @override
   void didChangeDependencies() {
@@ -50,12 +51,30 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     _updateStatusToViewed();
   }
   
+  @override
+  void didUpdateWidget(LeadDetailPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When navigating to a different lead via prev/next buttons
+    if (oldWidget.leadId != widget.leadId) {
+      print('📱 NAVIGATION: Lead changed from ${oldWidget.leadId} to ${widget.leadId}');
+      // Update the new lead's status from NEW to VIEWED if needed
+      _updateStatusToViewed();
+    }
+  }
+  
   Future<void> _updateStatusToViewed() async {
+    // Prevent duplicate updates for the same lead
+    if (_lastUpdatedLeadId == widget.leadId) {
+      print('📱 STATUS: Already updated lead ${widget.leadId} to VIEWED, skipping');
+      return;
+    }
+    
     try {
       final lead = await ref.read(leadDetailProvider(widget.leadId).future);
       
       // Only update if the lead is NEW
       if (lead.status == LeadStatus.new_) {
+        _lastUpdatedLeadId = widget.leadId; // Mark as updated
         final repository = ref.read(leadsRepositoryProvider);
         
         // Update the lead status
@@ -86,13 +105,25 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   @override
   Widget build(BuildContext context) {
     final leadAsync = ref.watch(leadDetailProvider(widget.leadId));
-    final navigationAsync = ref.watch(leadNavigationProvider(widget.leadId));
+    final navigation = ref.watch(leadNavigationProvider(widget.leadId));
+    
+    // Watch for lead data changes and update status when a NEW lead is loaded
+    ref.listen(leadDetailProvider(widget.leadId), (previous, next) {
+      next.whenData((lead) {
+        if (lead.status == LeadStatus.new_) {
+          print('📱 STATUS: NEW lead loaded (${lead.businessName}), triggering VIEWED update');
+          _updateStatusToViewed();
+        }
+      });
+    });
+    
+    // Note: We load leads on-demand now, not all at once
 
     return Scaffold(
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          _buildNavigationSection(navigationAsync),
+          _buildNavigationSection(navigation),
           Expanded(
             child: leadAsync.when(
               data: (lead) => _buildLeadContent(lead),
@@ -123,19 +154,21 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     );
   }
 
-  Widget _buildNavigationSection(AsyncValue<LeadNavigationContext> navigationAsync) {
+  Widget _buildNavigationSection(LeadNavigationContext? navigation) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     
-    return navigationAsync.when(
-      data: (navigation) => isMobile 
-        ? _buildMobileNavigation(navigation)
-        : LeadNavigationBar(navigation: navigation),
-      loading: () => _buildNavigationSkeleton(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
+    if (navigation == null) {
+      return _buildNavigationSkeleton();
+    }
+    
+    return isMobile 
+      ? _buildMobileNavigation(navigation)
+      : LeadNavigationBar(navigation: navigation);
   }
   
   Widget _buildMobileNavigation(LeadNavigationContext navigation) {
+    final hasMoreToLoad = navigation.totalCount > navigation.currentIndex;
+    
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -178,7 +211,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${navigation.currentIndex + 1} / ${navigation.totalCount}',
+                  '${navigation.currentIndex} / ${navigation.totalCount}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 11,
@@ -191,14 +224,19 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           IconButton(
             icon: Icon(
               Icons.chevron_right,
-              color: navigation.nextLead != null 
+              color: (navigation.nextLead != null || hasMoreToLoad)
                 ? AppTheme.accentPurple 
                 : Theme.of(context).disabledColor,
             ),
-            onPressed: navigation.nextLead != null
-              ? () => context.go('/leads/${navigation.nextLead!.id}')
+            onPressed: (navigation.nextLead != null || hasMoreToLoad)
+              ? () async {
+                  final nextId = await ref.read(leadNavigationActionsProvider).navigateToNext(navigation.currentLead.id);
+                  if (nextId != null && mounted) {
+                    context.go('/leads/$nextId');
+                  }
+                }
               : null,
-            tooltip: navigation.nextLead?.businessName ?? 'No next lead',
+            tooltip: navigation.nextLead?.businessName ?? (hasMoreToLoad ? 'Load more leads' : 'No next lead'),
           ),
         ],
       ),
@@ -233,6 +271,16 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             lead: lead,
             onRefresh: () {
               ref.invalidate(leadDetailProvider(widget.leadId));
+            },
+            onNavigateNext: () async {
+              // Navigate to next lead after DID NOT CONVERT submission
+              final navigation = ref.read(leadNavigationProvider(widget.leadId));
+              if (navigation != null) {
+                final nextId = await ref.read(leadNavigationActionsProvider).navigateToNext(widget.leadId);
+                if (nextId != null && context.mounted) {
+                  context.go('/leads/$nextId');
+                }
+              }
             },
           ),
           const SizedBox(height: 20),
@@ -575,19 +623,23 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   
   String _formatCallbackDate(DateTime date) {
     final now = DateTime.now();
-    final difference = date.difference(now);
     
-    if (difference.inDays == 0) {
+    // Compare just the date portions (year, month, day) ignoring time
+    final nowDate = DateTime(now.year, now.month, now.day);
+    final targetDate = DateTime(date.year, date.month, date.day);
+    final daysDifference = targetDate.difference(nowDate).inDays;
+    
+    if (daysDifference == 0) {
       // Today
       final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
       final period = date.hour < 12 ? 'AM' : 'PM';
       return 'Today at $hour:${date.minute.toString().padLeft(2, '0')} $period';
-    } else if (difference.inDays == 1) {
+    } else if (daysDifference == 1) {
       // Tomorrow
       final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
       final period = date.hour < 12 ? 'AM' : 'PM';
       return 'Tomorrow at $hour:${date.minute.toString().padLeft(2, '0')} $period';
-    } else if (difference.inDays < 7) {
+    } else if (daysDifference > 1 && daysDifference < 7) {
       // This week
       final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../domain/entities/lead.dart';
 import '../pages/leads_list_page.dart';
 import 'primary_filter_row.dart';
 import 'advanced_filter_section.dart';
@@ -26,6 +25,14 @@ class FilterBarState extends ConsumerState<FilterBar> {
     searchController.addListener(() {
       setState(() {}); // Rebuild to update suffix icon visibility
     });
+    
+    // Set initial value from provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentSearch = ref.read(searchFilterProvider);
+      if (currentSearch.isNotEmpty) {
+        searchController.text = currentSearch;
+      }
+    });
   }
 
   @override
@@ -37,6 +44,13 @@ class FilterBarState extends ConsumerState<FilterBar> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for search filter changes to sync the text field
+    ref.listen(searchFilterProvider, (previous, next) {
+      if (next != searchController.text) {
+        searchController.text = next;
+      }
+    });
+    
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,

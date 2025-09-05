@@ -19,29 +19,11 @@ def save_lead_to_database(business_details, job_id=None, enable_pagespeed=False,
             phone = (business_details.get('phone') or 'No phone').strip()
             profile_url = business_details.get('url', '').strip()
             
-            # Check for duplicates using multiple strategies
-            # Strategy 1: Exact match on business_name + location (case-insensitive)
+            # Check for duplicates using business name only (case-insensitive)
+            # This prevents duplicate businesses regardless of location
             existing_lead = db.query(Lead).filter(
-                and_(
-                    func.lower(Lead.business_name) == func.lower(business_name),
-                    func.lower(Lead.location) == func.lower(location)
-                )
+                func.lower(Lead.business_name) == func.lower(business_name)
             ).first()
-            
-            # Strategy 2: If no exact match, check profile URL (Google Maps URL is unique)
-            if not existing_lead and profile_url:
-                existing_lead = db.query(Lead).filter(
-                    Lead.profile_url == profile_url
-                ).first()
-            
-            # Strategy 3: Check phone number if it's not "No phone" and location matches
-            if not existing_lead and phone != 'No phone':
-                existing_lead = db.query(Lead).filter(
-                    and_(
-                        Lead.phone == phone,
-                        func.lower(Lead.location) == func.lower(location)
-                    )
-                ).first()
             
             if existing_lead:
                 print(f"    ⚠️ Duplicate lead found: {business_name} in {location}")

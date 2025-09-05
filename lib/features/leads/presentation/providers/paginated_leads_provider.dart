@@ -4,6 +4,8 @@ import '../../domain/entities/lead.dart';
 import '../../data/datasources/leads_remote_datasource.dart';
 import '../../data/models/paginated_response.dart';
 import '../../data/models/lead_model.dart';
+import 'job_provider.dart' show leadsRemoteDataSourceProvider, dioProvider;
+import '../pages/leads_list_page.dart' show hiddenStatusesProvider;
 
 // Helper class for handling explicit null values in copyWith
 class _Undefined {
@@ -15,6 +17,7 @@ class LeadsFilterState {
   final String? status;
   final String? search;
   final bool? candidatesOnly;
+  final bool? calledToday;
   final String sortBy;
   final bool sortAscending;
   
@@ -22,6 +25,7 @@ class LeadsFilterState {
     this.status,
     this.search,
     this.candidatesOnly,
+    this.calledToday,
     this.sortBy = 'created_at',
     this.sortAscending = false,
   });
@@ -30,6 +34,7 @@ class LeadsFilterState {
     Object? status = const _Undefined(),
     Object? search = const _Undefined(),
     Object? candidatesOnly = const _Undefined(),
+    Object? calledToday = const _Undefined(),
     Object? sortBy = const _Undefined(),
     Object? sortAscending = const _Undefined(),
   }) {
@@ -37,6 +42,7 @@ class LeadsFilterState {
       status: status is _Undefined ? this.status : status as String?,
       search: search is _Undefined ? this.search : search as String?,
       candidatesOnly: candidatesOnly is _Undefined ? this.candidatesOnly : candidatesOnly as bool?,
+      calledToday: calledToday is _Undefined ? this.calledToday : calledToday as bool?,
       sortBy: sortBy is _Undefined ? this.sortBy : (sortBy as String?) ?? 'created_at',
       sortAscending: sortAscending is _Undefined ? this.sortAscending : (sortAscending as bool?) ?? false,
     );
@@ -92,21 +98,38 @@ class PaginatedLeadsState {
   }
 }
 
-// Provider for the remote data source
-final leadsRemoteDataSourceProvider = Provider<LeadsRemoteDataSource>((ref) {
-  final dio = ref.watch(dioProvider);
-  return LeadsRemoteDataSourceImpl(dio: dio);
-});
-
-// Provider for Dio
-final dioProvider = Provider((ref) {
-  return Dio();
-});
+// Provider for the remote data source and Dio are imported from job_provider.dart
 
 // Main provider for paginated leads
 final paginatedLeadsProvider = StateNotifierProvider<PaginatedLeadsNotifier, PaginatedLeadsState>((ref) {
   final dataSource = ref.watch(leadsRemoteDataSourceProvider);
   return PaginatedLeadsNotifier(dataSource);
+});
+
+// Filtered provider that applies hidden statuses filter
+final filteredPaginatedLeadsProvider = Provider<PaginatedLeadsState>((ref) {
+  final paginatedState = ref.watch(paginatedLeadsProvider);
+  final hiddenStatuses = ref.watch(hiddenStatusesProvider);
+  
+  // If no hidden statuses, return original state
+  if (hiddenStatuses.isEmpty) {
+    return paginatedState;
+  }
+  
+  // Filter out hidden statuses from the leads
+  final filteredLeads = paginatedState.leads.where((lead) {
+    // Get the enum name (e.g., LeadStatus.new_ -> "new_", LeadStatus.called -> "called")
+    final statusString = lead.status.name;
+    return !hiddenStatuses.contains(statusString);
+  }).toList();
+  
+  // Return new state with filtered leads
+  // Keep the original total from the API - it represents ALL leads that match the query
+  // The filtered leads are just what we've loaded and then client-side filtered
+  return paginatedState.copyWith(
+    leads: filteredLeads,
+    // Don't change the total - it should remain the API's total count
+  );
 });
 
 class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
@@ -121,21 +144,31 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     if (state.isLoading) return;
     
     print('📊 PAGINATION: Starting initial load with page size: $_perPage');
-    print('📊 PAGINATION: Filters - status: ${state.filters.status}, search: ${state.filters.search}, candidatesOnly: ${state.filters.candidatesOnly}');
+    print('📊 PAGINATION: Filters - status: ${state.filters.status}, search: ${state.filters.search}, candidatesOnly: ${state.filters.candidatesOnly}, calledToday: ${state.filters.calledToday}');
     print('📊 PAGINATION: Sort - by: ${state.filters.sortBy}, ascending: ${state.filters.sortAscending}');
     
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      final response = await _dataSource.getLeadsPaginated(
-        page: 1,
-        perPage: _perPage,
-        status: state.filters.status,
-        search: state.filters.search,
-        candidatesOnly: state.filters.candidatesOnly,
-        sortBy: state.filters.sortBy,
-        sortAscending: state.filters.sortAscending,
-      );
+      // If calledToday filter is active, use the special endpoint
+      final PaginatedResponse<LeadModel> response;
+      if (state.filters.calledToday == true) {
+        print('📊 PAGINATION: Using called-today endpoint');
+        response = await _dataSource.getLeadsCalledToday(
+          page: 1,
+          perPage: _perPage,
+        );
+      } else {
+        response = await _dataSource.getLeadsPaginated(
+          page: 1,
+          perPage: _perPage,
+          status: state.filters.status,
+          search: state.filters.search,
+          candidatesOnly: state.filters.candidatesOnly,
+          sortBy: state.filters.sortBy,
+          sortAscending: state.filters.sortAscending,
+        );
+      }
       
       print('📊 PAGINATION: Received response - Page 1/${response.totalPages}');
       print('📊 PAGINATION: Items received: ${response.items.length} out of ${response.total} total');
@@ -177,15 +210,25 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     state = state.copyWith(isLoadingMore: true, error: null);
     
     try {
-      final response = await _dataSource.getLeadsPaginated(
-        page: nextPage,
-        perPage: _perPage,
-        status: state.filters.status,
-        search: state.filters.search,
-        candidatesOnly: state.filters.candidatesOnly,
-        sortBy: state.filters.sortBy,
-        sortAscending: state.filters.sortAscending,
-      );
+      // If calledToday filter is active, use the special endpoint
+      final PaginatedResponse<LeadModel> response;
+      if (state.filters.calledToday == true) {
+        print('📊 PAGINATION: Using called-today endpoint for page $nextPage');
+        response = await _dataSource.getLeadsCalledToday(
+          page: nextPage,
+          perPage: _perPage,
+        );
+      } else {
+        response = await _dataSource.getLeadsPaginated(
+          page: nextPage,
+          perPage: _perPage,
+          status: state.filters.status,
+          search: state.filters.search,
+          candidatesOnly: state.filters.candidatesOnly,
+          sortBy: state.filters.sortBy,
+          sortAscending: state.filters.sortAscending,
+        );
+      }
       
       print('📊 PAGINATION: Received page $nextPage/${response.totalPages}');
       print('📊 PAGINATION: Items received: ${response.items.length} (Total loaded: ${state.leads.length + response.items.length}/${response.total})');
@@ -225,27 +268,31 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   
   // Update filters and reload
   Future<void> updateFilters({
-    String? status,
-    String? search,
-    bool? candidatesOnly,
-    String? sortBy,
-    bool? sortAscending,
+    Object? status = const _Undefined(),
+    Object? search = const _Undefined(),
+    Object? candidatesOnly = const _Undefined(),
+    Object? calledToday = const _Undefined(),
+    Object? sortBy = const _Undefined(),
+    Object? sortAscending = const _Undefined(),
   }) async {
     print('📊 PAGINATION DEBUG: updateFilters called with:');
     print('  status=$status, search=$search, candidatesOnly=$candidatesOnly');
     print('  sortBy=$sortBy, sortAscending=$sortAscending');
     
     // Log if this is primarily a sort change
-    if (sortBy != null || sortAscending != null) {
-      print('🔄 SORT CHANGE: sortBy=${sortBy ?? state.filters.sortBy} (${sortBy != null ? "changed" : "unchanged"}), ascending=${sortAscending ?? state.filters.sortAscending} (${sortAscending != null ? "changed" : "unchanged"})');
+    if (sortBy is String || sortAscending is bool) {
+      final newSortBy = sortBy is String ? sortBy : state.filters.sortBy;
+      final newSortAscending = sortAscending is bool ? sortAscending : state.filters.sortAscending;
+      print('🔄 SORT CHANGE: sortBy=$newSortBy (${sortBy is String ? "changed" : "unchanged"}), ascending=$newSortAscending (${sortAscending is bool ? "changed" : "unchanged"})');
     }
     
     // When only updating sort parameters, preserve existing filter values
-    // The UI should pass all current values, but if it doesn't, we preserve them
+    // Only pass values that were explicitly provided (not _Undefined)
     final newFilters = state.filters.copyWith(
       status: status,
       search: search,
       candidatesOnly: candidatesOnly,
+      calledToday: calledToday,
       sortBy: sortBy,
       sortAscending: sortAscending,
     );
@@ -254,20 +301,30 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     print('📊 PAGINATION: Old filters - status: ${state.filters.status}, search: ${state.filters.search}, candidatesOnly: ${state.filters.candidatesOnly}, sortBy: ${state.filters.sortBy}, sortAscending: ${state.filters.sortAscending}');
     print('📊 PAGINATION: New filters - status: ${newFilters.status}, search: ${newFilters.search}, candidatesOnly: ${newFilters.candidatesOnly}, sortBy: ${newFilters.sortBy}, sortAscending: ${newFilters.sortAscending}');
     
+    // If calledToday filter is being toggled, clear other filters
+    final adjustedFilters = newFilters.calledToday == true 
+        ? newFilters.copyWith(
+            status: const _Undefined(),  // Clear status filter
+            search: const _Undefined(),  // Clear search filter
+            candidatesOnly: const _Undefined(),  // Clear candidates filter
+          )
+        : newFilters;
+    
     // Check if filters actually changed
     final filtersChanged = 
-        newFilters.status != state.filters.status ||
-        newFilters.search != state.filters.search ||
-        newFilters.candidatesOnly != state.filters.candidatesOnly ||
-        newFilters.sortBy != state.filters.sortBy ||
-        newFilters.sortAscending != state.filters.sortAscending;
+        adjustedFilters.status != state.filters.status ||
+        adjustedFilters.search != state.filters.search ||
+        adjustedFilters.candidatesOnly != state.filters.candidatesOnly ||
+        adjustedFilters.calledToday != state.filters.calledToday ||
+        adjustedFilters.sortBy != state.filters.sortBy ||
+        adjustedFilters.sortAscending != state.filters.sortAscending;
     
     if (!filtersChanged) {
       print('📊 PAGINATION: Filters unchanged, skipping reload');
       return;
     }
     
-    state = state.copyWith(filters: newFilters);
+    state = state.copyWith(filters: adjustedFilters);
     await refreshLeads();
   }
   

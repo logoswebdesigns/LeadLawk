@@ -43,505 +43,338 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
     
     // Notify parent widget
     widget.onPitchSelected?.call(pitchId);
-    
-    // Update on server
-    final dataSource = ref.read(salesPitchDataSourceProvider);
-    try {
-      await dataSource.assignPitchToLead(widget.lead.id, pitchId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sales pitch selected'),
-          backgroundColor: AppTheme.successGreen,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save pitch selection'),
-          backgroundColor: AppTheme.errorRed,
-        ),
-      );
-    }
-  }
-
-  void _copyToClipboard(String content) {
-    final personalizedContent = content
-        .replaceAll('[Business Name]', widget.lead.businessName)
-        .replaceAll('[Location]', widget.lead.location);
-    
-    Clipboard.setData(ClipboardData(text: personalizedContent));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sales pitch copied to clipboard!')),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final pitchesAsync = ref.watch(salesPitchesProvider);
+    final pitches = ref.watch(salesPitchesProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildHeader(),
-        if (_isExpanded) ...[
-          const SizedBox(height: 12),
-          pitchesAsync.when(
-            data: (pitches) => _buildPitchCards(pitches),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text(
-              'Error loading pitches: $error',
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    return InkWell(
-      onTap: () => setState(() => _isExpanded = !_isExpanded),
-      child: Row(
-        children: [
-          Icon(
-            Icons.campaign,
-            size: 20,
-            color: AppTheme.primaryGold,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Row(
-              children: [
-                Text(
-                  'Sales Pitch',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (widget.requireSelection && _selectedPitchId == null) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    '(Required)',
-                    style: TextStyle(
-                      color: AppTheme.errorRed,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-                if (_selectedPitchId != null) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successGreen.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Selected',
-                      style: TextStyle(
-                        color: AppTheme.successGreen,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Icon(
-            _isExpanded ? Icons.expand_less : Icons.expand_more,
-            color: AppTheme.primaryGold,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPitchCards(List<SalesPitch> pitches) {
     if (pitches.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    // If a pitch is selected, show it prominently at the top
-    if (_selectedPitchId != null) {
-      final selectedPitch = pitches.firstWhere(
-        (p) => p.id == _selectedPitchId,
-        orElse: () => pitches.first,
-      );
-      
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Selected pitch display
-          _buildSelectedPitchDisplay(selectedPitch),
-          const SizedBox(height: 16),
-          
-          // Option to change pitch
-          if (widget.lead.status == LeadStatus.new_ || widget.lead.status == LeadStatus.viewed) ...[
-            Text(
-              'Change Selection:',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ...pitches.where((p) => p.isActive && p.id != _selectedPitchId).map((pitch) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildPitchCard(pitch),
-            )).toList(),
-          ],
-        ],
-      );
-    }
-
-    // No selection yet - show all pitches
-    return Column(
-      children: pitches.where((p) => p.isActive).map((pitch) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: _buildPitchCard(pitch),
-      )).toList(),
-    );
-  }
-  
-  Widget _buildSelectedPitchDisplay(SalesPitch pitch) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryGold.withOpacity(0.15),
-            AppTheme.primaryGold.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.elevatedSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: widget.requireSelection 
+              ? AppTheme.primaryGold.withOpacity(0.5)
+              : Colors.white.withOpacity(0.1),
+            width: widget.requireSelection ? 2 : 1,
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.primaryGold,
-          width: 2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: AppTheme.primaryGold,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Active Sales Pitch',
-                        style: TextStyle(
-                          color: AppTheme.primaryGold,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        pitch.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (pitch.attempts > 0) ...[
-                  _buildStatChip(
-                    '${pitch.conversionRate.toStringAsFixed(1)}%',
-                    Icons.trending_up,
-                    AppTheme.successGreen,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Full pitch content (scrollable if long)
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      pitch.content
-                        .replaceAll('[Business Name]', widget.lead.businessName)
-                        .replaceAll('[Location]', widget.lead.location),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                        height: 1.6,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Actions
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _copyToClipboard(pitch.content),
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy to Clipboard'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGold,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (pitch.attempts > 0) ...[
-                      Text(
-                        '${pitch.conversions} / ${pitch.attempts} converted',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPitchCard(SalesPitch pitch) {
-    final isSelected = _selectedPitchId == pitch.id;
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: isSelected 
-          ? AppTheme.primaryGold.withOpacity(0.1)
-          : Colors.grey[900],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isSelected 
-            ? AppTheme.primaryGold 
-            : AppTheme.primaryGold.withOpacity(0.3),
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with title and stats
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(7),
-                topRight: Radius.circular(7),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    pitch.name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (pitch.attempts > 0) ...[
-                  _buildStatChip(
-                    '${pitch.conversionRate.toStringAsFixed(1)}%',
-                    Icons.trending_up,
-                    AppTheme.successGreen,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                    '${pitch.attempts} calls',
-                    Icons.phone,
-                    AppTheme.accentPurple,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pitch.content
-                    .replaceAll('[Business Name]', widget.lead.businessName)
-                    .replaceAll('[Location]', widget.lead.location),
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                // Actions
-                Row(
-                  children: [
-                    if (!isSelected)
-                      ElevatedButton.icon(
-                        onPressed: () => _selectPitch(pitch.id),
-                        icon: const Icon(Icons.check_circle, size: 16),
-                        label: const Text('Select'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryGold,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.successGreen.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: AppTheme.successGreen,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Selected',
-                              style: TextStyle(
-                                color: AppTheme.successGreen,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () => _copyToClipboard(pitch.content),
-                      icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.accentPurple,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatChip(String label, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.campaign_outlined,
-            size: 48,
-            color: Colors.white.withOpacity(0.3),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'No Sales Pitches Available',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Please add at least 2 sales pitches in your account settings',
+        child: Center(
+          child: Text(
+            'No sales pitches available. Add them in account settings.',
             style: TextStyle(
               color: Colors.white.withOpacity(0.5),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
           ),
-        ],
+        ),
+      );
+    }
+
+    // Find selected pitch
+    SalesPitch? selectedPitch;
+    if (_selectedPitchId != null) {
+      try {
+        selectedPitch = pitches.firstWhere((p) => p.id == _selectedPitchId);
+      } catch (_) {
+        // Pitch not found
+      }
+    }
+
+    // If no pitch selected and we require selection, auto-select default
+    if (selectedPitch == null && widget.requireSelection) {
+      try {
+        selectedPitch = pitches.firstWhere((p) => p.isDefault);
+        _selectedPitchId = selectedPitch.id;
+        // Notify parent
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onPitchSelected?.call(selectedPitch!.id);
+        });
+      } catch (_) {
+        // No default pitch
+        if (pitches.isNotEmpty) {
+          selectedPitch = pitches.first;
+          _selectedPitchId = selectedPitch.id;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            widget.onPitchSelected?.call(selectedPitch!.id);
+          });
+        }
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Material(
+        color: AppTheme.elevatedSurface,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: widget.requireSelection && _selectedPitchId == null
+                  ? AppTheme.primaryGold.withOpacity(0.5)
+                  : Colors.white.withOpacity(0.1),
+                width: widget.requireSelection && _selectedPitchId == null ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.campaign,
+                        color: widget.requireSelection && _selectedPitchId == null
+                          ? AppTheme.primaryGold
+                          : Colors.white.withOpacity(0.7),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Sales Pitch',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                            if (selectedPitch != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                selectedPitch.name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.primaryGold,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ] else if (widget.requireSelection) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Select a pitch before calling',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.warningOrange,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Expanded Content
+                if (_isExpanded) ...[
+                  Container(
+                    height: 1,
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Selected Pitch Content
+                          if (selectedPitch != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGold.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppTheme.primaryGold.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          selectedPitch.name,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primaryGold,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.copy,
+                                          size: 16,
+                                          color: Colors.white.withOpacity(0.5),
+                                        ),
+                                        onPressed: () {
+                                          Clipboard.setData(ClipboardData(text: selectedPitch!.content));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Pitch copied to clipboard'),
+                                              duration: Duration(seconds: 2),
+                                            ),
+                                          );
+                                        },
+                                        tooltip: 'Copy pitch',
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    selectedPitch.content,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white.withOpacity(0.9),
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          
+                          // Other Available Pitches
+                          if (pitches.length > 1) ...[
+                            Text(
+                              'Other Pitches',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withOpacity(0.5),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...pitches.where((p) => p.id != _selectedPitchId).map((pitch) => 
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _buildPitchOption(pitch),
+                              ),
+                            ),
+                          ] else if (_selectedPitchId == null) ...[
+                            // Show all pitches if none selected
+                            ...pitches.map((pitch) => 
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _buildPitchOption(pitch),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPitchOption(SalesPitch pitch) {
+    final isSelected = pitch.id == _selectedPitchId;
+    
+    return Material(
+      color: isSelected 
+        ? AppTheme.primaryGold.withOpacity(0.1)
+        : Colors.white.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () => _selectPitch(pitch.id),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected 
+                ? AppTheme.primaryGold.withOpacity(0.5)
+                : Colors.white.withOpacity(0.1),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      pitch.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? AppTheme.primaryGold : Colors.white,
+                      ),
+                    ),
+                  ),
+                  if (pitch.isDefault) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGold.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'DEFAULT',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryGold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (pitch.description != null && pitch.description!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  pitch.description!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                pitch.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.8),
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -91,6 +91,14 @@ class LeadModel {
   final String? salesPitchId;
   @JsonKey(name: 'sales_pitch_name')
   final String? salesPitchName;
+  
+  // Conversion failure tracking
+  @JsonKey(name: 'conversion_failure_reason')
+  final String? conversionFailureReason;
+  @JsonKey(name: 'conversion_failure_notes')
+  final String? conversionFailureNotes;
+  @JsonKey(name: 'conversion_failure_date')
+  final DateTime? conversionFailureDate;
 
   LeadModel({
     required this.id,
@@ -137,6 +145,9 @@ class LeadModel {
     this.conversionScoreFactors,
     this.salesPitchId,
     this.salesPitchName,
+    this.conversionFailureReason,
+    this.conversionFailureNotes,
+    this.conversionFailureDate,
   });
 
   factory LeadModel.fromJson(Map<String, dynamic> json) =>
@@ -190,6 +201,9 @@ class LeadModel {
       conversionScoreFactors: conversionScoreFactors,
       salesPitchId: salesPitchId,
       salesPitchName: salesPitchName,
+      conversionFailureReason: conversionFailureReason,
+      conversionFailureNotes: conversionFailureNotes,
+      conversionFailureDate: conversionFailureDate,
     );
   }
 
@@ -237,6 +251,11 @@ class LeadModel {
       conversionScore: lead.conversionScore,
       conversionScoreCalculatedAt: lead.conversionScoreCalculatedAt,
       conversionScoreFactors: lead.conversionScoreFactors,
+      salesPitchId: lead.salesPitchId,
+      salesPitchName: lead.salesPitchName,
+      conversionFailureReason: lead.conversionFailureReason,
+      conversionFailureNotes: lead.conversionFailureNotes,
+      conversionFailureDate: lead.conversionFailureDate,
     );
   }
 

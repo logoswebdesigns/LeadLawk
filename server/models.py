@@ -81,6 +81,11 @@ class Lead(Base):
     # Sales pitch tracking
     sales_pitch_id = Column(String, ForeignKey("sales_pitches.id"), nullable=True)
     
+    # Conversion failure tracking
+    conversion_failure_reason = Column(String, nullable=True)  # Reason code (e.g., 'NI', 'TE', 'COMP')
+    conversion_failure_notes = Column(Text, nullable=True)  # Additional notes about why they didn't convert
+    conversion_failure_date = Column(DateTime, nullable=True)  # When they were marked as did not convert
+    
     call_logs = relationship("CallLog", back_populates="lead", cascade="all, delete-orphan")
     timeline_entries = relationship("LeadTimelineEntry", back_populates="lead", cascade="all, delete-orphan", order_by="desc(LeadTimelineEntry.created_at)")
     sales_pitch = relationship("SalesPitch", back_populates="leads")

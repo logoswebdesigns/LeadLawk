@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../pages/leads_list_page.dart';
 import '../providers/paginated_leads_provider.dart';
+import '../providers/job_provider.dart' show leadsRemoteDataSourceProvider;
 
 class SelectionActionBar extends ConsumerStatefulWidget {
   const SelectionActionBar({super.key});
@@ -19,13 +20,13 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
   Widget build(BuildContext context) {
     final selectedLeads = ref.watch(selectedLeadsProvider);
     final isSelectionMode = ref.watch(isSelectionModeProvider);
-    final paginatedState = ref.watch(paginatedLeadsProvider);
+    final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
     final hasSelection = selectedLeads.isNotEmpty;
     
     // Calculate selected leads data
     final selectedData = paginatedState.leads.where((lead) => selectedLeads.contains(lead.id)).toList();
     
-    if (!isSelectionMode || !hasSelection) {
+    if (!isSelectionMode) {
       return const SizedBox.shrink();
     }
     
@@ -41,17 +42,38 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
       ),
       child: Row(
         children: [
+          // Exit selection mode button
+          IconButton(
+            onPressed: () {
+              ref.read(selectedLeadsProvider.notifier).state = {};
+              ref.read(isSelectionModeProvider.notifier).state = false;
+            },
+            icon: const Icon(Icons.close, size: 20),
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white70,
+            ),
+            tooltip: 'Exit selection mode',
+          ),
+          
+          const SizedBox(width: 8),
+          
           // Selection count
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.2),
+              color: hasSelection 
+                ? AppTheme.primaryGold.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${selectedLeads.length} selected',
-              style: const TextStyle(
-                color: AppTheme.primaryGold,
+              hasSelection 
+                ? '${selectedLeads.length} selected'
+                : 'Select items',
+              style: TextStyle(
+                color: hasSelection 
+                  ? AppTheme.primaryGold
+                  : Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -65,32 +87,43 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               final allLeadIds = paginatedState.leads.map((lead) => lead.id).toSet();
               ref.read(selectedLeadsProvider.notifier).state = allLeadIds;
             },
-            icon: const Icon(Icons.select_all, size: 18),
-            label: const Text('Select All'),
+            icon: Icon(
+              selectedLeads.length == paginatedState.leads.length 
+                ? Icons.check_box
+                : Icons.check_box_outline_blank, 
+              size: 18
+            ),
+            label: Text(
+              selectedLeads.length == paginatedState.leads.length 
+                ? 'All Selected'
+                : 'Select All'
+            ),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.white70,
+              foregroundColor: selectedLeads.length == paginatedState.leads.length
+                ? AppTheme.primaryGold
+                : Colors.white70,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             ),
           ),
           
-          // Clear Selection button
-          TextButton.icon(
-            onPressed: () {
-              ref.read(selectedLeadsProvider.notifier).state = {};
-              ref.read(isSelectionModeProvider.notifier).state = false;
-            },
-            icon: const Icon(Icons.clear, size: 18),
-            label: const Text('Clear'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.white70,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          // Clear Selection button (only show if items selected)
+          if (hasSelection)
+            TextButton.icon(
+              onPressed: () {
+                ref.read(selectedLeadsProvider.notifier).state = {};
+              },
+              icon: const Icon(Icons.clear_all, size: 18),
+              label: const Text('Clear'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white70,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
             ),
-          ),
           
           const Spacer(),
           
-          // Action buttons
-          if (!_isDeleting) ...[
+          // Action buttons (only show if items are selected)
+          if (hasSelection && !_isDeleting) ...[
             // Status update button
             PopupMenuButton<String>(
               child: Container(

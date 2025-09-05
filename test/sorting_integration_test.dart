@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:leadloq/features/leads/presentation/pages/leads_list_page.dart';
 import 'package:leadloq/features/leads/presentation/providers/paginated_leads_provider.dart';
+import 'package:leadloq/features/leads/presentation/providers/job_provider.dart' show leadsRemoteDataSourceProvider;
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:leadloq/features/leads/data/models/paginated_response.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';
@@ -104,10 +105,27 @@ void main() {
       
       // Assert - Sort bar is visible
       expect(find.byType(SortBar), findsOneWidget);
-      expect(find.text('Newest'), findsOneWidget); // Default sort
+      
+      // Find the sort button by looking for the container with the sort text
+      final sortButton = find.byWidgetPredicate((widget) {
+        if (widget is Container) {
+          final child = widget.child;
+          if (child is Row) {
+            return child.children.any((c) {
+              if (c is Text) {
+                return c.data == 'Newest';
+              }
+              return false;
+            });
+          }
+        }
+        return false;
+      });
+      
+      expect(sortButton, findsAtLeastNWidgets(1));
       
       // Act - Tap on sort button to open modal
-      await tester.tap(find.text('Newest'));
+      await tester.tap(sortButton.last);
       await tester.pumpAndSettle();
       
       // Assert - Sort modal appears
@@ -183,8 +201,22 @@ void main() {
         sortAscending: false,
       )).called(1);
       
-      // Act - Open sort modal
-      await tester.tap(find.text('Newest'));
+      // Act - Open sort modal by finding the sort button
+      final sortButton = find.byWidgetPredicate((widget) {
+        if (widget is Container) {
+          final child = widget.child;
+          if (child is Row) {
+            return child.children.any((c) {
+              if (c is Text) {
+                return c.data == 'Newest';
+              }
+              return false;
+            });
+          }
+        }
+        return false;
+      });
+      await tester.tap(sortButton.last);
       await tester.pumpAndSettle();
       
       // Act - Select Rating sort
@@ -256,8 +288,22 @@ void main() {
       await tester.pumpWidget(createTestWidget(child: const LeadsListPage()));
       await tester.pumpAndSettle();
       
-      // Act - Open sort modal
-      await tester.tap(find.text('Newest'));
+      // Act - Open sort modal by finding the sort button
+      final sortButton = find.byWidgetPredicate((widget) {
+        if (widget is Container) {
+          final child = widget.child;
+          if (child is Row) {
+            return child.children.any((c) {
+              if (c is Text) {
+                return c.data == 'Newest';
+              }
+              return false;
+            });
+          }
+        }
+        return false;
+      });
+      await tester.tap(sortButton.last);
       await tester.pumpAndSettle();
       
       // Find and tap the sort direction toggle
