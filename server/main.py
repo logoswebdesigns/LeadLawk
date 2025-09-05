@@ -1228,6 +1228,107 @@ async def get_pagespeed_status():
     service = PageSpeedService()
     return service.get_testing_status()
 
+@app.get("/leads/pagespeed/missing-count")
+async def count_missing_pagespeed():
+    """
+    Count leads that have a website but no PageSpeed score.
+    This excludes leads with pagespeed_error = true (those that already failed).
+    """
+    db = SessionLocal()
+    try:
+        # Count leads with website_url but no PageSpeed scores
+        eligible_count = db.query(Lead).filter(
+            Lead.website_url.isnot(None),
+            Lead.website_url != '',
+            Lead.pagespeed_mobile_score.is_(None),
+            Lead.pagespeed_desktop_score.is_(None),
+            # Exclude leads that already have errors
+            (Lead.pagespeed_test_error.is_(None) | (Lead.pagespeed_test_error == False))
+        ).count()
+        
+        # Also count leads with errors for reference
+        error_count = db.query(Lead).filter(
+            Lead.website_url.isnot(None),
+            Lead.website_url != '',
+            Lead.pagespeed_test_error == True
+        ).count()
+        
+        # Count leads with scores
+        scored_count = db.query(Lead).filter(
+            Lead.website_url.isnot(None),
+            Lead.website_url != '',
+            (Lead.pagespeed_mobile_score.isnot(None) | Lead.pagespeed_desktop_score.isnot(None))
+        ).count()
+        
+        return {
+            "eligible_for_processing": eligible_count,
+            "already_scored": scored_count,
+            "previous_errors": error_count,
+            "total_with_websites": eligible_count + scored_count + error_count
+        }
+    finally:
+        db.close()
+
+@app.post("/leads/pagespeed/process-missing")
+async def process_missing_pagespeed(background_tasks: BackgroundTasks, limit: int = None):
+    """
+    Find and process leads that have a website but no PageSpeed score.
+    This excludes leads with pagespeed_error = true (those that already failed).
+    If no limit is specified, processes ALL eligible leads.
+    """
+    from pagespeed_service import PageSpeedService
+    
+    db = SessionLocal()
+    try:
+        # Find leads with website_url but no PageSpeed scores
+        # Exclude leads that have pagespeed_error = true
+        query = db.query(Lead).filter(
+            Lead.website_url.isnot(None),
+            Lead.website_url != '',
+            Lead.pagespeed_mobile_score.is_(None),
+            Lead.pagespeed_desktop_score.is_(None),
+            # Exclude leads that already have errors
+            (Lead.pagespeed_test_error.is_(None) | (Lead.pagespeed_test_error == False))
+        )
+        
+        # Apply limit only if specified
+        if limit:
+            eligible_leads = query.limit(limit).all()
+        else:
+            eligible_leads = query.all()
+        
+        if not eligible_leads:
+            return {
+                "message": "No eligible leads found",
+                "criteria": "Has website_url, no PageSpeed scores, no previous errors",
+                "processed": 0
+            }
+        
+        # Start PageSpeed tests in background
+        service = PageSpeedService()
+        lead_data = [(lead.id, lead.website_url) for lead in eligible_leads]
+        background_tasks.add_task(service.test_multiple_leads_async, lead_data)
+        
+        # Log the action
+        logger.info(f"Starting PageSpeed tests for {len(eligible_leads)} leads without scores")
+        
+        return {
+            "message": f"PageSpeed tests started for {len(eligible_leads)} leads",
+            "processed": len(eligible_leads),
+            "leads": [
+                {
+                    "id": lead.id,
+                    "business_name": lead.business_name,
+                    "website_url": lead.website_url
+                } for lead in eligible_leads[:10]  # Return first 10 for visibility
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error processing missing PageSpeed scores: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
 
 @app.post("/jobs/{job_id}/pagespeed")
 async def enable_job_pagespeed(job_id: str, enable: bool = True):

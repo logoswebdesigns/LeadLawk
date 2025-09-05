@@ -46,8 +46,9 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
         .toSet();
     
     candidatesOnly = ref.read(candidatesOnlyProvider);
-    sortOption = ref.read(sortOptionProvider);
-    sortAscending = ref.read(sortAscendingProvider);
+    final sortState = ref.read(sortStateProvider);
+    sortOption = sortState.option;
+    sortAscending = sortState.ascending;
   }
 
   @override
@@ -574,8 +575,10 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     // Update all providers
     ref.read(searchFilterProvider.notifier).state = searchController.text;
     ref.read(candidatesOnlyProvider.notifier).state = candidatesOnly;
-    ref.read(sortOptionProvider.notifier).state = sortOption;
-    ref.read(sortAscendingProvider.notifier).state = sortAscending;
+    ref.read(sortStateProvider.notifier).state = SortState(
+      option: sortOption,
+      ascending: sortAscending,
+    );
     
     // Convert visible statuses to hidden statuses
     final hiddenStatuses = LeadStatus.values

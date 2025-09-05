@@ -75,8 +75,9 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final sortOption = ref.watch(sortOptionProvider);
-    final sortAscending = ref.watch(sortAscendingProvider);
+    final sortState = ref.watch(sortStateProvider);
+    final sortOption = sortState.option;
+    final sortAscending = sortState.ascending;
     final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
     final isSelectionMode = ref.watch(isSelectionModeProvider);
     final autoRefresh = ref.watch(autoRefreshLeadsProvider);

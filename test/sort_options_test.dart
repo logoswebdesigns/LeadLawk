@@ -40,7 +40,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sortOptionProvider.overrideWith((ref) => SortOption.rating),
+            sortStateProvider.overrideWith((ref) => SortState(option: SortOption.rating)),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -116,9 +116,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sortOptionProvider.overrideWith((ref) {
-              ref.listenSelf((_, next) => selectedOption = next);
-              return SortOption.newest;
+            sortStateProvider.overrideWith((ref) {
+              ref.listenSelf((_, next) => selectedOption = next.option);
+              return const SortState();
             }),
           ],
           child: const MaterialApp(

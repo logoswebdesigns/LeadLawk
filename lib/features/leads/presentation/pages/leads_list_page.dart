@@ -31,6 +31,55 @@ enum SortOption {
   conversion,
 }
 
+// Combined sort state to avoid race conditions
+class SortState {
+  final SortOption option;
+  final bool ascending;
+  
+  const SortState({
+    this.option = SortOption.newest,
+    this.ascending = false,
+  });
+  
+  SortState copyWith({
+    SortOption? option,
+    bool? ascending,
+  }) {
+    return SortState(
+      option: option ?? this.option,
+      ascending: ascending ?? this.ascending,
+    );
+  }
+  
+  String get sortField {
+    switch (option) {
+      case SortOption.newest:
+        return 'created_at';
+      case SortOption.rating:
+        return 'rating';
+      case SortOption.reviews:
+        return 'review_count';
+      case SortOption.alphabetical:
+        return 'business_name';
+      case SortOption.pageSpeed:
+        return 'pagespeed_mobile_score';
+      case SortOption.conversion:
+        return 'conversion_score';
+    }
+  }
+  
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SortState &&
+          runtimeType == other.runtimeType &&
+          option == other.option &&
+          ascending == other.ascending;
+  
+  @override
+  int get hashCode => option.hashCode ^ ascending.hashCode;
+}
+
 enum GroupByOption {
   none,
   status,
@@ -58,8 +107,8 @@ final hasRecentReviewsFilterProvider = StateProvider<bool?>((ref) => null);
 final ratingRangeFilterProvider = StateProvider<String?>((ref) => null);
 final reviewCountRangeFilterProvider = StateProvider<String?>((ref) => null);
 final pageSpeedFilterProvider = StateProvider<String?>((ref) => null);
-final sortOptionProvider = StateProvider<SortOption>((ref) => SortOption.newest);
-final sortAscendingProvider = StateProvider<bool>((ref) => false);
+// Single combined sort provider to avoid race conditions
+final sortStateProvider = StateProvider<SortState>((ref) => const SortState());
 final selectedLeadsProvider = StateProvider<Set<String>>((ref) => {});
 final isSelectionModeProvider = StateProvider<bool>((ref) => false);
 final groupByOptionProvider = StateProvider<GroupByOption>((ref) => GroupByOption.none);
@@ -113,24 +162,6 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         }
       });
     });
-  }
-  
-  
-  String _getSortByField(SortOption option) {
-    switch (option) {
-      case SortOption.newest:
-        return 'created_at';
-      case SortOption.rating:
-        return 'rating';
-      case SortOption.reviews:
-        return 'review_count';
-      case SortOption.alphabetical:
-        return 'business_name';
-      case SortOption.pageSpeed:
-        return 'pagespeed_mobile_score';
-      case SortOption.conversion:
-        return 'conversion_score';
-    }
   }
   
   void _initScrollController() {
@@ -199,16 +230,14 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         // Get current state of all other filters
         final search = ref.read(searchFilterProvider);
         final candidatesOnly = ref.read(candidatesOnlyProvider);
-        final sortOption = ref.read(sortOptionProvider);
-        final sortBy = _getSortByField(sortOption);
-        final sortAscending = ref.read(sortAscendingProvider);
+        final sortState = ref.read(sortStateProvider);
         
         ref.read(paginatedLeadsProvider.notifier).updateFilters(
           status: next,
           search: search.isEmpty ? null : search,
           candidatesOnly: candidatesOnly,
-          sortBy: sortBy,
-          sortAscending: sortAscending,
+          sortBy: sortState.sortField,
+          sortAscending: sortState.ascending,
         );
       }
     });
@@ -222,16 +251,14 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
           // Get current state of all other filters
           final status = ref.read(statusFilterProvider);
           final candidatesOnly = ref.read(candidatesOnlyProvider);
-          final sortOption = ref.read(sortOptionProvider);
-          final sortBy = _getSortByField(sortOption);
-          final sortAscending = ref.read(sortAscendingProvider);
+          final sortState = ref.read(sortStateProvider);
           
           ref.read(paginatedLeadsProvider.notifier).updateFilters(
             status: status,
             search: next.isEmpty ? null : next,
             candidatesOnly: candidatesOnly,
-            sortBy: sortBy,
-            sortAscending: sortAscending,
+            sortBy: sortState.sortField,
+            sortAscending: sortState.ascending,
           );
         });
       }
@@ -244,16 +271,14 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         // Get current state of all other filters
         final status = ref.read(statusFilterProvider);
         final search = ref.read(searchFilterProvider);
-        final sortOption = ref.read(sortOptionProvider);
-        final sortBy = _getSortByField(sortOption);
-        final sortAscending = ref.read(sortAscendingProvider);
+        final sortState = ref.read(sortStateProvider);
         
         ref.read(paginatedLeadsProvider.notifier).updateFilters(
           status: status,
           search: search.isEmpty ? null : search,
           candidatesOnly: next,
-          sortBy: sortBy,
-          sortAscending: sortAscending,
+          sortBy: sortState.sortField,
+          sortAscending: sortState.ascending,
         );
       }
     });
@@ -266,65 +291,38 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         final status = ref.read(statusFilterProvider);
         final search = ref.read(searchFilterProvider);
         final candidatesOnly = ref.read(candidatesOnlyProvider);
-        final sortOption = ref.read(sortOptionProvider);
-        final sortBy = _getSortByField(sortOption);
-        final sortAscending = ref.read(sortAscendingProvider);
+        final sortState = ref.read(sortStateProvider);
         
         ref.read(paginatedLeadsProvider.notifier).updateFilters(
           status: status,
           search: search.isEmpty ? null : search,
           candidatesOnly: candidatesOnly,
           calledToday: next,
-          sortBy: sortBy,
-          sortAscending: sortAscending,
+          sortBy: sortState.sortField,
+          sortAscending: sortState.ascending,
         );
       }
     });
     
-    // Sort option listener
-    ref.listen(sortOptionProvider, (previous, next) {
-      print('📱 UI DEBUG: sortOptionProvider changed from $previous to $next');
+    // Single sort state listener - no race conditions!
+    ref.listen(sortStateProvider, (previous, next) {
       if (previous != next) {
-        final sortBy = _getSortByField(next);
-        final sortAscending = ref.read(sortAscendingProvider);
-        print('📱 UI: Sort option changed to $next (sortBy: $sortBy, ascending: $sortAscending)');
+        print('🔀 SORT CHANGED: ${previous?.option.name} (${previous?.ascending == true ? "asc" : "desc"}) -> ${next.option.name} (${next.ascending ? "asc" : "desc"})');
+        print('🔀 SORT FIELD: sortBy = ${next.sortField}, ascending = ${next.ascending}');
         
         // Get current state of all filters
         final status = ref.read(statusFilterProvider);
         final search = ref.read(searchFilterProvider);
         final candidatesOnly = ref.read(candidatesOnlyProvider);
-        
-        print('📱 UI DEBUG: Calling updateFilters with status=$status, search=$search, candidatesOnly=$candidatesOnly, sortBy=$sortBy, sortAscending=$sortAscending');
-        
-        ref.read(paginatedLeadsProvider.notifier).updateFilters(
-          status: status,
-          search: search.isEmpty ? null : search,
-          candidatesOnly: candidatesOnly,
-          sortBy: sortBy,
-          sortAscending: sortAscending,
-        );
-      }
-    });
-    
-    // Sort ascending listener
-    ref.listen(sortAscendingProvider, (previous, next) {
-      print('📱 UI DEBUG: sortAscendingProvider listener triggered - previous: $previous, next: $next');
-      if (previous != next) {
-        final sortOption = ref.read(sortOptionProvider);
-        final sortBy = _getSortByField(sortOption);
-        print('📱 UI: Sort direction changed to ${next ? "ascending" : "descending"} (sortBy: $sortBy)');
-        
-        // Get current state of all filters
-        final status = ref.read(statusFilterProvider);
-        final search = ref.read(searchFilterProvider);
-        final candidatesOnly = ref.read(candidatesOnlyProvider);
+        final calledToday = ref.read(calledTodayProvider);
         
         ref.read(paginatedLeadsProvider.notifier).updateFilters(
           status: status,
           search: search.isEmpty ? null : search,
           candidatesOnly: candidatesOnly,
-          sortBy: sortBy,
-          sortAscending: next,
+          calledToday: calledToday,
+          sortBy: next.sortField,
+          sortAscending: next.ascending,
         );
       }
     });
@@ -366,6 +364,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       body: Stack(
+        fit: StackFit.expand,
         children: [
           Column(
             children: [

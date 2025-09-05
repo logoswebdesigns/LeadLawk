@@ -7,16 +7,22 @@ void main() {
     final container = ProviderContainer();
     
     // Initial values
-    expect(container.read(sortOptionProvider), SortOption.newest);
-    expect(container.read(sortAscendingProvider), false);
+    final initialState = container.read(sortStateProvider);
+    expect(initialState.option, SortOption.newest);
+    expect(initialState.ascending, false);
     
     // Change sort option
-    container.read(sortOptionProvider.notifier).state = SortOption.rating;
-    expect(container.read(sortOptionProvider), SortOption.rating);
+    container.read(sortStateProvider.notifier).state = SortState(
+      option: SortOption.rating,
+      ascending: false,
+    );
+    expect(container.read(sortStateProvider).option, SortOption.rating);
     
     // Change sort direction
-    container.read(sortAscendingProvider.notifier).state = true;
-    expect(container.read(sortAscendingProvider), true);
+    container.read(sortStateProvider.notifier).state = container.read(sortStateProvider).copyWith(
+      ascending: true,
+    );
+    expect(container.read(sortStateProvider).ascending, true);
     
     container.dispose();
   });

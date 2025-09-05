@@ -6,6 +6,7 @@ import '../../domain/entities/lead.dart';
 import '../../domain/constants/timeline_constants.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../providers/sales_pitch_provider.dart';
+import '../providers/lead_detail_provider.dart';
 
 class CallTrackingDialog extends ConsumerStatefulWidget {
   final Lead lead;
@@ -29,6 +30,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
   // Core call outcome
   String _selectedOutcome = 'NO_ANSWER';
   final _notesController = TextEditingController();
+  final _phoneController = TextEditingController();
   
   // Follow-up tracking
   bool _scheduledFollowUp = false;
@@ -39,15 +41,51 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
   bool _pitchResonated = false;
   
   @override
+  void initState() {
+    super.initState();
+  }
+  
+  @override
   void dispose() {
     _notesController.dispose();
+    _phoneController.dispose();
     super.dispose();
+  }
+
+  String _formatPhoneNumber(String phone) {
+    // Remove all non-digit characters
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    
+    // Handle US phone numbers (10 or 11 digits)
+    if (digits.length == 10) {
+      // Format as (XXX) XXX-XXXX
+      return '(${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}';
+    } else if (digits.length == 11 && digits.startsWith('1')) {
+      // Remove country code and format
+      final usDigits = digits.substring(1);
+      return '(${usDigits.substring(0, 3)}) ${usDigits.substring(3, 6)}-${usDigits.substring(6)}';
+    }
+    
+    // Return original if not a standard US format
+    return phone;
   }
 
   Future<void> _saveCallData() async {
     final repository = ref.read(leadsRepositoryProvider);
     
     try {
+      // Update phone number if provided
+      Lead currentLead = widget.lead;
+      bool phoneUpdated = false;
+      
+      if (_phoneController.text.trim().isNotEmpty && 
+          (_phoneController.text.trim() != widget.lead.phone || widget.lead.phone == 'No phone')) {
+        final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
+        currentLead = widget.lead.copyWith(phone: formattedPhone);
+        await repository.updateLead(currentLead);
+        phoneUpdated = true;
+      }
+      
       // Add timeline entry for the call
       final timelineData = {
         'type': TimelineEntryTypes.phoneCall,
@@ -69,22 +107,34 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
         metadata['pitch_resonated'] = _pitchResonated;
       }
       
-      await repository.addTimelineEntry(widget.lead.id, timelineData);
+      // Track if phone was added
+      if (phoneUpdated) {
+        (timelineData['metadata'] as Map<String, dynamic>)['phone_added'] = currentLead.phone;
+      }
+      
+      await repository.addTimelineEntry(currentLead.id, timelineData);
       
       // Update lead status based on outcome
       if (_selectedOutcome == 'INTERESTED' || _selectedOutcome == 'SCHEDULED_MEETING') {
-        final updatedLead = widget.lead.copyWith(status: LeadStatus.interested);
+        final updatedLead = currentLead.copyWith(status: LeadStatus.interested);
         await repository.updateLead(updatedLead);
       } else if (_selectedOutcome == 'NOT_INTERESTED' || _selectedOutcome == 'DO_NOT_CALL') {
-        final updatedLead = widget.lead.copyWith(status: LeadStatus.doNotCall);
+        final updatedLead = currentLead.copyWith(status: LeadStatus.doNotCall);
         await repository.updateLead(updatedLead);
       }
       
+      // Invalidate the lead detail provider to refresh UI
+      ref.invalidate(leadDetailProvider(currentLead.id));
+      
       if (mounted) {
-        Navigator.of(context).pop(true);
+        // Pop with result indicating phone was updated
+        Navigator.of(context).pop({'success': true, 'phoneUpdated': phoneUpdated});
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Call data saved successfully'),
+          SnackBar(
+            content: Text(phoneUpdated 
+              ? 'Call data saved and phone number updated'
+              : 'Call data saved successfully'),
             backgroundColor: AppTheme.successGreen,
           ),
         );
@@ -184,6 +234,40 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                       ),
                     ),
                     
+                    // Phone Number (optional)
+                    Visibility(
+                      visible: (widget.lead.phone?.isEmpty ?? true) || widget.lead.phone == 'No phone',
+                      child: _buildSection(
+                        'Phone Number (Optional)',
+                        TextField(
+                          controller: _phoneController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            labelText: 'Add Phone Number',
+                            labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            hintText: 'Enter phone number if available',
+                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                            prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold.withOpacity(0.7)),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.05),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                            ),
+                          ),
+                          keyboardType: TextInputType.phone,
+                        ),
+                      ),
+                    ),
+                    
                     // Call Notes
                     _buildSection(
                       'Call Notes',
@@ -260,7 +344,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(context).pop({'success': false}),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 12),

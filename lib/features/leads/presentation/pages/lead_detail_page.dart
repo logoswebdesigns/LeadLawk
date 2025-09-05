@@ -36,16 +36,27 @@ class LeadDetailPage extends ConsumerStatefulWidget {
 }
 
 class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
-  late final LeadActionsService _actionsService;
-  late final PageSpeedDataSource _pageSpeedDataSource;
+  LeadActionsService? _actionsService;
+  PageSpeedDataSource? _pageSpeedDataSource;
   bool _isTestingPageSpeed = false;
   String? _lastUpdatedLeadId; // Track which lead we've already updated
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize non-context dependent services in initState
+    _pageSpeedDataSource = PageSpeedDataSource();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _actionsService = LeadActionsService(ref: ref, context: context);
-    _pageSpeedDataSource = PageSpeedDataSource();
+    // Initialize context-dependent service only once
+    if (!_isInitialized) {
+      _actionsService = LeadActionsService(ref: ref, context: context);
+      _isInitialized = true;
+    }
     
     // Automatically transition NEW leads to VIEWED
     _updateStatusToViewed();
@@ -434,12 +445,42 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      lead.businessName,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            lead.businessName,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            Icons.copy,
+                            size: 18,
+                            color: AppTheme.primaryGold.withOpacity(0.7),
+                          ),
+                          tooltip: 'Copy business name',
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: lead.businessName));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Business name copied to clipboard'),
+                                duration: Duration(seconds: 2),
+                                backgroundColor: AppTheme.successGreen,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                     if (lead.rating != null && lead.rating! > 0) ...[
                       const SizedBox(height: 4),
@@ -683,7 +724,9 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     
     switch (action) {
       case 'delete':
-        await _actionsService.deleteLead(lead);
+        if (_actionsService != null) {
+          await _actionsService!.deleteLead(lead);
+        }
         break;
     }
   }
@@ -700,7 +743,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     
     // Show call tracking dialog after call
     if (mounted) {
-      await showDialog(
+      final result = await showDialog<Map<String, dynamic>>(
         context: context,
         barrierDismissible: false,
         builder: (context) => CallTrackingDialog(
@@ -709,6 +752,11 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           callDuration: callDuration,
         ),
       );
+      
+      // Refresh lead data if phone was updated or call was tracked
+      if (result != null && result['success'] == true) {
+        ref.invalidate(leadDetailProvider(widget.leadId));
+      }
     }
     
     // If lead is NEW or VIEWED, automatically update to CALLED
@@ -758,7 +806,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     ref.read(pageSpeedStatusProvider.notifier).startTest(lead.id);
     
     try {
-      await _pageSpeedDataSource.testSingleLead(lead.id);
+      await _pageSpeedDataSource?.testSingleLead(lead.id);
       
       // The status provider will handle tracking progress
       // and will automatically poll for results

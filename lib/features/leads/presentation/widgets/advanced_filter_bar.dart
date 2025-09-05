@@ -62,8 +62,9 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
   }
 
   Widget _buildSortingRow() {
-    final sortOption = ref.watch(sortOptionProvider);
-    final sortAscending = ref.watch(sortAscendingProvider);
+    final sortState = ref.watch(sortStateProvider);
+    final sortOption = sortState.option;
+    final sortAscending = sortState.ascending;
 
     return Row(
       children: [
@@ -88,7 +89,12 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
             }).toList(),
             onChanged: (value) {
               if (value != null) {
-                ref.read(sortOptionProvider.notifier).state = value;
+                // For PageSpeed, start with ascending (lowest scores first)
+                final newAscending = value == SortOption.pageSpeed ? true : sortAscending;
+                ref.read(sortStateProvider.notifier).state = SortState(
+                  option: value,
+                  ascending: newAscending,
+                );
               }
             },
           ),
@@ -100,7 +106,9 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
             color: AppTheme.primaryGold,
           ),
           onPressed: () {
-            ref.read(sortAscendingProvider.notifier).state = !sortAscending;
+            ref.read(sortStateProvider.notifier).state = sortState.copyWith(
+              ascending: !sortAscending,
+            );
           },
           tooltip: sortAscending ? 'Ascending' : 'Descending',
         ),

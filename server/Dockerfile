@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create directory for database
-RUN mkdir -p /app/data
+# Create directories for database and screenshots
+RUN mkdir -p /app/data /app/screenshots /app/website_screenshots
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1

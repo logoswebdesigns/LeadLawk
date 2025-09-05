@@ -261,162 +261,178 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
       );
     }
 
+    // Sort pitches to put default first
+    final sortedPitches = List<SalesPitch>.from(pitches);
+    sortedPitches.sort((a, b) {
+      if (a.isDefault) return -1;
+      if (b.isDefault) return 1;
+      return 0;
+    });
+
     return ListView.builder(
       shrinkWrap: true,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      itemCount: pitches.length,
+      itemCount: sortedPitches.length,
       itemBuilder: (context, index) {
-        final pitch = pitches[index];
-        return Card(
+        final pitch = sortedPitches[index];
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          color: Colors.white.withOpacity(0.05),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
-            side: pitch.isDefault
-              ? const BorderSide(color: AppTheme.primaryGold, width: 2)
-              : BorderSide.none,
+            border: pitch.isDefault
+              ? Border.all(color: AppTheme.primaryGold, width: 2)
+              : null,
           ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => _startEditing(pitch),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              initiallyExpanded: pitch.isDefault, // Auto-expand default pitch
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              title: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  pitch.name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                if (pitch.isDefault) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.primaryGold.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'DEFAULT',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primaryGold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
+                            Text(
+                              pitch.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                            if (pitch.description != null && pitch.description!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                pitch.description!,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white.withOpacity(0.6),
+                            if (pitch.isDefault) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGold.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'DEFAULT',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryGold,
+                                  ),
                                 ),
                               ),
                             ],
                           ],
                         ),
-                      ),
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5)),
-                        color: AppTheme.elevatedSurface,
-                        onSelected: (value) async {
-                          switch (value) {
-                            case 'edit':
-                              _startEditing(pitch);
-                              break;
-                            case 'setDefault':
-                              await ref.read(salesPitchesProvider.notifier).setDefault(pitch.id);
-                              break;
-                            case 'delete':
-                              await _deletePitch(pitch.id);
-                              break;
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 20, color: Colors.white70),
-                                SizedBox(width: 12),
-                                Text('Edit', style: TextStyle(color: Colors.white)),
-                              ],
+                        if (pitch.description != null && pitch.description!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            pitch.description!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.6),
                             ),
                           ),
-                          if (!pitch.isDefault)
-                            const PopupMenuItem(
-                              value: 'setDefault',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.star, size: 20, color: AppTheme.primaryGold),
-                                  SizedBox(width: 12),
-                                  Text('Set as Default', style: TextStyle(color: Colors.white)),
-                                ],
-                              ),
-                            ),
-                          if (pitches.length > 1)
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, size: 20, color: Colors.red),
-                                  SizedBox(width: 12),
-                                  Text('Delete', style: TextStyle(color: Colors.red)),
-                                ],
-                              ),
-                            ),
                         ],
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5)),
+                    color: AppTheme.elevatedSurface,
+                    onSelected: (value) async {
+                      switch (value) {
+                        case 'edit':
+                          _startEditing(pitch);
+                          break;
+                        case 'setDefault':
+                          await ref.read(salesPitchesProvider.notifier).setDefault(pitch.id);
+                          break;
+                        case 'delete':
+                          await _deletePitch(pitch.id);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 20, color: Colors.white70),
+                            SizedBox(width: 12),
+                            Text('Edit', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       ),
+                      if (!pitch.isDefault)
+                        const PopupMenuItem(
+                          value: 'setDefault',
+                          child: Row(
+                            children: [
+                              Icon(Icons.star, size: 20, color: AppTheme.primaryGold),
+                              SizedBox(width: 12),
+                              Text('Set as Default', style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      if (sortedPitches.length > 1)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 20, color: Colors.red),
+                              SizedBox(width: 12),
+                              Text('Delete', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      pitch.content,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withOpacity(0.8),
-                        height: 1.5,
-                      ),
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Updated ${_formatDate(pitch.updatedAt)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white.withOpacity(0.4),
-                    ),
                   ),
                 ],
               ),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    pitch.content,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.8),
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Updated ${_formatDate(pitch.updatedAt)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _startEditing(pitch),
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Edit'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.primaryGold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         );

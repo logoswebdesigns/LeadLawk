@@ -17,8 +17,9 @@ class SortOptionsModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentSort = ref.watch(sortOptionProvider);
-    final isAscending = ref.watch(sortAscendingProvider);
+    final sortState = ref.watch(sortStateProvider);
+    final currentSort = sortState.option;
+    final isAscending = sortState.ascending;
     
     return Container(
       decoration: BoxDecoration(
@@ -61,7 +62,8 @@ class SortOptionsModal extends ConsumerWidget {
                     GestureDetector(
                       onTap: () {
                         print('🔄 SORT MODAL: Toggling sort direction from ${isAscending ? "ascending" : "descending"} to ${!isAscending ? "ascending" : "descending"}');
-                        ref.read(sortAscendingProvider.notifier).state = !isAscending;
+                        // Update only the ascending property of the combined state
+                        ref.read(sortStateProvider.notifier).state = sortState.copyWith(ascending: !isAscending);
                         print('🔄 SORT MODAL: Sort direction toggled');
                       },
                       child: Container(
@@ -124,13 +126,20 @@ class SortOptionsModal extends ConsumerWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          print('🔄 SORT MODAL: Selected sort option: $option');
-          // Update the sort option
-          ref.read(sortOptionProvider.notifier).state = option;
-          print('🔄 SORT MODAL: Sort option updated, closing modal');
+          // For PageSpeed, always start with ascending (lowest scores first)
+          // For others, keep current direction or use default
+          final newAscending = option == SortOption.pageSpeed 
+              ? true 
+              : ref.read(sortStateProvider).ascending;
+          
+          // Update the entire sort state atomically - no race conditions!
+          ref.read(sortStateProvider.notifier).state = SortState(
+            option: option,
+            ascending: newAscending,
+          );
+          
           // Close the modal
           Navigator.of(context).pop();
-          // The leads list will automatically update due to watching sortOptionProvider
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
