@@ -8,9 +8,12 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import and_, or_, func
 from datetime import datetime, timedelta
+import logging
 
 from ..models import Lead, LeadTimelineEntry, CallLog
 from ..schemas import LeadCreate, LeadUpdate, PaginatedResponse
+
+logger = logging.getLogger(__name__)
 
 
 class LeadService:
@@ -38,7 +41,14 @@ class LeadService:
         )
         
         if status:
-            query = query.filter(Lead.status == status)
+            # Map Flutter's 'new_' to database 'new' (new is reserved in Dart)
+            logger.info(f"Filtering by status: '{status}'")
+            if status == 'new_':
+                logger.info("Mapping 'new_' to 'new' for database query")
+                # Use the string 'new' directly for the database query
+                query = query.filter(Lead.status == 'new')
+            else:
+                query = query.filter(Lead.status == status)
         
         if search:
             search_term = f"%{search}%"

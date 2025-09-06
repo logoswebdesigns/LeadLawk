@@ -498,7 +498,9 @@ async def get_leads(
         
         # Apply filters
         if status:
-            query = query.filter(Lead.status == status)
+            # Map Flutter's 'new_' to database 'new' (new is reserved in Dart)
+            db_status = 'new' if status == 'new_' else status
+            query = query.filter(Lead.status == db_status)
         if industry:
             query = query.filter(Lead.industry == industry)
         if location:
