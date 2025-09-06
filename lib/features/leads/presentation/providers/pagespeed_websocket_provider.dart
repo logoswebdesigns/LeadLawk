@@ -121,7 +121,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         _animationTimers[leadId]?.cancel();
         
         // After animation delay, remove from pending deletions
-        _animationTimers[leadId] = Timer(const Duration(seconds: 3), () {
+        _animationTimers[leadId] = Timer(Duration(seconds: 3), () {
           final updatedPendingDeletions = Set<String>.from(state.pendingDeletions)..remove(leadId);
           final updatedDeletionReasons = Map<String, String>.from(state.deletionReasons)..remove(leadId);
           
@@ -159,7 +159,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         state = state.copyWith(newLeads: newLeadsList);
         
         // Force refresh the leads provider after a small delay to ensure database is updated (only if auto-refresh is enabled)
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(Duration(milliseconds: 100), () {
           final autoRefresh = ref.read(autoRefreshLeadsProvider);
           if (autoRefresh) {
             DebugLogger.log('🔄 Auto-refresh enabled, fetching new lead');
@@ -174,7 +174,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         _animationTimers['new_$leadId']?.cancel();
         
         // Remove from new leads after animation (keep it longer for visibility)
-        _animationTimers['new_$leadId'] = Timer(const Duration(seconds: 5), () {
+        _animationTimers['new_$leadId'] = Timer(Duration(seconds: 5), () {
           final updatedNewLeads = Set<String>.from(state.newLeads)..remove(leadId);
           state = state.copyWith(newLeads: updatedNewLeads);
           _animationTimers.remove('new_$leadId');
@@ -185,7 +185,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
 
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(const Duration(seconds: 5), () {
+    _reconnectTimer = Timer(Duration(seconds: 5), () {
       DebugLogger.websocket('Attempting to reconnect PageSpeed WebSocket...');
       connect();
     });

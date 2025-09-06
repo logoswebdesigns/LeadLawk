@@ -28,7 +28,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         border: Border(
@@ -140,7 +140,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
 
   Widget _buildAdvancedFilterSection() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
@@ -175,7 +175,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
     return GestureDetector(
       onTap: () => setState(() => showAdvancedFilters = !showAdvancedFilters),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

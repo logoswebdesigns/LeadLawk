@@ -27,3 +27,23 @@ class ValidationFailure extends Failure {
 class ProcessingFailure extends Failure {
   const ProcessingFailure(super.message);
 }
+
+class TimeoutFailure extends Failure {
+  const TimeoutFailure(super.message);
+}
+
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure(super.message);
+}
+
+class PermissionFailure extends Failure {
+  const PermissionFailure(super.message);
+}
+
+class CircuitBreakerFailure extends Failure {
+  const CircuitBreakerFailure(super.message);
+}
+
+class DataConsistencyFailure extends Failure {
+  const DataConsistencyFailure(super.message);
+}

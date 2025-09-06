@@ -1,6 +1,6 @@
-/// Manage Lead Pipeline Use Case
-/// Pattern: State Machine Pattern for lead progression
-/// SOLID: Open/Closed - extend pipeline stages without modification
+// Manage Lead Pipeline Use Case
+// Pattern: State Machine Pattern for lead progression
+// SOLID: Open/Closed - extend pipeline stages without modification
 library;
 
 import 'package:dartz/dartz.dart';

@@ -34,7 +34,7 @@ class EnhancedLeadCard extends ConsumerWidget {
     final qualityTier = ref.watch(leadQualityTierProvider(lead));
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
@@ -53,7 +53,7 @@ class EnhancedLeadCard extends ConsumerWidget {
           child: Column(
             children: [
               // Main content row
-              Padding(padding: const EdgeInsets.all(12),
+              Padding(padding: EdgeInsets.all(12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -104,7 +104,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                             ),
                             errorWidget: (context, url, error) => Container(
                               color: AppTheme.darkGray,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.image_not_supported,
                                 color: AppTheme.mediumGray,
                                 size: 24,
@@ -194,7 +194,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                           // Location and industry
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.location_on,
                                 size: 12,
                                 color: AppTheme.mediumGray,
@@ -208,7 +208,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Icon(
+                              Icon(
                                 Icons.business,
                                 size: 12,
                                 color: AppTheme.mediumGray,
@@ -232,7 +232,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                       children: [
                         // Status indicator
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: _getStatusColor(lead.status).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
@@ -283,7 +283,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                         Colors.transparent,
                       ],
                     ),
-                    borderRadius: const BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(12),
                       bottomRight: Radius.circular(12),
                     ),
@@ -298,8 +298,8 @@ class EnhancedLeadCard extends ConsumerWidget {
 
   Widget _buildNewBadge() {
     return Container(
-      margin: const EdgeInsets.only(left: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      margin: EdgeInsets.only(left: 8),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: AppTheme.primaryGold,
         borderRadius: BorderRadius.circular(6),
@@ -325,8 +325,8 @@ class EnhancedLeadCard extends ConsumerWidget {
 
   Widget _buildCandidateBadge() {
     return Container(
-      margin: const EdgeInsets.only(left: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      margin: EdgeInsets.only(left: 4),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.accentCyan.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
@@ -343,7 +343,7 @@ class EnhancedLeadCard extends ConsumerWidget {
             size: 10,
             color: AppTheme.accentCyan,
           ),
-          SizedBox(width: 2),
+          const SizedBox(width: 2),
           Text(
             'CANDIDATE',
             style: TextStyle(
@@ -365,7 +365,7 @@ class EnhancedLeadCard extends ConsumerWidget {
         : AppTheme.errorRed;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
@@ -397,7 +397,7 @@ class EnhancedLeadCard extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          hasWebsite ? Icons.language : Icons.language_outlined,
+          hasWebsite ? Icons.language : Icons.language,
           size: 14,
           color: hasWebsite ? AppTheme.primaryBlue : AppTheme.mediumGray,
         ),
@@ -417,7 +417,7 @@ class EnhancedLeadCard extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           Icons.star,
           size: 14,
           color: AppTheme.warningOrange,
@@ -471,7 +471,7 @@ class EnhancedLeadCard extends ConsumerWidget {
     }
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: tierColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
@@ -511,7 +511,7 @@ class EnhancedLeadCard extends ConsumerWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(4),

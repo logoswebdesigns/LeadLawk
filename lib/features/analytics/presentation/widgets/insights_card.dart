@@ -11,13 +11,13 @@ class InsightsCard extends ConsumerWidget {
 
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.lightbulb, color: Colors.amber),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text(
                   'Actionable Insights',
@@ -31,7 +31,7 @@ class InsightsCard extends ConsumerWidget {
             insightsAsync.when(
               data: (insights) {
                 if (insights.isEmpty) {
-                  return Center(child: Padding(padding: const EdgeInsets.all(20),
+                  return Center(child: Padding(padding: EdgeInsets.all(20),
                       child: Text(
                         'No insights available yet',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
@@ -49,7 +49,7 @@ class InsightsCard extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
@@ -122,7 +122,7 @@ class _InsightTile extends StatelessWidget {
     final color = _getColor(insight.impact);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
@@ -150,7 +150,7 @@ class _InsightTile extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
@@ -176,7 +176,7 @@ class _InsightTile extends StatelessWidget {
           ],
         ),
         trailing: insight.impact == 'high'
-            ? const Icon(Icons.priority_high, color: Colors.red)
+            ? Icon(Icons.refresh)
             : null,
       ),
     );

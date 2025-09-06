@@ -45,7 +45,7 @@ class _TimelineEntryFormState extends State<TimelineEntryForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: TimelineColorScheme.getBackgroundColor(_selectedType),
         borderRadius: BorderRadius.circular(12),
@@ -81,7 +81,7 @@ class _TimelineEntryFormState extends State<TimelineEntryForm> {
         child: DropdownButton<TimelineEntryType>(
           value: _selectedType,
           isExpanded: true,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           items: TimelineEntryType.values.map((type) {
             final icon = TimelineIconMapper.getEntryIcon(type);
             final label = TimelineIconMapper.getEntryLabel(type);
@@ -141,7 +141,7 @@ class _TimelineEntryFormState extends State<TimelineEntryForm> {
     return InkWell(
       onTap: () => _selectFollowUpDate(context),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -166,7 +166,7 @@ class _TimelineEntryFormState extends State<TimelineEntryForm> {
             const Spacer(),
             if (_followUpDate != null)
               IconButton(
-                icon: const Icon(Icons.clear, size: 18),
+                icon: Icon(Icons.refresh),
                 onPressed: () {
                   setState(() {
                     _followUpDate = null;
@@ -216,6 +216,7 @@ class _TimelineEntryFormState extends State<TimelineEntryForm> {
     );
 
     if (date != null) {
+      if (!context.mounted) return;
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_followUpDate ?? DateTime.now()),

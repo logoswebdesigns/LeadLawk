@@ -1,6 +1,6 @@
-/// Command Provider for Lead Actions
-/// Pattern: Provider Pattern with Command Pattern
-/// SOLID: Dependency Inversion - providers depend on abstractions
+// Command Provider for Lead Actions
+// Pattern: Provider Pattern with Command Pattern
+// SOLID: Dependency Inversion - providers depend on abstractions
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

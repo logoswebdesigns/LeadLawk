@@ -1,6 +1,6 @@
-/// Schedule Callback Use Case
-/// Pattern: Use Case Pattern (Clean Architecture)
-/// SOLID: Single Responsibility - manages callback scheduling
+// Schedule Callback Use Case
+// Pattern: Use Case Pattern (Clean Architecture)
+// SOLID: Single Responsibility - manages callback scheduling
 library;
 
 import 'package:dartz/dartz.dart';

@@ -256,6 +256,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
       
       result.fold(
         (failure) {
+          if (!mounted) return;
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -265,6 +266,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           );
         },
         (updatedLead) {
+          if (!mounted) return;
           // Update the lead state with the new data
           widget.onLeadUpdated?.call(updatedLead);
           _cancelEditing();
@@ -279,6 +281,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         },
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error updating timeline entry: $e'),
@@ -307,6 +310,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
     );
 
     if (date != null) {
+      if (!mounted) return;
       final time = await showTimePicker(
         context: context,
         initialTime: _editingFollowUpDate != null 
@@ -357,6 +361,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
     );
 
     if (date != null) {
+      if (!mounted) return;
       final time = await showTimePicker(
         context: context,
         initialTime: const TimeOfDay(hour: 9, minute: 0),
@@ -423,7 +428,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               // GitHub Actions style timestamp
               Container(
                 width: 140,
-                padding: const EdgeInsets.only(right: 16, top: 2),
+                padding: EdgeInsets.only(right: 16, top: 2),
                 child: Text(
                   _formatGitHubStyleTime(entry.createdAt),
                   style: const TextStyle(
@@ -457,7 +462,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       Container(
                         width: 2,
                         height: 40,
-                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        margin: EdgeInsets.symmetric(vertical: 2),
                         color: const Color(0xFF30363D),
                       ),
                   ],
@@ -492,7 +497,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
 
     // GitHub Actions style entry card
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isSynthetic 
             ? const Color(0xFF0D1117).withValues(alpha: 0.5) // Dimmer for synthetic
@@ -546,8 +551,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 children: [
                   if (isSynthetic)
                     Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      margin: EdgeInsets.only(right: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFF30363D).withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
@@ -563,8 +568,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                     ),
                   if (entry.followUpDate != null && !entry.isCompleted)
                     Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      margin: EdgeInsets.only(right: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: isOverdue 
                             ? const Color(0xFFDA3633).withValues(alpha: 0.15)
@@ -585,10 +590,10 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   if (!isSynthetic) // Only show edit button for non-synthetic entries
                     IconButton(
                       onPressed: () => _startEditingEntry(entry),
-                      icon: const Icon(Icons.more_horiz, size: 16),
+                      icon: Icon(Icons.refresh),
                       style: IconButton.styleFrom(
                         foregroundColor: const Color(0xFF8B949E),
-                        padding: const EdgeInsets.all(4),
+                        padding: EdgeInsets.all(4),
                         minimumSize: Size.zero,
                       ),
                       tooltip: 'Edit entry',
@@ -600,7 +605,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           if (entry.followUpDate != null) ...[
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.warningOrange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -610,7 +615,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.alarm,
                     color: AppTheme.warningOrange,
                     size: 16,
@@ -636,7 +641,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.successGreen,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,
                       ),
                       child: const Text(
@@ -657,7 +662,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
     final color = _getEntryColor(entry.type);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
@@ -671,7 +676,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -686,7 +691,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.edit, color: AppTheme.primaryGold, size: 16),
+              Icon(Icons.refresh),
               const SizedBox(width: 4),
               const Text(
                 'Editing',
@@ -765,7 +770,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   onTap: _showEditFollowUpDatePicker,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(8),
@@ -773,7 +778,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule, color: AppTheme.warningOrange, size: 20),
+                        Icon(Icons.refresh),
                         const SizedBox(width: 8),
                         Text(
                           _editingFollowUpDate == null
@@ -801,7 +806,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       _editingFollowUpDate = null;
                     });
                   },
-                  icon: const Icon(Icons.clear, size: 20),
+                  icon: Icon(Icons.refresh),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -858,10 +863,10 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
       children: [
         // GitHub Actions style header
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFF161B22), // GitHub dark header
-            borderRadius: const BorderRadius.only(
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(6),
               topRight: Radius.circular(6),
             ),
@@ -872,7 +877,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.history,
                 size: 16,
                 color: Color(0xFF8B949E), // GitHub muted
@@ -888,7 +893,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFF30363D),
                   borderRadius: BorderRadius.circular(10),
@@ -906,7 +911,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               if (!_showAddForm)
                 IconButton(
                   onPressed: _showAddEntryForm,
-                  icon: const Icon(Icons.add),
+                  icon: Icon(Icons.refresh),
                   style: IconButton.styleFrom(
                     foregroundColor: AppTheme.primaryGold,
                     backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.1),
@@ -921,7 +926,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         // Add Entry Form
         if (_showAddForm) ...[
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurface,
               borderRadius: BorderRadius.circular(12),
@@ -934,7 +939,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.add, color: AppTheme.primaryGold, size: 20),
+                    Icon(Icons.refresh),
                     const SizedBox(width: 8),
                     const Text(
                       'Add Timeline Entry',
@@ -946,7 +951,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                     const Spacer(),
                     IconButton(
                       onPressed: _cancelAdd,
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: Icon(Icons.refresh),
                       style: IconButton.styleFrom(
                         foregroundColor: Colors.white.withValues(alpha: 0.7),
                       ),
@@ -1070,7 +1075,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                         onTap: _showFollowUpDatePicker,
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(8),
@@ -1078,7 +1083,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.schedule, color: AppTheme.warningOrange, size: 20),
+                              Icon(Icons.refresh),
                               const SizedBox(width: 8),
                               Text(
                                 _selectedFollowUpDate == null
@@ -1106,7 +1111,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                             _selectedFollowUpDate = null;
                           });
                         },
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: Icon(Icons.refresh),
                         style: IconButton.styleFrom(
                           foregroundColor: Colors.white.withValues(alpha: 0.7),
                         ),
@@ -1154,7 +1159,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         if (sortedTimeline.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),

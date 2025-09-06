@@ -26,7 +26,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: Duration(seconds: 3),
       vsync: this,
     );
     
@@ -91,7 +91,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
         final goldenEffect = isNewlyAdded ? _goldenEffectAnimation.value : 0.0;
         
         return Container(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isPendingDeletion 
                 ? Colors.red.withValues(alpha: 0.1)
@@ -151,7 +151,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
                   ref.read(selectedLeadsProvider.notifier).state = {widget.lead.id};
                 }
               },
-              child: Padding(padding: const EdgeInsets.all(14),
+              child: Padding(padding: EdgeInsets.all(14),
                 child: Row(
                   children: [
                     // Checkbox (only show in selection mode)
@@ -311,7 +311,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
               ],
             ),
           ),
-          child: const Icon(
+          child: Icon(
             CupertinoIcons.speedometer,
             size: 10,
             color: Colors.white,
@@ -347,7 +347,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
                 width: 1,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               CupertinoIcons.exclamationmark,
               size: 10,
               color: Colors.orange,
@@ -384,7 +384,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
                 width: 1,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               CupertinoIcons.minus,
               size: 10,
               color: Colors.grey,
@@ -406,7 +406,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
   
   Widget _buildStatusBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: _getStatusColor().withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),

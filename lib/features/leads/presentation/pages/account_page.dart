@@ -39,18 +39,18 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           ),
         ),
         SliverToBoxAdapter(
-          child: Padding(padding: const EdgeInsets.all(16),
+          child: Padding(padding: EdgeInsets.all(16),
             child: Column(
               children: [
                 // Profile Section
                 Card(
-                  child: Padding(padding: const EdgeInsets.all(20),
+                  child: Padding(padding: EdgeInsets.all(20),
                     child: Column(
                       children: [
                         CircleAvatar(
                           radius: 40,
                           backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person,
                             size: 40,
                             color: AppTheme.primaryGold,
@@ -84,7 +84,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                        icon: Icons.campaign_outlined,
+                        icon: Icons.campaign,
                         title: 'Sales Pitches',
                         subtitle: 'Manage your sales pitch templates',
                         onTap: () => _showSalesPitchEditor(context),
@@ -98,7 +98,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.mail_lock_outlined,
+                        icon: Icons.mail_lock,
                         title: 'Email Settings',
                         subtitle: 'Configure SMTP for sending calendar invites',
                         onTap: () => _showEmailSettings(context),
@@ -112,14 +112,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.security_outlined,
+                        icon: Icons.security,
                         title: 'Privacy & Security',
                         subtitle: 'Control your privacy settings',
                         onTap: () {},
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.storage_outlined,
+                        icon: Icons.storage,
                         title: 'Data Management',
                         subtitle: 'Export or delete your data',
                         onTap: () {},
@@ -134,14 +134,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                        icon: Icons.palette_outlined,
+                        icon: Icons.palette,
                         title: 'Appearance',
                         subtitle: 'Customize the app theme',
                         onTap: () {},
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.language_outlined,
+                        icon: Icons.language,
                         title: 'Language',
                         subtitle: 'English (US)',
                         onTap: () {},
@@ -170,14 +170,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.article_outlined,
+                        icon: Icons.article,
                         title: 'Terms of Service',
                         subtitle: 'Read our terms and conditions',
                         onTap: () {},
                       ),
                       _buildDivider(),
                       _buildSettingsItem(
-                        icon: Icons.privacy_tip_outlined,
+                        icon: Icons.privacy_tip,
                         title: 'Privacy Policy',
                         subtitle: 'How we handle your data',
                         onTap: () {},
@@ -204,7 +204,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(16),
+        child: Padding(padding: EdgeInsets.all(16),
           child: Row(
             children: [
               Icon(
@@ -236,7 +236,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 20,
                 color: AppTheme.mediumGray,
@@ -286,7 +286,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             children: [
               // Handle bar
               Container(
-                margin: const EdgeInsets.only(top: 12),
+                margin: EdgeInsets.only(top: 12),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
@@ -295,10 +295,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 ),
               ),
               // Header
-              Padding(padding: const EdgeInsets.all(20),
+              Padding(padding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    const Icon(Icons.email_outlined, color: Colors.teal, size: 28),
+                    Icon(Icons.refresh),
                     const SizedBox(width: 12),
                     const Text(
                       'Email Templates',
@@ -310,7 +310,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold),
+                      icon: Icon(Icons.refresh),
                       onPressed: () => _showAddTemplateDialog(context),
                     ),
                   ],
@@ -351,7 +351,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             const SizedBox(height: 24),
                             ElevatedButton.icon(
                               onPressed: () => _showAddTemplateDialog(context),
-                              icon: const Icon(Icons.add),
+                              icon: Icon(Icons.refresh),
                               label: const Text('Add Template'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryGold,
@@ -365,12 +365,12 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     
                     return ListView.builder(
                       controller: scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16),
                       itemCount: templates.length,
                       itemBuilder: (context, index) {
                         final template = templates[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: EdgeInsets.only(bottom: 12),
                           color: AppTheme.elevatedSurface,
                           child: ExpansionTile(
                             title: Text(
@@ -395,19 +395,19 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.edit, size: 20),
+                                  icon: Icon(Icons.refresh),
                                   color: Colors.teal,
                                   onPressed: () => _showEditTemplateDialog(context, template),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, size: 20),
+                                  icon: Icon(Icons.refresh),
                                   color: Colors.red,
                                   onPressed: () => _confirmDeleteTemplate(context, ref, template),
                                 ),
                               ],
                             ),
                             children: [
-                              Padding(padding: const EdgeInsets.all(16),
+                              Padding(padding: EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -820,7 +820,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: const Text(
+        title: Text(
           'Delete Template?',
           style: TextStyle(color: Colors.white),
         ),
@@ -836,6 +836,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           ElevatedButton(
             onPressed: () async {
               await ref.read(emailTemplatesApiProvider.notifier).deleteTemplate(template.id);
+              if (!context.mounted) return;
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

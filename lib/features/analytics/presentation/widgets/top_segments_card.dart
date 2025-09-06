@@ -11,13 +11,13 @@ class TopSegmentsCard extends ConsumerWidget {
 
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.bar_chart, color: Colors.green),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text(
                   'Top Converting Segments',
@@ -61,7 +61,7 @@ class TopSegmentsCard extends ConsumerWidget {
                   if (segments.reviewPerformance.isNotEmpty) ...[
                     _SegmentSection(
                       title: 'Review Count Performance',
-                      icon: Icons.reviews,
+                      icon: Icons.rate_review,
                       segments: segments.reviewPerformance,
                       nameKey: 'reviewBand',
                     ),
@@ -72,7 +72,7 @@ class TopSegmentsCard extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
@@ -161,8 +161,8 @@ class _SegmentSection extends StatelessWidget {
           final totalLeads = segment.totalLeads;
           
           return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
+            margin: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
@@ -201,7 +201,7 @@ class _SegmentSection extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
@@ -260,7 +260,7 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),

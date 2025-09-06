@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:leadloq/features/leads/data/repositories/leads_repository_impl.dart';
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:flutter/foundation.dart';
 
 class MockLeadsRemoteDataSource extends Mock implements LeadsRemoteDataSource {}
 
@@ -27,7 +28,7 @@ void main() {
           // The error message should NOT contain "Exception: " prefix
           expect(failure.message, equals('Connection error - check if server is running'));
           expect(failure.message, isNot(contains('Exception:')));
-          print('✅ Error message properly cleaned: ${failure.message}');
+          debugPrint('✅ Error message properly cleaned: ${failure.message}');
         },
         (_) => fail('Should have returned failure'),
       );
@@ -43,7 +44,7 @@ void main() {
         (failure) {
           expect(failure.message, equals('Network error: DioException [connection timeout]'));
           expect(failure.message, isNot(startsWith('Exception:')));
-          print('✅ DioException message properly handled: ${failure.message}');
+          debugPrint('✅ DioException message properly handled: ${failure.message}');
         },
         (_) => fail('Should have returned failure'),
       );
@@ -58,7 +59,7 @@ void main() {
       result.fold(
         (failure) {
           expect(failure.message, equals('Server error: 500 - Internal Server Error'));
-          print('✅ Server error message properly formatted: ${failure.message}');
+          debugPrint('✅ Server error message properly formatted: ${failure.message}');
         },
         (_) => fail('Should have returned failure'),
       );

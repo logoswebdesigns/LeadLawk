@@ -90,8 +90,8 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
   }
   
   // Add timeout to prevent blocking forever
-  dio.options.connectTimeout = const Duration(seconds: 5);
-  dio.options.receiveTimeout = const Duration(seconds: 10);
+  dio.options.connectTimeout = Duration(seconds: 5);
+  dio.options.receiveTimeout = Duration(seconds: 10);
   
   try {
     DebugLogger.log('📊 Fetching lead statistics from $baseUrl/leads/statistics/all');
@@ -100,7 +100,7 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
     final response = await dio.get(
       '$baseUrl/leads/statistics/all',
     ).timeout(
-      const Duration(seconds: 10),
+      Duration(seconds: 10),
       onTimeout: () {
         DebugLogger.network('📊 Statistics request timed out after 10 seconds');
         // Return empty statistics on timeout rather than throwing

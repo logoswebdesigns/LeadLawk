@@ -1,6 +1,6 @@
-/// Command Pattern Implementation
-/// Provides undo/redo capability for all user actions
-/// SOLID: Single Responsibility - each command does one thing
+// Command Pattern Implementation
+// Provides undo/redo capability for all user actions
+// SOLID: Single Responsibility - each command does one thing
 library;
 
 import 'package:dartz/dartz.dart';

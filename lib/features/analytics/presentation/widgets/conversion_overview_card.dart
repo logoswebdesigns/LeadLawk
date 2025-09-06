@@ -11,13 +11,13 @@ class ConversionOverviewCard extends ConsumerWidget {
 
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.analytics, color: Colors.blue),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text(
                   'Conversion Overview',
@@ -58,7 +58,7 @@ class ConversionOverviewCard extends ConsumerWidget {
                   const SizedBox(height: 16),
                   // Conversion rates
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -114,7 +114,7 @@ class ConversionOverviewCard extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(

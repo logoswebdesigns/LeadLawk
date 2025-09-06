@@ -28,15 +28,15 @@ class PipelineStage extends StatelessWidget {
       onTap: leadCount > 0 ? () => _showStageLeads(context) : null,
       child: Container(
         width: 72,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.symmetric(horizontal: 4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             // Count badge
             if (leadCount > 0)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                margin: const EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                margin: EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   color: stage.color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -55,7 +55,7 @@ class PipelineStage extends StatelessWidget {
               child: Container(
                 alignment: Alignment.bottomCenter,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 600),
+                  duration: Duration(milliseconds: 600),
                   curve: Curves.easeOutCubic,
                   height: (heightPercentage * 80) + 4,
                   width: double.infinity,
@@ -68,7 +68,7 @@ class PipelineStage extends StatelessWidget {
                         stage.color.withValues(alpha: 0.8),
                       ],
                     ),
-                    borderRadius: const BorderRadius.vertical(
+                    borderRadius: BorderRadius.vertical(
                       top: Radius.circular(6),
                     ),
                     boxShadow: [
@@ -117,7 +117,7 @@ class PipelineStage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -142,7 +142,7 @@ class PipelineStage extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: stage.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -165,13 +165,13 @@ class PipelineStage extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final lead = leads[index];
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.backgroundDark,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
+                      contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),

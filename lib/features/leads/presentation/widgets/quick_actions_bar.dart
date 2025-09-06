@@ -29,7 +29,7 @@ class QuickActionsBar extends ConsumerWidget {
           color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
         ),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       child: Row(
         children: [
           Expanded(
@@ -127,7 +127,7 @@ class QuickActionsBar extends ConsumerWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -273,7 +273,7 @@ class QuickActionsBar extends ConsumerWidget {
         );
         
         // Add a small delay before navigation to ensure UI updates complete
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(Duration(milliseconds: 100));
         
         // Navigate to next lead after successful submission
         if (context.mounted) {

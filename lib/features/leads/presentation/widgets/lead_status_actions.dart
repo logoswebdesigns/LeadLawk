@@ -325,7 +325,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
     final isTerminalStatus = availableTransitions.isEmpty;
     
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      margin: EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -347,17 +347,17 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               onTap: !isTerminalStatus ? () {
                 setState(() {
                   _isExpanded = !_isExpanded;
                 });
               } : null,
-              child: Padding(padding: const EdgeInsets.all(16),
+              child: Padding(padding: EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: _getStatusColor(widget.lead.status).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -392,9 +392,9 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                     const Spacer(),
                     if (!isTerminalStatus)
                       AnimatedRotation(
-                        duration: const Duration(milliseconds: 200),
+                        duration: Duration(milliseconds: 200),
                         turns: _isExpanded ? 0.5 : 0.0,
-                        child: const Icon(
+                        child: Icon(
                           Icons.expand_more,
                           color: AppTheme.primaryGold,
                         ),
@@ -408,12 +408,12 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
           // Actions
           if (!isTerminalStatus)
             AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: Duration(milliseconds: 300),
               height: _isExpanded ? null : 0,
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
+                duration: Duration(milliseconds: 200),
                 opacity: _isExpanded ? 1.0 : 0.0,
-                child: _isExpanded ? Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _isExpanded ? Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -480,7 +480,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                       ),
                     ],
                   ),
-                ) : const SizedBox.shrink(),
+                ) : SizedBox.shrink(),
               ),
             ),
         ],
@@ -550,7 +550,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
   
   Widget _buildCallbackChip() {
     return ActionChip(
-      avatar: const Icon(
+      avatar: Icon(
         Icons.event,
         size: 16,
         color: Colors.purple,
@@ -590,7 +590,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(

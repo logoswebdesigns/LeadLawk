@@ -17,7 +17,7 @@ class TimelineFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 40,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -30,7 +30,7 @@ class TimelineFilterBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           ...TimelineEntryType.values.map((type) {
-            return Padding(padding: const EdgeInsets.only(right: 8),
+            return Padding(padding: EdgeInsets.only(right: 8),
               child: _buildTypeFilterChip(context, type),
             );
           }),
@@ -75,7 +75,7 @@ class TimelineFilterBar extends StatelessWidget {
       selected: isSelected,
       onSelected: (_) => onTap(),
       avatar: icon != null
-          ? Icon(icon, size: 16, color: isSelected ? Colors.white : color)
+          ? Icon(icon)
           : null,
       label: Text(
         label,
@@ -92,7 +92,7 @@ class TimelineFilterBar extends StatelessWidget {
           color: color.withValues(alpha: 0.3),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: 8),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }

@@ -28,7 +28,7 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
     super.initState();
     _isExpanded = widget.defaultExpanded;
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       vsync: this,
     );
     _expandAnimation = CurvedAnimation(
@@ -80,8 +80,8 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
           // Header
           InkWell(
             onTap: _toggleExpanded,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Padding(padding: const EdgeInsets.all(16),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: Padding(padding: EdgeInsets.all(16),
               child: Row(
                 children: [
                   Icon(
@@ -100,7 +100,7 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
                   const Spacer(),
                   AnimatedRotation(
                     turns: _isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
+                    duration: Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down,
                       color: Colors.white.withValues(alpha: 0.5),
@@ -114,7 +114,7 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
           // Content
           SizeTransition(
             sizeFactor: _expandAnimation,
-            child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: _buildScreenshotsContent(
                 isMobile, 
                 isDesktop, 

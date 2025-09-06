@@ -26,7 +26,7 @@ class LeadScreenshotSection extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        const Icon(
+        Icon(
           Icons.camera_alt,
           size: 20,
           color: AppTheme.accentPurple,
@@ -91,7 +91,7 @@ class LeadScreenshotSection extends StatelessWidget {
 
   Widget _buildNoScreenshotPlaceholder(String message) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

@@ -110,8 +110,8 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: const Text('Delete Sales Pitch?', style: TextStyle(color: Colors.white)),
-        content: const Text(
+        title: Text('Delete Sales Pitch?', style: TextStyle(color: Colors.white)),
+        content: Text(
           'Are you sure you want to delete this sales pitch? This cannot be undone.',
           style: TextStyle(color: Colors.white70),
         ),
@@ -155,7 +155,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 20),
+                margin: EdgeInsets.only(top: 12, bottom: 20),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
@@ -163,12 +163,12 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               ),
               
               // Header
-              Padding(padding: const EdgeInsets.symmetric(horizontal: 24),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   children: [
                     if (_isEditing) ...[
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        icon: Icon(Icons.refresh),
                         onPressed: _cancelEditing,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -200,7 +200,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                       ),
                     ] else ...[
                       IconButton(
-                        icon: const Icon(Icons.add_circle_outline, color: AppTheme.primaryGold),
+                        icon: Icon(Icons.refresh),
                         onPressed: () => _startEditing(null),
                         tooltip: 'Add New Pitch',
                       ),
@@ -226,12 +226,12 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
 
   Widget _buildPitchesList(List<SalesPitch> pitches) {
     if (pitches.isEmpty) {
-      return Center(child: Padding(padding: const EdgeInsets.all(32),
+      return Center(child: Padding(padding: EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.campaign_outlined,
+                Icons.campaign,
                 size: 64,
                 color: Colors.white.withValues(alpha: 0.3),
               ),
@@ -267,12 +267,12 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
 
     return ListView.builder(
       shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       itemCount: sortedPitches.length,
       itemBuilder: (context, index) {
         final pitch = sortedPitches[index];
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
@@ -284,8 +284,8 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               initiallyExpanded: pitch.isDefault, // Auto-expand default pitch
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              tilePadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              childrenPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
               title: Row(
                 children: [
                   Expanded(
@@ -305,7 +305,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                             if (pitch.isDefault) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(
+                                padding: EdgeInsets.symmetric(
                                   horizontal: 8,
                                   vertical: 2,
                                 ),
@@ -360,7 +360,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                         child: Row(
                           children: [
                             Icon(Icons.edit, size: 20, color: Colors.white70),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Text('Edit', style: TextStyle(color: Colors.white)),
                           ],
                         ),
@@ -371,7 +371,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                           child: Row(
                             children: [
                               Icon(Icons.star, size: 20, color: AppTheme.primaryGold),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text('Set as Default', style: TextStyle(color: Colors.white)),
                             ],
                           ),
@@ -382,7 +382,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                           child: Row(
                             children: [
                               Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 12),
+                              const SizedBox(width: 12),
                               Text('Delete', style: TextStyle(color: Colors.red)),
                             ],
                           ),
@@ -393,7 +393,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               ),
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
@@ -420,7 +420,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                     ),
                     TextButton.icon(
                       onPressed: () => _startEditing(pitch),
-                      icon: const Icon(Icons.edit, size: 16),
+                      icon: Icon(Icons.refresh),
                       label: const Text('Edit'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.primaryGold,
@@ -440,7 +440,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -555,7 +555,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
             ),
             const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -563,7 +563,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  Icon(Icons.refresh),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

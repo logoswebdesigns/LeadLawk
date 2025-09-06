@@ -14,14 +14,14 @@ class WebsiteScreenshotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (lead.websiteScreenshotPath == null) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     final baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
     final imageUrl = '$baseUrl/website_screenshots/${lead.websiteScreenshotPath}';
     
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -48,7 +48,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
         children: [
           // Enhanced Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -58,7 +58,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                   AppTheme.primaryGold.withValues(alpha: 0.05),
                 ],
               ),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
@@ -66,12 +66,12 @@ class WebsiteScreenshotCard extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.phone_iphone,
                     size: 18,
                     color: AppTheme.primaryGold,
@@ -116,7 +116,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
               _showFullWebsiteScreenshot(context, lead.websiteScreenshotPath!);
             },
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -126,7 +126,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                     AppTheme.backgroundDark.withValues(alpha: 0.8),
                   ],
                 ),
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
@@ -201,7 +201,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                               left: 8,
                               right: 8,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: AppTheme.warningOrange.withValues(alpha: 0.95),
                                   borderRadius: BorderRadius.circular(8),
@@ -221,7 +221,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                                       size: 14,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         'Possible placeholder page',
@@ -245,7 +245,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                             right: 0,
                             child: Center(
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.7),
                                   borderRadius: BorderRadius.circular(12),
@@ -253,7 +253,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.touch_app,
                                       size: 14,
                                       color: AppTheme.primaryGold,
@@ -294,7 +294,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
             : Icons.warning_amber_rounded;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -378,7 +378,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                 mini: true,
                 backgroundColor: Colors.black54,
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, color: Colors.white),
+                child: Icon(Icons.refresh),
               ),
             ),
           );

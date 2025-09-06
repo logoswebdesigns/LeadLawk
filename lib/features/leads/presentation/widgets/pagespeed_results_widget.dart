@@ -32,13 +32,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildNoWebsiteCard(BuildContext context) {
     return Card(
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.speed, color: Colors.grey),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -59,13 +59,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
     
     return Card(
       color: Colors.red.shade50,
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.error_outline, color: Colors.red),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text('Website Issue Detected',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -76,7 +76,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
               Chip(
                 label: const Text('UNREACHABLE WEBSITE'),
                 backgroundColor: Colors.red.shade100,
-                avatar: const Icon(Icons.wifi_off, size: 16),
+                avatar: Icon(Icons.refresh),
               ),
               const SizedBox(height: 8),
               const Text('Website is broken or extremely slow',
@@ -89,11 +89,11 @@ class PageSpeedResultsWidget extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: isLoading ? null : onTestPressed,
               icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
+                  ? SizedBox(
+        width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.refresh),
+                  : Icon(Icons.refresh),
               label: Text(isLoading ? 'Testing...' : 'Retry Test'),
             ),
           ],
@@ -104,13 +104,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildNotTestedCard(BuildContext context) {
     return Card(
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.speed, color: Colors.blue),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -122,11 +122,11 @@ class PageSpeedResultsWidget extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: isLoading ? null : onTestPressed,
               icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
+                  ? SizedBox(
+        width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.play_arrow),
+                  : Icon(Icons.refresh),
               label: Text(isLoading ? 'Testing...' : 'Run PageSpeed Test'),
             ),
           ],
@@ -137,13 +137,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildResultsCard(BuildContext context) {
     return Card(
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.speed, color: Colors.green),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text('PageSpeed Results',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -170,7 +170,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: isLoading ? null : onTestPressed,
-              icon: const Icon(Icons.refresh, size: 16),
+              icon: Icon(Icons.refresh),
               label: Text(isLoading ? 'Testing...' : 'Retest'),
             ),
           ],
@@ -184,7 +184,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
     final category = _getScoreCategory(score);
     
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -228,7 +228,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
   }
 
   Widget _buildMetricRow(String label, String value) {
-    return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
+    return Padding(padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

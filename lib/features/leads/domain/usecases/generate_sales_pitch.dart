@@ -1,6 +1,6 @@
-/// Generate Sales Pitch Use Case
-/// Pattern: Template Method Pattern
-/// SOLID: Open/Closed - new pitch templates without modification
+// Generate Sales Pitch Use Case
+// Pattern: Template Method Pattern
+// SOLID: Open/Closed - new pitch templates without modification
 library;
 
 import 'package:dartz/dartz.dart';

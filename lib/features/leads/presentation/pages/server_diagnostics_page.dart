@@ -130,7 +130,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceDark,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.refresh),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -148,7 +148,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               ref.invalidate(serverLogsProvider);
             },
             tooltip: 'Recheck',
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh),
           ),
           IconButton(
             onPressed: () async {
@@ -193,7 +193,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               } catch (_) {}
             },
             tooltip: 'Diagnostics',
-            icon: const Icon(Icons.science, color: Colors.white),
+            icon: Icon(Icons.refresh),
           ),
         ],
       ),
@@ -201,7 +201,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Padding(padding: const EdgeInsets.all(16),
+          Padding(padding: EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
@@ -235,7 +235,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           ),
           if (server.message != null)
-            Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
+            Padding(padding: EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 server.message!,
                 style: const TextStyle(fontSize: 14, color: Colors.white),
@@ -243,9 +243,9 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           const SizedBox(height: 8),
           // Setup Instructions
-          Padding(padding: const EdgeInsets.all(16),
+          Padding(padding: EdgeInsets.all(16),
             child: Card(
-              child: Padding(padding: const EdgeInsets.all(16),
+              child: Padding(padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -261,7 +261,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     const SizedBox(height: 8),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
@@ -312,7 +312,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       itemBuilder: (context, index) {
                         final line = merged[merged.length - 1 - index];
                         final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                        return Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        return Padding(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           child: Text(
                             line,
                             style: TextStyle(
@@ -336,7 +336,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       itemBuilder: (context, index) {
                         final line = fallback[fallback.length - 1 - index];
                         final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                        return Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        return Padding(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           child: Text(
                             line,
                             style: TextStyle(
@@ -371,7 +371,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       return const Center(child: Text('No jobs yet', style: TextStyle(color: Colors.white)));
                     }
                     return ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
                       itemCount: jobs.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -386,7 +386,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                           onTap: () => _showJobLogsSheet(context, ref, jobId),
                           child: Container(
                             width: 260,
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -479,13 +479,13 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           length: 2,
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.8,
-            child: Padding(padding: const EdgeInsets.all(12),
+            child: Padding(padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.analytics),
+                      Icon(Icons.refresh),
                       const SizedBox(width: 8),
                       Expanded(child: Text('Job $jobId', style: const TextStyle(fontWeight: FontWeight.w600))),
                       TextButton(
@@ -555,7 +555,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     const SnackBar(content: Text('Job logs copied to clipboard')),
                   );
                 },
-                icon: const Icon(Icons.copy, size: 16),
+                icon: Icon(Icons.refresh),
                 label: const Text('Copy Logs'),
               ),
             ),
@@ -568,7 +568,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     final line = lines[index];
                     final isErr = line.contains('ERROR') || line.contains('Traceback');
                     final isScreenshot = line.contains('📸 Screenshot captured');
-                    return Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    return Padding(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       child: Text(
                         line,
                         style: TextStyle(
@@ -612,7 +612,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           return const Center(child: Text('No screenshots captured'));
         }
         return GridView.builder(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 8,
@@ -641,7 +641,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
                         child: Image.network(
                           imageUrl,
                           fit: BoxFit.cover,
@@ -668,10 +668,10 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     ),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
                       ),
                       child: Text(
                         description,
@@ -758,7 +758,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
     final description = _extractScreenshotDescription(filename);
     
     return Dialog(
-      insetPadding: const EdgeInsets.all(20),
+      insetPadding: EdgeInsets.all(20),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.9,
@@ -767,10 +767,10 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(padding: const EdgeInsets.all(16),
+            Padding(padding: EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.camera_alt),
+                  Icon(Icons.refresh),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -780,7 +780,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.refresh),
                   ),
                 ],
               ),
@@ -799,7 +799,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text('Failed to load screenshot'),
                               ],
                             ),
@@ -816,11 +816,11 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
                       child: Center(
                         child: IconButton(
                           onPressed: _previousImage,
-                          icon: const Icon(Icons.arrow_back_ios, size: 32),
+                          icon: Icon(Icons.refresh),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.black54,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12),
                           ),
                         ),
                       ),
@@ -832,11 +832,11 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
                       child: Center(
                         child: IconButton(
                           onPressed: _nextImage,
-                          icon: const Icon(Icons.arrow_forward_ios, size: 32),
+                          icon: Icon(Icons.refresh),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.black54,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.all(12),
+                            padding: EdgeInsets.all(12),
                           ),
                         ),
                       ),
@@ -846,7 +846,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
               ),
             ),
             if (widget.screenshots.length > 1)
-              Padding(padding: const EdgeInsets.all(16),
+              Padding(padding: EdgeInsets.all(16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: widget.screenshots.asMap().entries.map((entry) {
@@ -854,7 +854,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
                     return Container(
                       width: 8,
                       height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      margin: EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: index == currentIndex ? Colors.blue : Colors.grey,
@@ -883,7 +883,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
 }
 
 Widget _diagRow(String label, bool ok) {
-  return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
+  return Padding(padding: EdgeInsets.symmetric(vertical: 2),
     child: Row(
       children: [
         Icon(ok ? Icons.check_circle : Icons.error, color: ok ? Colors.green : Colors.red, size: 16),

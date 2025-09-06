@@ -116,7 +116,7 @@ class LeadsRepositoryImpl implements LeadsRepository {
           break;
         }
 
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(Duration(seconds: 1));
       } catch (e) {
         yield Job(
           id: jobId,

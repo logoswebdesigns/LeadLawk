@@ -206,7 +206,7 @@ final pageSizeProvider = Provider<int>((ref) {
 class FilterStateNotifier extends StateNotifier<AsyncValue<LeadsFilterState>> {
   final Ref _ref;
 
-  FilterStateNotifier(this._ref) : super(const AsyncValue.loading()) {
+  FilterStateNotifier(this._ref) : super(AsyncValue.loading()) {
     _loadInitialState();
   }
 
@@ -345,7 +345,7 @@ class FilterStateNotifier extends StateNotifier<AsyncValue<LeadsFilterState>> {
 class SortStateNotifier extends StateNotifier<AsyncValue<SortState>> {
   final Ref _ref;
 
-  SortStateNotifier(this._ref) : super(const AsyncValue.loading()) {
+  SortStateNotifier(this._ref) : super(AsyncValue.loading()) {
     _loadInitialState();
   }
 
@@ -384,7 +384,7 @@ class SortStateNotifier extends StateNotifier<AsyncValue<SortState>> {
 class UIStateNotifier extends StateNotifier<AsyncValue<LeadsUIState>> {
   final Ref _ref;
 
-  UIStateNotifier(this._ref) : super(const AsyncValue.loading()) {
+  UIStateNotifier(this._ref) : super(AsyncValue.loading()) {
     _loadInitialState();
   }
 

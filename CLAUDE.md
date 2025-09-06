@@ -137,6 +137,12 @@ CallLog: lead_id, duration, outcome (call tracking)
 
 ## Code Standards
 
+### CRITICAL RULES - NEVER VIOLATE
+- **NEVER comment out code to fix warnings** - Always properly implement or remove code
+- **NEVER hide problems** - Fix issues properly, don't sweep them under the rug
+- **NEVER create unused variables** - If a variable is created, it must be used meaningfully
+- **NEVER ignore compiler warnings** - Fix them properly with real solutions
+
 ### SOLID Principles Compliance
 - **Strict adherence to SOLID principles required**
 - **File length limit: 100 lines maximum per file**

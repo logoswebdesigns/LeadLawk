@@ -10,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from .database import engine, Base
+from .database import engine, Base, SessionLocal
+from .auth.init_admin import create_default_admin
 from .routers import (
     health_router, 
     leads_router,
@@ -21,7 +22,8 @@ from .routers import (
     sales_router,
     misc_router,
     pagespeed_router,
-    conversion_router
+    conversion_router,
+    auth_router
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +38,14 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting application...")
     Base.metadata.create_all(bind=engine)
+    
+    # Initialize default admin user
+    db = SessionLocal()
+    try:
+        create_default_admin(db)
+    finally:
+        db.close()
+    
     yield
     logger.info("Shutting down application...")
 
@@ -60,6 +70,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     
+    app.include_router(auth_router.router)
     app.include_router(health_router.router)
     app.include_router(leads_router.router)
     app.include_router(jobs_router.router)

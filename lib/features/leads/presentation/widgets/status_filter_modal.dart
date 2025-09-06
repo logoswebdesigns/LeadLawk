@@ -43,7 +43,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +51,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
           // Header
           Row(
             children: [
-              const Icon(
+              Icon(
                 CupertinoIcons.eye_slash,
                 color: AppTheme.primaryGold,
                 size: 24,
@@ -67,7 +67,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
               ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white54),
+                icon: Icon(Icons.refresh),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -121,7 +121,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
                 final isHidden = tempHiddenStatuses.contains(status.name);
                 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: AppTheme.elevatedSurface,
                     borderRadius: BorderRadius.circular(12),
@@ -203,7 +203,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -228,7 +228,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),

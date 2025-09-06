@@ -36,7 +36,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.refresh),
           onPressed: () => context.pop(),
         ),
       ),
@@ -44,7 +44,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -81,7 +81,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
     
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -124,7 +124,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
             if (totalSearches > 10) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -132,7 +132,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.orange, size: 16),
+                    Icon(Icons.refresh),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -155,7 +155,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
 Widget _buildSearchParameters() {
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -180,13 +180,13 @@ Widget _buildSearchParameters() {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.remove, color: Colors.white),
+                      icon: Icon(Icons.refresh),
                       onPressed: searchLimit > 10
                           ? () => setState(() => searchLimit -= 10)
                           : null,
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -197,7 +197,7 @@ Widget _buildSearchParameters() {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add, color: Colors.white),
+                      icon: Icon(Icons.refresh),
                       onPressed: searchLimit < 100
                           ? () => setState(() => searchLimit += 10)
                           : null,
@@ -233,13 +233,13 @@ Widget _buildSearchParameters() {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.remove, color: Colors.white),
+                      icon: Icon(Icons.refresh),
                       onPressed: recentReviewMonths > 6
                           ? () => setState(() => recentReviewMonths -= 6)
                           : null,
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -250,7 +250,7 @@ Widget _buildSearchParameters() {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add, color: Colors.white),
+                      icon: Icon(Icons.refresh),
                       onPressed: recentReviewMonths < 48
                           ? () => setState(() => recentReviewMonths += 6)
                           : null,
@@ -267,7 +267,7 @@ Widget _buildSearchParameters() {
   
   Widget _buildActionBar(int totalSearches) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.backgroundDark,
         border: Border(
@@ -280,7 +280,7 @@ Widget _buildSearchParameters() {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryGold,
             disabledBackgroundColor: Colors.grey,
-            minimumSize: const Size.fromHeight(48),
+            minimumSize: Size.fromHeight(48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -338,7 +338,7 @@ Widget _buildSearchParameters() {
               ),
             ),
             const SizedBox(height: 8),
-            ...generatedSearches.take(5).map((search) => Padding(padding: const EdgeInsets.only(bottom: 4),
+            ...generatedSearches.take(5).map((search) => Padding(padding: EdgeInsets.only(bottom: 4),
               child: Text(
                 '• ${search['industry']} in ${search['location']}',
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
@@ -372,15 +372,15 @@ Widget _buildSearchParameters() {
               // Check for errors
               final state = ref.read(parallelSearchProvider);
               if (state.error != null) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(state.error!),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               } else if (state.parentJobId != null) {
+                if (!context.mounted) return;
                 // Navigate back to the leads list page
                 context.go('/leads');
               }

@@ -165,7 +165,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -173,14 +173,14 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                     AppTheme.primaryBlue.withValues(alpha: 0.05),
                   ],
                 ),
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.phone_in_talk, color: AppTheme.primaryGold),
+                  Icon(Icons.refresh),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,7 +205,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -315,7 +315,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                                 title: Text(_followUpDate == null 
                                   ? 'Select Date' 
                                   : 'Follow-up: ${_followUpDate!.toLocal().toString().split(' ')[0]}'),
-                                trailing: const Icon(Icons.calendar_today),
+                                trailing: Icon(Icons.refresh),
                                 onTap: () async {
                                   final date = await showDatePicker(
                                     context: context,
@@ -338,7 +338,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
             
             // Footer
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -365,7 +365,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
   }
 
   Widget _buildSection(String title, Widget content) {
-    return Padding(padding: const EdgeInsets.only(bottom: 24),
+    return Padding(padding: EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -406,7 +406,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
       return Card(
         color: AppTheme.primaryGold.withValues(alpha: 0.08),
         elevation: 0,
-        margin: const EdgeInsets.only(bottom: 24),
+        margin: EdgeInsets.only(bottom: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
@@ -415,7 +415,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
           ),
         ),
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Center(
             child: Column(
               children: [
@@ -456,7 +456,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
     return Card(
       color: AppTheme.primaryGold.withValues(alpha: 0.08),
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: EdgeInsets.only(bottom: 24),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -469,17 +469,17 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
         children: [
           // Header with clear visual hierarchy (Material Design principle)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withValues(alpha: 0.15),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.campaign,
                   color: AppTheme.primaryGold,
                   size: 24,
@@ -511,7 +511,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.copy_all,
                     color: AppTheme.primaryGold,
                   ),
@@ -538,13 +538,13 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
           // Pitch content - Always visible for easy reading during calls
           // Using good contrast and readability as per WCAG guidelines
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Script content with enhanced readability
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
@@ -569,7 +569,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                 
                 // Pitch tracking with clear touch targets (48dp minimum as per Material Design)
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
@@ -579,7 +579,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                       InkWell(
                         borderRadius: BorderRadius.circular(8),
                         onTap: () => setState(() => _pitchDeliveredSuccessfully = !_pitchDeliveredSuccessfully),
-                        child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(padding: EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
                               SizedBox(
@@ -607,7 +607,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
                           onTap: () => setState(() => _pitchResonated = !_pitchResonated),
-                          child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Padding(padding: EdgeInsets.symmetric(vertical: 8),
                             child: Row(
                               children: [
                                 SizedBox(

@@ -104,7 +104,7 @@ class PageSpeedStatusNotifier extends StateNotifier<Map<String, PageSpeedTestSta
     _pollers[leadId]?.cancel();
     
     int pollCount = 0;
-    _pollers[leadId] = Timer.periodic(const Duration(seconds: 2), (timer) async {
+    _pollers[leadId] = Timer.periodic(Duration(seconds: 2), (timer) async {
       pollCount++;
       
       // Simulate progress based on time
@@ -178,7 +178,7 @@ class PageSpeedStatusNotifier extends StateNotifier<Map<String, PageSpeedTestSta
             DebugLogger.log('📊 PageSpeed test completed for lead $leadId');
             
             // Clear state after a longer delay to allow UI to see the completion
-            Future.delayed(const Duration(seconds: 15), () {
+            Future.delayed(Duration(seconds: 15), () {
               if (state.containsKey(leadId)) {
                 DebugLogger.log('🧹 Clearing PageSpeed status for $leadId');
                 state = Map.from(state)..remove(leadId);
@@ -245,8 +245,8 @@ class PageSpeedStatusNotifier extends StateNotifier<Map<String, PageSpeedTestSta
 final pageSpeedStatusProvider = StateNotifierProvider<PageSpeedStatusNotifier, Map<String, PageSpeedTestState>>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: 'http://localhost:8000',
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 5),
+    connectTimeout: Duration(seconds: 5),
+    receiveTimeout: Duration(seconds: 5),
   ));
   
   final notificationService = ref.watch(pageSpeedNotificationServiceProvider);

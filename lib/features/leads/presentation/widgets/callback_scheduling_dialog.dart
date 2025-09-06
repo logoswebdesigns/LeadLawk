@@ -57,7 +57,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppTheme.primaryGold,
               onPrimary: Colors.black,
               surface: AppTheme.elevatedSurface,
@@ -83,7 +83,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppTheme.primaryGold,
               onPrimary: Colors.black,
               surface: AppTheme.elevatedSurface,
@@ -274,7 +274,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
           SnackBar(
             content: Text(message),
             backgroundColor: AppTheme.successGreen,
-            duration: const Duration(seconds: 4),
+            duration: Duration(seconds: 4),
           ),
         );
       }
@@ -333,12 +333,12 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.purple.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.event,
               color: Colors.purple,
               size: 20,
@@ -370,14 +370,14 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               onTap: _selectDate,
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       CupertinoIcons.calendar,
                       color: AppTheme.primaryGold,
                       size: 20,
@@ -413,14 +413,14 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               onTap: _selectTime,
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       CupertinoIcons.clock,
                       color: AppTheme.primaryGold,
                       size: 20,
@@ -480,7 +480,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             
             // Calendar Options Section
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
@@ -496,7 +496,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                         color: AppTheme.primaryGold,
                         size: 18,
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'Calendar Options',
                         style: TextStyle(
@@ -605,7 +605,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                           size: 18,
                         ),
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                     ),
                   ],
@@ -617,7 +617,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             
             // Preview
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -625,7 +625,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.info_outline,
                     color: Colors.purple,
                     size: 16,
@@ -658,8 +658,8 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             foregroundColor: Colors.white,
           ),
           child: _isLoading 
-              ? const SizedBox(
-                  width: 20,
+              ? SizedBox(
+        width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,

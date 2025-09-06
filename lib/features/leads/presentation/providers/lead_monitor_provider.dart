@@ -16,7 +16,7 @@ class LeadMonitorNotifier extends StateNotifier<List<Lead>> {
   
   void _startMonitoring() {
     // Check for new leads every 5 seconds
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _timer = Timer.periodic(Duration(seconds: 5), (_) {
       _checkForNewLeads();
     });
     

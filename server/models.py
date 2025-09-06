@@ -7,6 +7,28 @@ import uuid
 from database import Base
 
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    full_name = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Rate limiting tracking
+    request_count = Column(Integer, default=0)
+    last_request_reset = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    leads = relationship("Lead", back_populates="user")
+    call_logs = relationship("CallLog", back_populates="created_by")
+    timeline_entries = relationship("LeadTimelineEntry", back_populates="created_by")
+
+
 class LeadStatus(str, enum.Enum):
     new = "new"
     viewed = "viewed"
@@ -33,6 +55,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     business_name = Column(String, nullable=False, index=True)
     phone = Column(String, nullable=False, index=True)
     website_url = Column(String, nullable=True)
@@ -86,6 +109,7 @@ class Lead(Base):
     conversion_failure_notes = Column(Text, nullable=True)  # Additional notes about why they didn't convert
     conversion_failure_date = Column(DateTime, nullable=True)  # When they were marked as did not convert
     
+    user = relationship("User", back_populates="leads")
     call_logs = relationship("CallLog", back_populates="lead", cascade="all, delete-orphan")
     timeline_entries = relationship("LeadTimelineEntry", back_populates="lead", cascade="all, delete-orphan", order_by="desc(LeadTimelineEntry.created_at)")
     sales_pitch = relationship("SalesPitch", back_populates="leads")
@@ -96,6 +120,7 @@ class CallLog(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     lead_id = Column(String, ForeignKey("leads.id"), nullable=False)
+    created_by_id = Column(String, ForeignKey("users.id"), nullable=False)
     called_at = Column(DateTime, default=datetime.utcnow)
     outcome = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
@@ -103,6 +128,7 @@ class CallLog(Base):
     sales_pitch_id = Column(String, ForeignKey("sales_pitches.id"), nullable=True)
     
     lead = relationship("Lead", back_populates="call_logs")
+    created_by = relationship("User", back_populates="call_logs")
     sales_pitch = relationship("SalesPitch", back_populates="call_logs")
 
 
@@ -111,6 +137,7 @@ class LeadTimelineEntry(Base):
 
     id = Column(String, primary_key=True)
     lead_id = Column(String, ForeignKey("leads.id"), nullable=False)
+    created_by_id = Column(String, ForeignKey("users.id"), nullable=False)
     type = Column(SQLEnum(TimelineEntryType), nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
@@ -123,6 +150,7 @@ class LeadTimelineEntry(Base):
     completed_at = Column(DateTime, nullable=True)
     
     lead = relationship("Lead", back_populates="timeline_entries")
+    created_by = relationship("User", back_populates="timeline_entries")
 
 
 class ConversionModel(Base):

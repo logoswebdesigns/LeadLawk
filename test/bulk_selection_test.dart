@@ -52,7 +52,7 @@ void main() {
       );
       
       // Execute
-      final result = await updateUIState(UpdateUIStateParams(uiState: newState));
+      final result = await updateUIState(const UpdateUIStateParams(uiState: newState));
       
       // Verify
       expect(result.isRight(), true);
@@ -90,7 +90,7 @@ void main() {
       );
       
       // Execute
-      final result = await updateUIState(UpdateUIStateParams(uiState: newState));
+      final result = await updateUIState(const UpdateUIStateParams(uiState: newState));
       
       // Verify
       expect(result.isRight(), true);
@@ -130,14 +130,14 @@ void main() {
     
     test('should handle selection mode toggle failure', () async {
       // Setup
-      final failure = CacheFailure('Failed to toggle selection mode');
+      const failure = CacheFailure('Failed to toggle selection mode');
       when(mockFilterRepository.saveUIState(any)).thenAnswer(
-        (_) async => Left(failure),
+        (_) async => const Left(failure),
       );
       
       // Execute
       const newState = LeadsUIState(isSelectionMode: true);
-      final result = await updateUIState(UpdateUIStateParams(uiState: newState));
+      final result = await updateUIState(const UpdateUIStateParams(uiState: newState));
       
       // Verify
       expect(result.isLeft(), true);

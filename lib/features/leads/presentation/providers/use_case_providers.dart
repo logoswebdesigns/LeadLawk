@@ -1,6 +1,6 @@
-/// Use Case Providers for Business Logic
-/// Pattern: Provider Pattern with Use Case Pattern
-/// SOLID: Single Responsibility - each provider wraps one use case
+// Use Case Providers for Business Logic
+// Pattern: Provider Pattern with Use Case Pattern
+// SOLID: Single Responsibility - each provider wraps one use case
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

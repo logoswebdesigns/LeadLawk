@@ -1,6 +1,6 @@
-/// Command Bus for executing commands with history
-/// Pattern: Command Pattern with Event Sourcing
-/// SOLID: Open/Closed - new commands without modifying bus
+// Command Bus for executing commands with history
+// Pattern: Command Pattern with Event Sourcing
+// SOLID: Open/Closed - new commands without modifying bus
 library;
 
 import 'dart:collection';

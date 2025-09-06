@@ -70,7 +70,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
       onTap: () => setState(() => _isExpanded = !_isExpanded),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.campaign,
             size: 20,
             color: AppTheme.primaryGold,
@@ -101,7 +101,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                 if (_selectedPitchId != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppTheme.successGreen.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -134,7 +134,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
     }
 
     return Column(
-      children: pitches.map((pitch) => Padding(padding: const EdgeInsets.only(bottom: 12),
+      children: pitches.map((pitch) => Padding(padding: EdgeInsets.only(bottom: 12),
         child: _buildPitchCard(pitch),
       )).toList(),
     );
@@ -161,10 +161,10 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
         children: [
           // Header with title and stats
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(7),
                 topRight: Radius.circular(7),
               ),
@@ -185,7 +185,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
             ),
           ),
           // Content
-          Padding(padding: const EdgeInsets.all(12),
+          Padding(padding: EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -208,12 +208,12 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     if (!isSelected)
                       ElevatedButton.icon(
                         onPressed: () => _selectPitch(pitch.id),
-                        icon: const Icon(Icons.check_circle, size: 16),
+                        icon: Icon(Icons.refresh),
                         label: const Text('Select'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryGold,
                           foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
                           ),
@@ -221,7 +221,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                       )
                     else
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
@@ -236,7 +236,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                               size: 16,
                               color: AppTheme.successGreen,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
                               'Selected',
                               style: TextStyle(
@@ -251,7 +251,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => _copyToClipboard(pitch.content),
-                      icon: const Icon(Icons.copy, size: 16),
+                      icon: Icon(Icons.refresh),
                       label: const Text('Copy'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.accentPurple,
@@ -269,7 +269,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
@@ -280,7 +280,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
       child: Column(
         children: [
           Icon(
-            Icons.campaign_outlined,
+            Icons.campaign,
             size: 48,
             color: Colors.white.withValues(alpha: 0.3),
           ),

@@ -84,7 +84,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             SnackBar(
               content: Text('Added ${citiesAsync.length} cities from $state'),
               backgroundColor: AppTheme.successGreen,
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
             ),
           );
         }
@@ -160,12 +160,12 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.location_city,
                 color: AppTheme.primaryGold,
                 size: 20,
@@ -182,7 +182,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
@@ -202,15 +202,15 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             TextButton.icon(
               onPressed: _isLoadingCities ? null : _showStateSelectionDialog,
               icon: _isLoadingCities 
-                ? const SizedBox(
-                    width: 12,
+                ? SizedBox(
+        width: 12,
                     height: 12,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
                     ),
                   )
-                : const Icon(Icons.map, size: 16),
+                : Icon(Icons.refresh),
               label: Text(
                 _isLoadingCities ? 'Loading...' : 'Add State',
                 style: const TextStyle(fontSize: 12),
@@ -248,7 +248,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
               // Chips inside the field
               if (formState.selectedLocations.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -266,7 +266,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Padding(padding: const EdgeInsets.only(left: 10),
+                            Padding(padding: EdgeInsets.only(left: 10),
                               child: Text(
                                 city,
                                 style: const TextStyle(
@@ -283,7 +283,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                                 onTap: () => formNotifier.removeLocation(city),
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.all(4),
+                                  padding: EdgeInsets.all(4),
                                   child: Icon(
                                     Icons.close,
                                     size: 14,
@@ -330,7 +330,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                     ),
                     suffixIcon: _cityController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.add_circle,
                             color: AppTheme.primaryGold,
                           ),
@@ -342,7 +342,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
+                    contentPadding: EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
@@ -356,7 +356,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
         ),
         
         if (formState.selectedLocations.isEmpty)
-          Padding(padding: const EdgeInsets.only(top: 8),
+          Padding(padding: EdgeInsets.only(top: 8),
             child: Text(
               'Add at least one city to search',
               style: TextStyle(
@@ -369,7 +369,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
         // Info message about multi-city and state-wide search
         const SizedBox(height: 12),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),

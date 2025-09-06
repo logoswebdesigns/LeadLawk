@@ -8,8 +8,8 @@ final emailTemplatesRemoteDataSourceProvider = Provider<EmailTemplatesRemoteData
   final baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
   final dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    connectTimeout: Duration(seconds: 10),
+    receiveTimeout: Duration(seconds: 10),
   ));
   return EmailTemplatesRemoteDataSource(dio);
 });

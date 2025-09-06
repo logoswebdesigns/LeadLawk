@@ -42,7 +42,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
     super.initState();
     
     _flowController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: Duration(seconds: 3),
       vsync: this,
     )..repeat();
     
@@ -123,7 +123,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
           title: const Row(
             children: [
               Icon(Icons.event, color: AppTheme.primaryGold),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 'Schedule Callback',
                 style: TextStyle(color: AppTheme.primaryGold),
@@ -137,14 +137,14 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
               children: [
                 // Date picker
                 ListTile(
-                  leading: const Icon(Icons.calendar_today, color: AppTheme.primaryBlue),
+                  leading: Icon(Icons.refresh),
                   title: Text(
                     selectedDate == null
                         ? 'Select Date'
                         : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
                     style: const TextStyle(color: Colors.white),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: Icon(Icons.refresh),
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -160,14 +160,14 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 
                 // Time picker
                 ListTile(
-                  leading: const Icon(Icons.access_time, color: AppTheme.primaryBlue),
+                  leading: Icon(Icons.refresh),
                   title: Text(
                     selectedTime == null
                         ? 'Select Time'
                         : selectedTime!.format(context),
                     style: const TextStyle(color: Colors.white),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: Icon(Icons.refresh),
                   onTap: () async {
                     final time = await showTimePicker(
                       context: context,
@@ -190,7 +190,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    prefixIcon: const Icon(Icons.note, color: AppTheme.primaryGold),
+                    prefixIcon: Icon(Icons.refresh),
                   ),
                   maxLines: 3,
                   style: const TextStyle(color: Colors.white),
@@ -200,7 +200,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 
                 // Info box
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -210,7 +210,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: AppTheme.primaryBlue, size: 20),
+                      Icon(Icons.refresh),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -304,7 +304,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
             if (node.points > 0) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -422,7 +422,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
   Widget build(BuildContext context) {
     return Container(
       height: containerHeight,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8),
       child: Stack(
         children: [
           // Background with gradient
@@ -444,7 +444,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
           ),
           
           // Skill tree visualization
-          Padding(padding: const EdgeInsets.all(20),
+          Padding(padding: EdgeInsets.all(20),
             child: CustomPaint(
               painter: SkillTreePainter(
                 nodes: _allNodes,
@@ -475,7 +475,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
     final progress = (xp % 100) / 100;
     
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
@@ -952,7 +952,7 @@ class SkillTreePainter extends CustomPainter {
         ..strokeWidth = 6
         ..strokeCap = StrokeCap.round
         ..color = theme.withValues(alpha: 0.2)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
       canvas.drawPath(path, glowPaint);
     } else {
       canvas.drawPath(path, paint);

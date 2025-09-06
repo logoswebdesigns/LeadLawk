@@ -111,7 +111,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
       title: const Row(
         children: [
           Icon(Icons.email_outlined, color: AppTheme.primaryGold, size: 24),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Text(
             'Email Settings',
             style: TextStyle(color: Colors.white),
@@ -127,7 +127,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
             children: [
               // Quick Setup Buttons
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -149,12 +149,12 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                       children: [
                         ElevatedButton.icon(
                           onPressed: _applyGmailPreset,
-                          icon: const Icon(Icons.mail, size: 16),
+                          icon: Icon(Icons.refresh),
                           label: const Text('Gmail'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryGold,
                             foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
                         ),
                       ],
@@ -213,7 +213,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                     borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
               ),
@@ -244,7 +244,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                     borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
               ),
@@ -274,7 +274,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                     borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
               ),
@@ -313,7 +313,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                     onPressed: () => setState(() => _showPassword = !_showPassword),
                   ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
                 validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
               ),
@@ -322,7 +322,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
 
               // Instructions
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -334,7 +334,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                     const Row(
                       children: [
                         Icon(Icons.info_outline, color: Colors.blue, size: 16),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           'Gmail Setup Instructions',
                           style: TextStyle(
@@ -376,8 +376,8 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
             foregroundColor: Colors.black,
           ),
           child: _isLoading
-              ? const SizedBox(
-                  width: 20,
+              ? SizedBox(
+        width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,

@@ -51,7 +51,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
 
   void _startPeriodicHealthCheck() {
     _healthCheckTimer?.cancel();
-    _healthCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _healthCheckTimer = Timer.periodic(Duration(seconds: 5), (_) {
       checkServerHealth();
     });
   }
@@ -63,8 +63,8 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
       final response = await dio.get(
         'http://localhost:8000/health',
         options: Options(
-          receiveTimeout: const Duration(seconds: 2),
-          sendTimeout: const Duration(seconds: 2),
+          receiveTimeout: Duration(seconds: 2),
+          sendTimeout: Duration(seconds: 2),
         ),
       );
       
@@ -161,7 +161,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
           appendLog('[OUT] ${line.trim()}');
         }
         if (output.contains('Uvicorn running on')) {
-          Future.delayed(const Duration(seconds: 2), () {
+          Future.delayed(Duration(seconds: 2), () {
             checkServerHealth();
           });
         }
@@ -175,7 +175,7 @@ class ServerStatusNotifier extends StateNotifier<ServerState> {
         }
       });
       
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(Duration(seconds: 5));
       checkServerHealth();
       
     } catch (e) {
@@ -222,8 +222,8 @@ final serverLogsProvider = FutureProvider.autoDispose<List<String>>((ref) async 
       'http://localhost:8000/logs',
       queryParameters: {'tail': 500},
       options: Options(
-        receiveTimeout: const Duration(seconds: 2),
-        sendTimeout: const Duration(seconds: 2),
+        receiveTimeout: Duration(seconds: 2),
+        sendTimeout: Duration(seconds: 2),
       ),
     );
     final data = resp.data;
@@ -243,8 +243,8 @@ final jobsListProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
     final resp = await dio.get(
       'http://localhost:8000/jobs',
       options: Options(
-        receiveTimeout: const Duration(seconds: 2),
-        sendTimeout: const Duration(seconds: 2),
+        receiveTimeout: Duration(seconds: 2),
+        sendTimeout: Duration(seconds: 2),
       ),
     );
     final data = resp.data;
@@ -260,7 +260,7 @@ class AutoRefreshJobsNotifier extends StateNotifier<AsyncValue<List<Map<String, 
   final Ref ref;
   Timer? _timer;
   
-  AutoRefreshJobsNotifier(this.ref) : super(const AsyncValue.loading()) {
+  AutoRefreshJobsNotifier(this.ref) : super(AsyncValue.loading()) {
     _startAutoRefresh();
   }
   
@@ -269,7 +269,7 @@ class AutoRefreshJobsNotifier extends StateNotifier<AsyncValue<List<Map<String, 
     _fetchJobs();
     
     // Set up periodic refresh every 3 seconds
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _timer = Timer.periodic(Duration(seconds: 3), (_) {
       _fetchJobs();
     });
   }
@@ -283,8 +283,8 @@ class AutoRefreshJobsNotifier extends StateNotifier<AsyncValue<List<Map<String, 
       final resp = await dio.get(
         'http://localhost:8000/jobs',
         options: Options(
-          receiveTimeout: const Duration(seconds: 2),
-          sendTimeout: const Duration(seconds: 2),
+          receiveTimeout: Duration(seconds: 2),
+          sendTimeout: Duration(seconds: 2),
         ),
       );
       
@@ -296,7 +296,7 @@ class AutoRefreshJobsNotifier extends StateNotifier<AsyncValue<List<Map<String, 
         final jobs = data.cast<Map>().map((e) => e.cast<String, dynamic>()).toList();
         state = AsyncValue.data(jobs);
       } else {
-        state = const AsyncValue.data(<Map<String, dynamic>>[]);
+        state = AsyncValue.data(<Map<String, dynamic>>[]);
       }
     } catch (e, stack) {
       // Check if mounted before setting error state

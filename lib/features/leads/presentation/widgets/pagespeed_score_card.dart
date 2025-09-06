@@ -19,7 +19,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!lead.hasWebsite) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
 
     final hasScores = lead.pagespeedTestedAt != null;
@@ -31,7 +31,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
         testStatus.status != PageSpeedTestStatus.error;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1B),
         borderRadius: BorderRadius.circular(12),
@@ -45,7 +45,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
         children: [
           // Header section
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -71,7 +71,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.speed,
                     color: Colors.white,
                     size: 18,
@@ -96,7 +96,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                 if (hasScores)
                   IconButton(
                     onPressed: () => _openPageSpeedInsights(lead.websiteUrl),
-                    icon: const Icon(Icons.open_in_new),
+                    icon: Icon(Icons.refresh),
                     color: const Color(0xFF8AB4F8),
                     tooltip: 'View on PageSpeed Insights',
                   )
@@ -113,7 +113,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
           ),
           
           // Content section
-          Padding(padding: const EdgeInsets.all(16),
+          Padding(padding: EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -390,7 +390,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
 
   Widget _buildErrorSection(String? error) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFF4E42).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -400,7 +400,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline,
             color: Color(0xFFFF4E42),
             size: 20,
@@ -494,7 +494,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
     }
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -556,7 +556,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                 Container(
                   width: 60,
                   height: 60,
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: statusColor.withValues(alpha: 0.1),

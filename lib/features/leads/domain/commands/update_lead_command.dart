@@ -1,6 +1,6 @@
-/// Update Lead Command
-/// Pattern: Command Pattern
-/// SOLID: Single Responsibility - only updates lead
+// Update Lead Command
+// Pattern: Command Pattern
+// SOLID: Single Responsibility - only updates lead
 library;
 
 import 'package:dartz/dartz.dart';

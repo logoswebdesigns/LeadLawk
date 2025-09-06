@@ -24,7 +24,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
     super.initState();
     _isExpanded = true; // Default to expanded
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 200),
       vsync: this,
     );
     _expandAnimation = CurvedAnimation(
@@ -59,7 +59,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
     final activeJobsState = ref.watch(activeJobsProvider);
     
     if (activeJobsState.jobs.isEmpty) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     // Get parent jobs (type == 'parent') and individual jobs
@@ -95,7 +95,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                 // Header - Now clickable for collapse/expand
                 InkWell(
                   onTap: _toggleExpanded,
-                  child: Padding(padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                  child: Padding(padding: EdgeInsets.fromLTRB(24, 16, 24, 12),
                     child: Row(
                       children: [
                         Container(
@@ -132,7 +132,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                         const Spacer(),
                         AnimatedRotation(
                           turns: _isExpanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 200),
+                          duration: Duration(milliseconds: 200),
                           child: Icon(
                             Icons.keyboard_arrow_down,
                             color: Colors.white.withValues(alpha: 0.5),
@@ -150,12 +150,12 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                       maxHeight: MediaQuery.of(context).size.height * 0.4, // Max 40% of screen height
                     ),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Parent jobs (full width)
-                        ...parentJobs.map((job) => Padding(padding: const EdgeInsets.only(bottom: 8),
+                        ...parentJobs.map((job) => Padding(padding: EdgeInsets.only(bottom: 8),
                           child: _JobCard(
                             job: job,
                             isParentJob: true,
@@ -194,7 +194,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                             },
                           ),
                         if (allIndividualJobs.length > 10)
-                          Padding(padding: const EdgeInsets.only(top: 8),
+                          Padding(padding: EdgeInsets.only(top: 8),
                             child: Text(
                               '+ ${(allIndividualJobs.length - 10).toString().replaceAllMapped(
                                 RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -246,7 +246,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: 500),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
@@ -264,7 +264,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
     if (widget.job.status == JobStatus.done && !_isCompleted) {
       _isCompleted = true;
       // Wait 2 seconds then fade out
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(Duration(seconds: 2), () {
         if (mounted) {
           _animationController.forward().then((_) {
             if (mounted) widget.onComplete();
@@ -355,7 +355,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
               opacity: _fadeAnimation.value,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -373,7 +373,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.grid_view_rounded,
                           size: 20,
                           color: AppTheme.primaryGold,
@@ -402,7 +402,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryGold.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(6),
@@ -429,7 +429,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                       child: Stack(
                         children: [
                           AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
+                            duration: Duration(milliseconds: 300),
                             width: MediaQuery.of(context).size.width * progress,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -469,7 +469,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                       ],
                     ),
                     if (job.message != null)
-                      Padding(padding: const EdgeInsets.only(top: 8),
+                      Padding(padding: EdgeInsets.only(top: 8),
                         child: Text(
                           job.message!,
                           style: TextStyle(

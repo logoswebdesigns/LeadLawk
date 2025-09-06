@@ -20,7 +20,7 @@ class GoalsTrackingCard extends ConsumerWidget {
       : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
@@ -53,7 +53,7 @@ class GoalsTrackingCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.settings,
               color: AppTheme.primaryGold,
               size: 18,

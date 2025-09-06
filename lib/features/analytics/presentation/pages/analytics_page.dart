@@ -41,7 +41,7 @@ class AnalyticsPage extends ConsumerWidget {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh),
             onPressed: () {
               ref.invalidate(conversionOverviewProvider);
               ref.invalidate(topSegmentsProvider);
@@ -66,19 +66,19 @@ class AnalyticsPage extends ConsumerWidget {
             children: [
               // Conversion Overview
               ConversionOverviewCard(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               
               // Custom Comparison Analysis
               CustomComparisonCard(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               
               // Actionable Insights
               InsightsCard(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               
               // Conversion Timeline Chart
               TimelineChart(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               
               // Top Converting Segments
               TopSegmentsCard(),

@@ -148,7 +148,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: Icon(Icons.refresh),
         onPressed: () => _navigateBack(),
       ),
       title: const Text('Lead Details'),
@@ -188,7 +188,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
           // Previous button
@@ -285,7 +285,9 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
               final navigation = ref.read(leadNavigationProvider(widget.leadId));
               if (navigation != null) {
                 final nextId = await ref.read(leadNavigationActionsProvider).navigateToNext(widget.leadId);
-                if (nextId != null && context.mounted) {
+                if (!context.mounted) return;
+                if (nextId != null) {
+                  // ignore: use_build_context_synchronously
                   context.go('/leads/$nextId');
                 }
               }
@@ -295,7 +297,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           
           // Notes Section - MOVED UP for quick access during calls
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
@@ -403,7 +405,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryGold,
               foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text(
               'Back to Leads',
@@ -420,7 +422,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
 
   Widget _buildCompactHeaderSection(Lead lead) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
@@ -463,7 +465,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                             minWidth: 32,
                             minHeight: 32,
                           ),
-                          padding: const EdgeInsets.all(4),
+                          padding: EdgeInsets.all(4),
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: lead.businessName));
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -481,7 +483,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: AppTheme.warningOrange, size: 14),
+                          Icon(Icons.refresh),
                           const SizedBox(width: 4),
                           Text(
                             '${lead.rating!.toStringAsFixed(1)} (${lead.reviewCount ?? 0} reviews)',
@@ -499,7 +501,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
               const SizedBox(width: 16),
               // Status badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _getStatusColor(lead.status).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -586,7 +588,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           if (lead.status == LeadStatus.callbackScheduled && lead.followUpDate != null) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -597,7 +599,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.event,
                     size: 16,
                     color: Colors.purple,
@@ -803,7 +805,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
       // and will automatically poll for results
       
       // Periodically refresh lead data while test is running
-      Timer.periodic(const Duration(seconds: 3), (timer) {
+      Timer.periodic(Duration(seconds: 3), (timer) {
         final status = ref.read(pageSpeedStatusProvider)[lead.id];
         // Always refresh to get latest data
         ref.invalidate(leadDetailProvider(widget.leadId));

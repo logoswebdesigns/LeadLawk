@@ -71,7 +71,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 24, 16, 16),
+            padding: EdgeInsets.fromLTRB(24, 24, 16, 16),
             decoration: BoxDecoration(
               color: AppTheme.backgroundDark,
               border: Border(
@@ -82,7 +82,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   CupertinoIcons.slider_horizontal_3,
                   color: AppTheme.primaryGold,
                   size: 24,
@@ -121,7 +121,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white54),
+                  icon: Icon(Icons.refresh),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -131,7 +131,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -144,7 +144,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                     decoration: InputDecoration(
                       hintText: 'Search by business name or phone...',
                       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         CupertinoIcons.search,
                         color: AppTheme.primaryGold,
                         size: 20,
@@ -230,7 +230,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
           
           // Apply Button
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: AppTheme.backgroundDark,
               border: Border(
@@ -248,7 +248,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryGold,
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -292,7 +292,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: AppTheme.primaryGold.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
@@ -329,7 +329,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
             });
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: isVisible 
                 ? _getStatusColor(status).withValues(alpha: 0.2)
@@ -376,7 +376,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
       children: [
         // Sort field selection
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurface,
             borderRadius: BorderRadius.circular(12),
@@ -395,7 +395,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
         const SizedBox(height: 12),
         // Sort direction
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurface,
             borderRadius: BorderRadius.circular(12),
@@ -406,7 +406,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                 child: GestureDetector(
                   onTap: () => setState(() => sortAscending = false),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: !sortAscending 
                         ? AppTheme.primaryGold.withValues(alpha: 0.2)
@@ -444,7 +444,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                 child: GestureDetector(
                   onTap: () => setState(() => sortAscending = true),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: sortAscending 
                         ? AppTheme.primaryGold.withValues(alpha: 0.2)
@@ -489,7 +489,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     return GestureDetector(
       onTap: () => setState(() => sortOption = option),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected 
             ? AppTheme.primaryGold.withValues(alpha: 0.1)
@@ -526,7 +526,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
 
   Widget _buildAdditionalFilters() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),

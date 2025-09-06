@@ -28,7 +28,7 @@ class CalendarService {
           description: _buildEventDescription(lead, notes),
           location: lead.location,
           startDate: callbackDateTime,
-          endDate: callbackDateTime.add(const Duration(minutes: 30)),
+          endDate: callbackDateTime.add(Duration(minutes: 30)),
           allDay: false,
           iosParams: const IOSParams(
             reminder: Duration(minutes: 15),
@@ -84,7 +84,7 @@ class CalendarService {
       attendeeEmails: attendees,
       rsvp: true,
       start: callbackDateTime,
-      end: callbackDateTime.add(const Duration(minutes: 30)),
+      end: callbackDateTime.add(Duration(minutes: 30)),
       location: lead.location,
       summary: 'Callback: ${lead.businessName}',
       description: _buildEventDescription(lead, notes),

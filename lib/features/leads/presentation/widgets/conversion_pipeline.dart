@@ -37,7 +37,7 @@ class ConversionPipeline extends ConsumerWidget {
         children: [
           // Header Section
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -51,14 +51,14 @@ class ConversionPipeline extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(
+                Icon(
                   CupertinoIcons.chart_bar_alt_fill,
                   color: AppTheme.primaryGold,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
@@ -91,7 +91,7 @@ class ConversionPipeline extends ConsumerWidget {
           ),
           // Pipeline Stages
           Expanded(
-            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Padding(padding: EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   for (int i = 0; i < stages.length; i++)
@@ -134,7 +134,7 @@ class ConversionPipeline extends ConsumerWidget {
       children: [
         // Count badge
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: stage.color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
@@ -160,7 +160,7 @@ class ConversionPipeline extends ConsumerWidget {
               alignment: Alignment.bottomCenter,
               children: [
                 AnimatedFractionallySizedBox(
-                  duration: const Duration(milliseconds: 500),
+                  duration: Duration(milliseconds: 500),
                   heightFactor: heightFraction,
                   child: Container(
                     decoration: BoxDecoration(
@@ -201,7 +201,7 @@ class ConversionPipeline extends ConsumerWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: rate > 0 
                 ? AppTheme.successGreen.withValues(alpha: 0.15)

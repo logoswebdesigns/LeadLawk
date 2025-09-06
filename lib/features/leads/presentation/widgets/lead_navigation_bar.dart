@@ -25,7 +25,7 @@ class LeadNavigationBar extends ConsumerWidget {
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -182,7 +182,7 @@ class _NavigationButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: isNext ? [
@@ -223,7 +223,7 @@ class _NavigationButton extends StatelessWidget {
     );
   }
 
-  Widget _buildArrowIcon(BuildContext context) {
+  Widget _buildArrowIcon(BuildContext) {
     return Container(
       width: 44,
       height: 44,

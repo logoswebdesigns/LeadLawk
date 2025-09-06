@@ -7,7 +7,7 @@ class LeadDetailUtils {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(20),
+        insetPadding: EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -27,7 +27,7 @@ class LeadDetailUtils {
                 ),
               ),
             ),
-            Padding(padding: const EdgeInsets.all(16),
+            Padding(padding: EdgeInsets.all(16),
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Close'),

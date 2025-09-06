@@ -26,7 +26,7 @@ class LeadInfoRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(4),
-          child: Padding(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Padding(padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Row(
               children: [
                 Icon(

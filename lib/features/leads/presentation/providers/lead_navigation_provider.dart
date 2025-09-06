@@ -121,7 +121,7 @@ class LeadNavigationActions {
         await _ref.read(paginatedLeadsProvider.notifier).loadMoreLeads();
         
         // Wait a bit for the state to update
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(Duration(milliseconds: 100));
         
         // Get the updated state
         final updatedFiltered = _ref.read(filteredPaginatedLeadsProvider);
@@ -191,6 +191,6 @@ final leadNavigationLoaderProvider = FutureProvider<void>((ref) async {
     }
     
     // Add a small delay to avoid overwhelming the server
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(Duration(milliseconds: 100));
   }
 });

@@ -17,7 +17,7 @@ class LeadFlagRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: '$label: ${value ? "Yes" : "No"}${description != null ? " - $description" : ""}',
-      child: Padding(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Padding(padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Row(
           children: [
             Icon(
@@ -39,7 +39,7 @@ class LeadFlagRow extends StatelessWidget {
                     ),
                   ),
                   if (description != null)
-                    Padding(padding: const EdgeInsets.only(top: 2),
+                    Padding(padding: EdgeInsets.only(top: 2),
                       child: Text(
                         description!,
                         style: TextStyle(

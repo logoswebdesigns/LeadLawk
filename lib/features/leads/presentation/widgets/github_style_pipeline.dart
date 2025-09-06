@@ -47,10 +47,10 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
               border: Border(
                 bottom: BorderSide(
                   color: Colors.white.withValues(alpha: 0.1),
@@ -84,7 +84,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: _buildPipelineNodes(),
@@ -103,7 +103,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
     // final isInProgress = !isSuccess && !isFailed;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isSuccess 
             ? Colors.green.withValues(alpha: 0.1)
@@ -271,7 +271,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
     return Container(
       width: horizontalSpacing,
       height: lineHeight,
-      margin: const EdgeInsets.only(bottom: 28),
+      margin: EdgeInsets.only(bottom: 28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isActive
@@ -302,7 +302,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
     if (!hasAlternativePath) return const SizedBox(width: 0);
     
     return Container(
-      margin: const EdgeInsets.only(left: 16),
+      margin: EdgeInsets.only(left: 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,7 +476,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today, size: 20),
+                leading: Icon(Icons.refresh),
                 title: Text(
                   selectedDate == null
                       ? 'Select Date'
@@ -497,7 +497,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.access_time, size: 20),
+                leading: Icon(Icons.refresh),
                 title: Text(
                   selectedTime == null
                       ? 'Select Time'
@@ -629,7 +629,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
         title: const Text('Mark as Do Not Call', style: TextStyle(fontSize: 16)),
-        content: const Text(
+        content: Text(
           'This will mark the lead as Do Not Call. Continue?',
           style: TextStyle(fontSize: 14),
         ),
@@ -692,7 +692,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
           SnackBar(
             content: Text('Status updated to ${_getStatusLabel(newStatus)}'),
             backgroundColor: AppTheme.successGreen,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }

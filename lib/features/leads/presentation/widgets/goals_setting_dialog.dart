@@ -53,7 +53,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Goals updated successfully!')),
+        const SnackBar(content: const Text('Goals updated successfully!')),
       );
     }
   }
@@ -69,7 +69,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SingleChildScrollView(
-        child: Padding(padding: const EdgeInsets.all(20),
+        child: Padding(padding: EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +78,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
+                  margin: EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey[600],
                     borderRadius: BorderRadius.circular(2),
@@ -97,7 +97,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: Icon(Icons.refresh),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -124,7 +124,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryGold,
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

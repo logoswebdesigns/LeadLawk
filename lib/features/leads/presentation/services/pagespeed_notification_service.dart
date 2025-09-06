@@ -13,7 +13,7 @@ class PageSpeedNotificationService {
 
   // Rate limiting configuration
   static const int _maxNotificationsPerMinute = 5;
-  static const Duration _rateLimitWindow = Duration(minutes: 1);
+  static const Duration _rateLimitWindow = const Duration(minutes: 1);
   
   // Track recent notifications for rate limiting
   final List<DateTime> _recentNotifications = [];
@@ -33,7 +33,7 @@ class PageSpeedNotificationService {
   
   void _startCleanupTimer() {
     _cleanupTimer?.cancel();
-    _cleanupTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _cleanupTimer = Timer.periodic(Duration(seconds: 30), (_) {
       _cleanupOldNotifications();
     });
   }
@@ -81,7 +81,7 @@ class PageSpeedNotificationService {
     if (_processingQueue) return;
     _processingQueue = true;
     
-    Future.delayed(const Duration(seconds: 15), () {
+    Future.delayed(Duration(seconds: 15), () {
       _processingQueue = false;
       if (_pendingQueue.isNotEmpty && !_shouldRateLimit()) {
         final notification = _pendingQueue.removeAt(0);
@@ -140,7 +140,7 @@ class PageSpeedNotificationService {
       message: message,
       icon: Icons.dashboard,
       backgroundColor: failed > 0 ? AppTheme.warningOrange : AppTheme.successGreen,
-      duration: const Duration(seconds: 5),
+      duration: Duration(seconds: 5),
     );
   }
   
@@ -226,7 +226,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
       vsync: this,
     );
     
@@ -286,7 +286,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                 _dismiss();
               },
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: widget.backgroundColor ?? AppTheme.primaryBlue,
                   borderRadius: BorderRadius.circular(12),
@@ -302,7 +302,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                   children: [
                     if (widget.icon != null) ...[
                       Icon(
-                        widget.icon,
+                        widget.icon!,
                         color: Colors.white,
                         size: 24,
                       ),

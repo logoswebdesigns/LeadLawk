@@ -17,7 +17,7 @@ class PageSpeedFilter extends ConsumerWidget {
     final formNotifier = ref.read(automationFormProvider.notifier);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: formState.enablePagespeed 
             ? const Color(0xFF1A1A1B)  // Dark background when enabled
@@ -50,7 +50,7 @@ class PageSpeedFilter extends ConsumerWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.speed,
                   color: Colors.white,
                   size: 18,
@@ -69,7 +69,7 @@ class PageSpeedFilter extends ConsumerWidget {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'Automatically filter leads by Core Web Vitals',
                       style: TextStyle(
@@ -98,7 +98,7 @@ class PageSpeedFilter extends ConsumerWidget {
           if (formState.enablePagespeed) ...[
             const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFF202124),  // Google dark surface
                 borderRadius: BorderRadius.circular(8),
@@ -265,7 +265,7 @@ class PageSpeedFilter extends ConsumerWidget {
                   const SizedBox(height: 16),
                   // Info box
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2D2E30),
                       borderRadius: BorderRadius.circular(6),
@@ -277,7 +277,7 @@ class PageSpeedFilter extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline,
                           size: 16,
                           color: Color(0xFF8AB4F8),  // Google blue

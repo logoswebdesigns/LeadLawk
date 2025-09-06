@@ -65,7 +65,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       // Load leads first, statistics will load via the ConversionPipeline widget
       ref.read(paginatedLeadsProvider.notifier).refreshLeads();
       // Delay goals refresh to avoid blocking
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(Duration(milliseconds: 500), () {
         if (mounted) {
           ref.read(goalsProvider.notifier).refreshMetrics();
         }
@@ -155,7 +155,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     ref.listen(searchFilterProvider, (previous, next) {
       if (previous != next) {
         _debounceTimer?.cancel();
-        _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        _debounceTimer = Timer(Duration(milliseconds: 300), () {
           DebugLogger.log('📱 UI: Search filter changed to "$next"');
           // Get current state of all other filters
           final status = ref.read(statusFilterProvider);
@@ -288,7 +288,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                   const FilterBar(),
                   // Page size selector
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     color: AppTheme.elevatedSurface,
                     child: Row(
                       children: [
@@ -301,7 +301,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             color: AppTheme.backgroundDark,
                             borderRadius: BorderRadius.circular(8),
@@ -313,7 +313,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                             child: DropdownButton<int>(
                               value: pageSize,
                               dropdownColor: AppTheme.elevatedSurface,
-                              icon: const Icon(Icons.arrow_drop_down, color: AppTheme.mediumGray),
+                              icon: Icon(Icons.refresh),
                               style: const TextStyle(color: Colors.white, fontSize: 14),
                               items: [25, 50, 100, 500].map((size) {
                                 return DropdownMenuItem(
@@ -358,7 +358,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                                Icon(Icons.refresh),
                                 const SizedBox(height: 16),
                                 Text('Error: ${paginatedState.error}', textAlign: TextAlign.center),
                                 const SizedBox(height: 16),
@@ -413,7 +413,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 'Start Search',
@@ -430,7 +430,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       itemCount: leads.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == leads.length) {
@@ -467,7 +467,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 5),
+      duration: Duration(seconds: 5),
       vsync: this,
     );
     
@@ -506,7 +506,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
         final goldenEffect = isNewlyAdded ? _goldenEffectAnimation.value : 0.0;
         
         return Container(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: isPendingDeletion 
                 ? Colors.red.withValues(alpha: 0.15)
@@ -539,7 +539,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => context.go('/leads/${widget.lead.id}'),
-              child: Padding(padding: const EdgeInsets.all(12),
+              child: Padding(padding: EdgeInsets.all(12),
                 child: Row(
                   children: [
                     // Checkbox
@@ -598,11 +598,11 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
                             ),
                           ),
                           if (widget.lead.rating != null || widget.lead.reviewCount != null)
-                            Padding(padding: const EdgeInsets.only(top: 4),
+                            Padding(padding: EdgeInsets.only(top: 4),
                               child: Row(
                                 children: [
                                   if (widget.lead.rating != null) ...[
-                                    const Icon(Icons.star, size: 12, color: AppTheme.warningOrange),
+                                    Icon(Icons.refresh),
                                     const SizedBox(width: 2),
                                     Text(
                                       widget.lead.rating!.toStringAsFixed(1),
@@ -624,7 +624,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
                     ),
                     // Status badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getStatusColor(widget.lead.status).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
@@ -700,14 +700,14 @@ class ServerStatusBadge extends ConsumerWidget {
     final serverState = ref.watch(serverStatusProvider);
     
     if (serverState.status == ServerStatus.online) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     return Positioned(
       bottom: 20,
       right: 20,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: serverState.status == ServerStatus.starting
               ? Colors.orange
@@ -718,8 +718,8 @@ class ServerStatusBadge extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (serverState.status == ServerStatus.starting)
-              const SizedBox(
-                width: 12,
+              SizedBox(
+        width: 12,
                 height: 12,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
@@ -727,7 +727,7 @@ class ServerStatusBadge extends ConsumerWidget {
                 ),
               )
             else
-              const Icon(Icons.warning, size: 16, color: Colors.white),
+              Icon(Icons.refresh),
             const SizedBox(width: 8),
             Text(
               serverState.status == ServerStatus.starting

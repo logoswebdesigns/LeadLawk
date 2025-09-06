@@ -1,6 +1,6 @@
-/// Delete Lead Command
-/// Pattern: Command Pattern
-/// SOLID: Single Responsibility - only deletes lead
+// Delete Lead Command
+// Pattern: Command Pattern
+// SOLID: Single Responsibility - only deletes lead
 library;
 
 import 'package:dartz/dartz.dart';

@@ -38,7 +38,7 @@ class AppBottomNavigationBar extends StatelessWidget {
       child: SafeArea(
         child: Container(
           height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -111,7 +111,7 @@ class AppBottomNavigationBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
                   padding: EdgeInsets.all(isCenter ? 6 : 3),
                   decoration: BoxDecoration(

@@ -68,7 +68,7 @@ class FilterBarState extends ConsumerState<FilterBar> {
           children: [
             // Search Bar
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: _buildSearchField(),
             ),
             // Primary Filters
@@ -98,7 +98,7 @@ class FilterBarState extends ConsumerState<FilterBar> {
           color: Colors.white.withValues(alpha: 0.4),
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: const Icon(
+        prefixIcon: Icon(
           CupertinoIcons.search,
           color: AppTheme.primaryGold,
           size: 20,
@@ -129,11 +129,11 @@ class FilterBarState extends ConsumerState<FilterBar> {
         ),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.05),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
       onChanged: (value) {
         debounceTimer?.cancel();
-        debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        debounceTimer = Timer(Duration(milliseconds: 300), () {
           if (mounted) {
             ref.read(domain_filters.currentFilterStateProvider.notifier).updateSearchFilter(value);
           }
@@ -146,7 +146,7 @@ class FilterBarState extends ConsumerState<FilterBar> {
     return GestureDetector(
       onTap: () => setState(() => showFilters = !showFilters),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

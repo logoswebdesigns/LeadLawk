@@ -32,7 +32,7 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
     
@@ -78,7 +78,7 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
             child: Center(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: _buildPipelineVisualization(route),
               ),
             ),
@@ -90,10 +90,10 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
   
   Widget _buildHeader(PipelineRoute route) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
         border: Border(
           bottom: BorderSide(
             color: Colors.white.withValues(alpha: 0.1),
@@ -128,7 +128,7 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
     final progress = _calculateProgress(route);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: route.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),

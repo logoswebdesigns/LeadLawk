@@ -109,7 +109,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh),
             onPressed: _loadJobs,
           ),
         ],
@@ -121,7 +121,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      Icon(Icons.refresh),
                       const SizedBox(height: 16),
                       const Text(
                         'Error loading jobs',
@@ -146,7 +146,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.inbox, size: 64, color: Colors.white30),
+                          Icon(Icons.refresh),
                           const SizedBox(height: 16),
                           const Text(
                             'No jobs found',
@@ -160,7 +160,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: () => context.go('/browser'),
-                            icon: const Icon(Icons.search),
+                            icon: Icon(Icons.refresh),
                             label: const Text('Find Leads'),
                           ),
                         ],
@@ -169,7 +169,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                   : RefreshIndicator(
                       onRefresh: _loadJobs,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(16),
                         itemCount: _jobs.length,
                         itemBuilder: (context, index) {
                           final job = _jobs[index];
@@ -180,7 +180,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                           
                           return Card(
                             color: AppTheme.surfaceDark,
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: EdgeInsets.only(bottom: 12),
                             child: ListTile(
                               onTap: () {
                                 if (job['id'] != null) {
@@ -188,7 +188,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                 }
                               },
                               leading: Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: _getStatusColor(status).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
@@ -212,7 +212,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: _getStatusColor(status).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
@@ -282,7 +282,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                   ),
                                 ],
                               ),
-                              trailing: const Icon(
+                              trailing: Icon(
                                 Icons.arrow_forward_ios,
                                 color: Colors.white30,
                                 size: 16,

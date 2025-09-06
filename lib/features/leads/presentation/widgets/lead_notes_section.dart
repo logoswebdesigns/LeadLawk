@@ -58,7 +58,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
       children: [
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.notes,
               size: 20,
               color: AppTheme.accentCyan,
@@ -75,7 +75,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             const Spacer(),
             IconButton(
               onPressed: _startEditingNotes,
-              icon: const Icon(Icons.edit, size: 18),
+              icon: Icon(Icons.refresh),
               color: AppTheme.accentCyan,
             ),
           ],
@@ -91,7 +91,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
 
   Widget _buildEditingField() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
@@ -135,7 +135,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.accentCyan,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 ),
                 child: const Text('Save'),
               ),
@@ -151,7 +151,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
       onTap: _startEditingNotes,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(8),

@@ -47,7 +47,7 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
     fetchActiveJobs();
     
     // Poll for updates - use longer interval if many jobs to reduce server load
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _pollTimer = Timer.periodic(Duration(seconds: 5), (_) {
       fetchActiveJobs();
     });
   }
@@ -65,8 +65,8 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
         '$apiUrl/jobs',
         options: Options(
           headers: {'Accept': 'application/json'},
-          sendTimeout: const Duration(milliseconds: 5000),
-          receiveTimeout: const Duration(milliseconds: 10000),
+          sendTimeout: Duration(milliseconds: 5000),
+          receiveTimeout: Duration(milliseconds: 10000),
         ),
       );
 
@@ -178,7 +178,7 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
           if (!error.toString().contains('Failed host lookup') && 
               !error.toString().contains('Connection refused') &&
               !error.toString().contains('Connection reset')) {
-            Future.delayed(const Duration(seconds: 10), () {
+            Future.delayed(Duration(seconds: 10), () {
               if (state.jobs.any((job) => job.id == jobId && job.status == JobStatus.running)) {
                 connectToJob(jobId);
               }
@@ -230,7 +230,7 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
       
       // Remove completed jobs after a delay
       if (jobs[index].status == JobStatus.done) {
-        Future.delayed(const Duration(seconds: 3), () {
+        Future.delayed(Duration(seconds: 3), () {
           removeJob(jobId);
         });
       }

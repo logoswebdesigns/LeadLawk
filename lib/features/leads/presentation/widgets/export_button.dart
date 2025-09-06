@@ -122,7 +122,7 @@ class ExportButton extends ConsumerWidget {
                 SnackBar(
                   content: Row(
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.white),
+                      Icon(Icons.refresh),
                       const SizedBox(width: 12),
                       Text('Excel file saved: ${outputFile.split('/').last}'),
                       const Spacer(),
@@ -142,7 +142,7 @@ class ExportButton extends ConsumerWidget {
                     ],
                   ),
                   backgroundColor: AppTheme.successGreen,
-                  duration: const Duration(seconds: 5),
+                  duration: Duration(seconds: 5),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -168,7 +168,7 @@ class ExportButton extends ConsumerWidget {
                   SnackBar(
                     content: Text('Excel file saved to Downloads: $fileName'),
                     backgroundColor: AppTheme.successGreen,
-                    duration: const Duration(seconds: 5),
+                    duration: Duration(seconds: 5),
                   ),
                 );
               }
@@ -183,7 +183,7 @@ class ExportButton extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Excel export is currently only supported on desktop'),
+              content: const Text('Excel export is currently only supported on desktop'),
               backgroundColor: AppTheme.warningOrange,
             ),
           );
@@ -233,7 +233,7 @@ class ExportButton extends ConsumerWidget {
           onTap: () => _exportToExcel(context, ref),
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -242,7 +242,7 @@ class ExportButton extends ConsumerWidget {
                   color: Colors.white,
                   size: 20,
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
                   'Export to Excel',
                   style: TextStyle(

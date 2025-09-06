@@ -1,22 +1,32 @@
 #!/usr/bin/env python3
-"""
-Comprehensive Flutter error fixing script
-Principal Engineer approach: Fix ALL errors systematically
-"""
-
-import re
 import os
-import subprocess
-import sys
+import re
 
-def remove_all_const_keywords(content):
-    """Remove ALL const keywords to fix const-related errors"""
-    # Remove const from widget constructors
+def fix_icon_issues(content):
+    """Fix all Icon-related issues"""
+    # Fix Icons.refresh. patterns (wrongly inserted)
+    content = content.replace('Icons.refresh.list_alt_rounded', 'Icons.list_alt_rounded')
+    content = content.replace('Icons.refresh.add_circle_outline', 'Icons.add_circle_outline')
+    content = content.replace('Icons.refresh.insights', 'Icons.insights')
+    content = content.replace('Icons.refresh.person_outline', 'Icons.person_outline')
+    content = content.replace('Icons.refresh.close', 'Icons.close')
+    content = content.replace('Icons.refresh.error', 'Icons.error')
+    content = content.replace('Icons.refresh.warning', 'Icons.warning')
+    content = content.replace('Icons.refresh.info', 'Icons.info')
+    content = content.replace('Icons.refresh.check_circle', 'Icons.check_circle')
+    
+    # Fix EdgeInsets const issues
     patterns = [
-        (r'\bconst\s+(\w+)\s*\(', r'\1('),  # const Widget(
-        (r'\bconst\s+(\w+\.\w+)\s*\(', r'\1('),  # const Class.constructor(
-        (r'\bconst\s+(<[\w<>,\s]+>)?\s*\[', r'\1['),  # const [] or const <Type>[]
-        (r'\bconst\s+(<[\w<>,\s]+>)?\s*\{', r'\1{'),  # const {} or const <Type>{}
+        # Fix const SizedBox with variables
+        (r'const SizedBox\(\s*height: (\d+)\)', r'SizedBox(height: \1)'),
+        (r'const SizedBox\(\s*width: (\d+)\)', r'SizedBox(width: \1)'),
+        
+        # Fix const EdgeInsets
+        (r'const EdgeInsets\.all\((\d+)\)', r'EdgeInsets.all(\1)'),
+        (r'const EdgeInsets\.symmetric\(horizontal: (\d+), vertical: (\d+)\)', r'EdgeInsets.symmetric(horizontal: \1, vertical: \2)'),
+        
+        # Fix const Icon with literal IconData
+        (r'const Icon\((Icons\.\w+)\)', r'Icon(\1)'),
     ]
     
     for pattern, replacement in patterns:
@@ -24,184 +34,119 @@ def remove_all_const_keywords(content):
     
     return content
 
-def fix_lead_constructor_calls(content):
-    """Add all required parameters to Lead() constructor calls"""
-    if 'Lead(' not in content:
-        return content
+def fix_const_constructor_issues(content):
+    """Fix const constructor issues"""
+    # Remove const from ErrorDisplay constructor
+    content = content.replace('const ErrorDisplay(', 'ErrorDisplay(')
     
-    # Pattern to match Lead( ... ) constructor calls
-    lead_pattern = r'(Lead\s*\([^)]*\))'
-    
-    def fix_lead(match):
-        lead_call = match.group(1)
-        
-        # Check which required params are missing and add defaults
-        required_params = {
-            'id': "'test-id'",
-            'businessName': "'Test Business'",
-            'phone': "'555-0000'",
-            'industry': "'unknown'",
-            'location': "'unknown'",
-            'source': "'manual'",
-            'hasWebsite': 'false',
-            'meetsRatingThreshold': 'false',
-            'hasRecentReviews': 'false',
-            'isCandidate': 'false',
-            'status': 'LeadStatus.new_',
-            'createdAt': 'DateTime.now()',
-            'updatedAt': 'DateTime.now()',
-        }
-        
-        for param, default in required_params.items():
-            if f'{param}:' not in lead_call:
-                # Add the parameter before the closing paren
-                lead_call = lead_call[:-1] + f', {param}: {default})'
-        
-        return lead_call
-    
-    content = re.sub(lead_pattern, fix_lead, content)
-    return content
-
-def add_missing_imports(filepath, content):
-    """Add missing imports based on undefined names"""
-    missing_imports = []
-    
-    # Check for SortOption usage
-    if 'SortOption' in content and "import '../providers/filter_providers.dart'" not in content:
-        if '/widgets/' in filepath or '/pages/' in filepath:
-            missing_imports.append("import '../providers/filter_providers.dart';")
-    
-    # Check for provider usage
-    providers = [
-        'sortStateProvider', 'searchFilterProvider', 'statusFilterProvider',
-        'candidatesOnlyProvider', 'hasWebsiteFilterProvider', 'selectedLeadsProvider',
-        'isSelectionModeProvider', 'pageSpeedFilterProvider', 'meetsRatingFilterProvider',
-        'hasRecentReviewsFilterProvider', 'followUpFilterProvider', 'ratingRangeFilterProvider',
-        'GroupByOption', 'SortState'
+    # Fix Icon widget const issues
+    patterns = [
+        # Match variations of Icon widget with size parameter
+        (r'const Icon\(\s*icon,\s*size:\s*[^)]+\)', lambda m: m.group(0).replace('const ', '')),
+        # Icon with single parameter should remain const if it's Icons.something
+        (r'Icon\((Icons\.\w+)\)', r'Icon(\1)'),
     ]
     
-    for provider in providers:
-        if provider in content and "import '../providers/filter_providers.dart'" not in content:
-            if '/widgets/' in filepath or '/pages/' in filepath:
-                missing_imports.append("import '../providers/filter_providers.dart';")
-                break
-    
-    # Add imports after the last import statement
-    if missing_imports:
-        last_import = 0
-        lines = content.split('\n')
-        for i, line in enumerate(lines):
-            if line.startswith('import '):
-                last_import = i
-        
-        for imp in set(missing_imports):
-            lines.insert(last_import + 1, imp)
-        
-        content = '\n'.join(lines)
+    for pattern, replacement in patterns:
+        if callable(replacement):
+            content = re.sub(pattern, replacement, content)
+        else:
+            content = re.sub(pattern, replacement, content)
     
     return content
 
-def fix_file(filepath):
-    """Apply all fixes to a single file"""
-    if not os.path.exists(filepath):
-        return False
+def fix_sizedbox_issues(content):
+    """Fix SizedBox const issues"""
+    # Remove const from SizedBox when using expressions or method calls
+    patterns = [
+        (r'const SizedBox\(\s*height:\s*[^,\)]*\(\)', lambda m: m.group(0).replace('const ', '')),
+        (r'const SizedBox\(\s*width:\s*[^,\)]*\(\)', lambda m: m.group(0).replace('const ', '')),
+        (r'SizedBox\(\s*height:\s*(\d+)\)', r'const SizedBox(height: \1)'),
+        (r'SizedBox\(\s*width:\s*(\d+)\)', r'const SizedBox(width: \1)'),
+    ]
     
+    for pattern, replacement in patterns:
+        if callable(replacement):
+            content = re.sub(pattern, replacement, content)
+        else:
+            content = re.sub(pattern, replacement, content)
+    
+    return content
+
+def fix_duration_issues(content):
+    """Fix Duration const issues in default parameters"""
+    # These should have const in default parameters
+    patterns = [
+        (r'Duration\(milliseconds: (\d+)\)', r'const Duration(milliseconds: \1)'),
+        (r'Duration\(seconds: (\d+)\)', r'const Duration(seconds: \1)'),
+        (r'Duration\(minutes: (\d+)\)', r'const Duration(minutes: \1)'),
+    ]
+    
+    for pattern, replacement in patterns:
+        # Only in parameter defaults
+        if 'this.' in content or '=' in content:
+            content = re.sub(pattern, replacement, content)
+    
+    return content
+
+def process_file(filepath):
+    """Process a single file"""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
         original = content
         
-        # Skip mock files - they will be regenerated
-        if filepath.endswith('.mocks.dart'):
-            return False
+        # Apply fixes in order
+        content = fix_icon_issues(content)
+        content = fix_const_constructor_issues(content)
+        content = fix_sizedbox_issues(content)
         
-        # Apply all fixes
-        content = remove_all_const_keywords(content)
+        # Special handling for specific files
+        if 'bottom_navigation.dart' in filepath:
+            # Fix Icon constructor issues
+            content = content.replace('const Icon(\n                    icon,', 'Icon(\n                    icon,')
         
-        # Only fix Lead constructors in test files
-        if '/test/' in filepath:
-            content = fix_lead_constructor_calls(content)
+        if 'error_boundary.dart' in filepath or 'error_handler.dart' in filepath:
+            # Fix Icon(Icons.refresh) patterns
+            content = content.replace('Icon(Icons.refresh)', 'const Icon(Icons.refresh)')
+            content = content.replace('Icon(Icons.refresh.close)', 'const Icon(Icons.close)')
         
-        # Add missing imports
-        content = add_missing_imports(filepath, content)
+        if 'app_modal.dart' in filepath:
+            # Fix Icon constructor
+            content = content.replace('icon: Icons.refresh', 'icon: const Icon(Icons.close)')
+            content = content.replace('Icon(icon)', 'icon ?? const Icon(Icons.info)')
         
         if content != original:
-            with open(filepath, 'w') as f:
+            with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
             return True
+        return False
     except Exception as e:
         print(f"Error processing {filepath}: {e}")
-    
-    return False
+        return False
 
 def main():
-    print("=== Comprehensive Error Fix ===")
-    print("Fixing ALL errors to achieve ZERO ERRORS requirement")
-    print()
+    """Fix all errors in Dart files"""
+    fixed_count = 0
     
-    # Step 1: Remove all mock files
-    print("Step 1: Removing mock files...")
-    os.system("find . -name '*.mocks.dart' -delete")
-    
-    # Step 2: Get all Dart files
-    print("Step 2: Processing all Dart files...")
-    dart_files = []
     for root, dirs, files in os.walk('lib'):
         for file in files:
             if file.endswith('.dart'):
-                dart_files.append(os.path.join(root, file))
+                filepath = os.path.join(root, file)
+                if process_file(filepath):
+                    print(f"Fixed: {filepath}")
+                    fixed_count += 1
     
     for root, dirs, files in os.walk('test'):
         for file in files:
-            if file.endswith('.dart') and not file.endswith('.mocks.dart'):
-                dart_files.append(os.path.join(root, file))
+            if file.endswith('.dart'):
+                filepath = os.path.join(root, file)
+                if process_file(filepath):
+                    print(f"Fixed: {filepath}")
+                    fixed_count += 1
     
-    print(f"Found {len(dart_files)} Dart files to process")
-    
-    # Step 3: Fix all files
-    fixed_count = 0
-    for filepath in dart_files:
-        if fix_file(filepath):
-            fixed_count += 1
-            print(f"  Fixed: {filepath}")
-    
-    print(f"\nFixed {fixed_count} files")
-    
-    # Step 4: Regenerate mocks
-    print("\nStep 3: Regenerating mock files...")
-    os.system("flutter pub run build_runner build --delete-conflicting-outputs 2>/dev/null")
-    
-    # Step 5: Final analysis
-    print("\nStep 4: Running final analysis...")
-    result = subprocess.run(['flutter', 'analyze'], capture_output=True, text=True)
-    
-    # Count errors
-    error_lines = [line for line in result.stderr.split('\n') if '  error •' in line]
-    error_count = len(error_lines)
-    
-    print(f"\n{'='*50}")
-    print(f"FINAL RESULT: {error_count} errors")
-    
-    if error_count == 0:
-        print("✅ SUCCESS: ZERO ERRORS ACHIEVED!")
-    else:
-        print(f"❌ {error_count} errors remaining")
-        print("\nTop remaining errors:")
-        # Show top error types
-        error_types = {}
-        for line in error_lines[:20]:
-            if '•' in line:
-                parts = line.split('•')
-                if len(parts) >= 2:
-                    error_type = parts[1].strip()
-                    error_types[error_type] = error_types.get(error_type, 0) + 1
-        
-        for error_type, count in sorted(error_types.items(), key=lambda x: x[1], reverse=True)[:5]:
-            print(f"  {count}: {error_type}")
-    
-    return error_count
+    print(f"\nTotal files fixed: {fixed_count}")
 
 if __name__ == '__main__':
-    error_count = main()
-    sys.exit(0 if error_count == 0 else 1)
+    main()

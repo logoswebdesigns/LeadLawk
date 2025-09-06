@@ -35,7 +35,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
     ));
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(16),
@@ -153,7 +153,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
         ),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurface,
             borderRadius: BorderRadius.circular(8),
@@ -180,7 +180,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
             isExpanded: true,
             underline: const SizedBox(),
             dropdownColor: AppTheme.elevatedSurface,
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_drop_down,
               color: AppTheme.primaryBlue,
             ),
@@ -205,7 +205,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
       children: [
         // Correlation indicator
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurface,
             borderRadius: BorderRadius.circular(8),
@@ -268,11 +268,11 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
             ),
           ),
           const SizedBox(height: 8),
-          ...insights.map((insight) => Padding(padding: const EdgeInsets.only(bottom: 8),
+          ...insights.map((insight) => Padding(padding: EdgeInsets.only(bottom: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.insights,
                   color: AppTheme.primaryBlue,
                   size: 16,
@@ -312,7 +312,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -336,7 +336,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                     color: AppTheme.primaryBlue,
                     size: 20,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
                     'Website Quality Impact Analysis',
                     style: TextStyle(
@@ -373,14 +373,14 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
               
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.successGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lightbulb,
                       color: AppTheme.successGreen,
                       size: 20,

@@ -1,5 +1,5 @@
-/// Timeline entry type constants that match the backend enum values
-/// Backend expects lowercase values for TimelineEntryType enum
+// Timeline entry type constants that match the backend enum values
+// Backend expects lowercase values for TimelineEntryType enum
 class TimelineEntryTypes {
   static const String leadCreated = 'lead_created';
   static const String statusChange = 'status_change';

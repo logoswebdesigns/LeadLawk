@@ -56,7 +56,7 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
   )) {
     _loadGoals();
     // Defer metrics loading to avoid blocking initial render
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(Duration(milliseconds: 500), () {
       if (mounted) {
         _loadTodayMetrics();
       }

@@ -51,8 +51,8 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
 
     if (pitches.isEmpty) {
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.elevatedSurface,
           borderRadius: BorderRadius.circular(12),
@@ -108,7 +108,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Material(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
@@ -128,7 +128,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
             child: Column(
               children: [
                 // Header
-                Padding(padding: const EdgeInsets.all(16),
+                Padding(padding: EdgeInsets.all(16),
                   child: Row(
                     children: [
                       Icon(
@@ -192,14 +192,14 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                   Container(
                     constraints: const BoxConstraints(maxHeight: 400),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Selected Pitch Content
                           if (selectedPitch != null) ...[
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: AppTheme.primaryGold.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -232,7 +232,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                                           Clipboard.setData(ClipboardData(text: selectedPitch!.content));
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(
-                                              content: Text('Pitch copied to clipboard'),
+                                              content: const Text('Pitch copied to clipboard'),
                                               duration: Duration(seconds: 2),
                                             ),
                                           );
@@ -268,14 +268,14 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                             ),
                             const SizedBox(height: 8),
                             ...pitches.where((p) => p.id != _selectedPitchId).map((pitch) => 
-                              Padding(padding: const EdgeInsets.only(bottom: 8),
+                              Padding(padding: EdgeInsets.only(bottom: 8),
                                 child: _buildPitchOption(pitch),
                               ),
                             ),
                           ] else if (_selectedPitchId == null) ...[
                             // Show all pitches if none selected
                             ...pitches.map((pitch) => 
-                              Padding(padding: const EdgeInsets.only(bottom: 8),
+                              Padding(padding: EdgeInsets.only(bottom: 8),
                                 child: _buildPitchOption(pitch),
                               ),
                             ),
@@ -305,7 +305,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
         onTap: () => _selectPitch(pitch.id),
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
@@ -331,7 +331,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                   ),
                   if (pitch.isDefault) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),

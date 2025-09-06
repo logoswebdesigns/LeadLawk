@@ -10,7 +10,7 @@ class ServerStatusIndicator extends ConsumerWidget {
     final serverState = ref.watch(serverStatusProvider);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: _getBackgroundColor(serverState.status).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -54,26 +54,26 @@ class ServerStatusIndicator extends ConsumerWidget {
   Widget _buildStatusIcon(ServerStatus status) {
     switch (status) {
       case ServerStatus.online:
-        return const Icon(
+        return Icon(
           Icons.check_circle,
           color: Colors.green,
           size: 16,
         );
       case ServerStatus.offline:
-        return const Icon(
+        return Icon(
           Icons.cancel,
           color: Colors.red,
           size: 16,
         );
       case ServerStatus.checking:
       case ServerStatus.starting:
-        return const Icon(
+        return Icon(
           Icons.sync,
           color: Colors.orange,
           size: 16,
         );
       case ServerStatus.error:
-        return const Icon(
+        return Icon(
           Icons.error,
           color: Colors.red,
           size: 16,
@@ -169,7 +169,7 @@ class ServerStatusBadge extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -224,7 +224,7 @@ class ServerStatusBadge extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Padding(padding: const EdgeInsets.symmetric(vertical: 4),
+    return Padding(padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

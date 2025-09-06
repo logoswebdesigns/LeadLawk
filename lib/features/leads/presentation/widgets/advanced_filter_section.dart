@@ -10,7 +10,7 @@ class AdvancedFilterSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -74,7 +74,7 @@ class AdvancedFilterSection extends ConsumerWidget {
     return GestureDetector(
       onTap: () => onTap(!isSelected),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected 
               ? AppTheme.primaryGold.withValues(alpha: 0.2)
@@ -118,7 +118,7 @@ class AdvancedFilterSection extends ConsumerWidget {
   Widget _buildDropdown(String label, String? value, List<DropdownOption> options, Function(String?) onChanged) {
     return Container(
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),

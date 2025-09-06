@@ -11,9 +11,9 @@ extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
       value: value,
       decoration: _getInputDecoration('Follow-up Status'),
       items: const [
-        DropdownMenuItem(value: null, child: Text('All Follow-ups')),
-        DropdownMenuItem(value: 'upcoming', child: Text('Upcoming')),
-        DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
+        DropdownMenuItem(value: null, child: const Text('All Follow-ups')),
+        DropdownMenuItem(value: 'upcoming', child: const Text('Upcoming')),
+        DropdownMenuItem(value: 'overdue', child: const Text('Overdue')),
       ],
       onChanged: (value) => ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(value),
     );

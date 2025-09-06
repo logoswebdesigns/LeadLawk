@@ -107,14 +107,14 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
         color: const Color(0xFF1E2336),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         children: [
           if (widget.showLegend) _buildLegend(),
           Expanded(
             child: LineChart(
               _buildChartData(),
-              duration: const Duration(milliseconds: 300),
+              duration: Duration(milliseconds: 300),
             ),
           ),
         ],
@@ -125,12 +125,12 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
   Widget _buildLegend() {
     return Container(
       height: 40,
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: widget.metrics.map((metric) {
           final color = metric.color ?? _getDefaultColor(widget.metrics.indexOf(metric));
-          return Padding(padding: const EdgeInsets.symmetric(horizontal: 12),
+          return Padding(padding: EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 Container(

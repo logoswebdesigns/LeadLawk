@@ -26,7 +26,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: Duration(seconds: 1),
       vsync: this,
     );
   }
@@ -53,12 +53,12 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
     ref.read(paginatedLeadsProvider.notifier).refreshLeads();
     
     // Wait a bit for the refresh to start
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 500));
     
     try {
       // Wait for the leads to reload
       // Wait for refresh to complete
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
     } catch (e) {
       // Handle error silently - the error will be shown in the leads list
     }
@@ -96,7 +96,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
     
     // Don't show this bar when in selection mode
     if (isSelectionMode) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     return Container(
@@ -109,7 +109,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
           ),
         ),
       ),
-      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Padding(padding: EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
             // Lead count
@@ -126,7 +126,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
             GestureDetector(
               onTap: _isRefreshing ? null : _handleRefresh,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _isRefreshing 
                       ? AppTheme.primaryGold.withValues(alpha: 0.15)
@@ -178,7 +178,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: autoRefresh 
                       ? AppTheme.primaryGold.withValues(alpha: 0.15)
@@ -236,7 +236,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
             GestureDetector(
               onTap: () => UnifiedFilterModal.show(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: activeFilterCount > 0
                       ? AppTheme.primaryGold.withValues(alpha: 0.15)
@@ -263,7 +263,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
                             right: -4,
                             top: -4,
                             child: Container(
-                              padding: const EdgeInsets.all(2),
+                              padding: EdgeInsets.all(2),
                               decoration: const BoxDecoration(
                                 color: AppTheme.primaryGold,
                                 shape: BoxShape.circle,
@@ -300,7 +300,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
             GestureDetector(
               onTap: () => ref.read(presentation_providers.isSelectionModeProvider.notifier).state = true,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
@@ -331,7 +331,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
             GestureDetector(
               onTap: () => SortOptionsModal.show(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),

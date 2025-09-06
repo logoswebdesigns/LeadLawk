@@ -20,7 +20,7 @@ class MetricSelector extends StatelessWidget {
         color: const Color(0xFF1E2336),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -137,7 +137,7 @@ class TimeRangeSelector extends StatelessWidget {
         color: const Color(0xFF1E2336),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -187,7 +187,7 @@ class TimeRangeSelector extends StatelessWidget {
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () => _showCustomRangePicker(context),
-                    icon: const Icon(Icons.calendar_today, size: 16),
+                    icon: Icon(Icons.refresh),
                     label: const Text('Custom'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white70,
@@ -201,7 +201,7 @@ class TimeRangeSelector extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.info_outline, size: 14, color: Colors.white54),
+              Icon(Icons.refresh),
               const SizedBox(width: 4),
               Text(
                 'From: ${_formatDate(selectedRange.start)}',
@@ -256,7 +256,7 @@ class TimeRangeSelector extends StatelessWidget {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: Color(0xFF00E5FF),
               surface: Color(0xFF1E2336),
             ),
@@ -322,7 +322,7 @@ class ChartOptionsPanel extends StatelessWidget {
         color: const Color(0xFF1E2336),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -402,7 +402,7 @@ class ChartOptionsPanel extends StatelessWidget {
             child: Row(
               children: ChartType.values.map((type) {
                 final isSelected = chartType == type;
-                return Padding(padding: const EdgeInsets.only(right: 8),
+                return Padding(padding: EdgeInsets.only(right: 8),
                   child: ChoiceChip(
                     label: Text(_getChartTypeLabel(type)),
                     selected: isSelected,

@@ -7,8 +7,8 @@ final parallelSearchDataSourceProvider = Provider<ParallelSearchDataSource>((ref
   final baseUrl = dotenv.env['BASE_URL'] ?? 'http://localhost:8000';
   final dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: Duration(seconds: 30),
+    receiveTimeout: Duration(seconds: 30),
   ));
   
   return ParallelSearchDataSource(dio);

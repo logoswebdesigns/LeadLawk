@@ -104,7 +104,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async {
               // Delay to test loading state
-              await Future.delayed(const Duration(milliseconds: 100));
+              await Future.delayed(Duration(milliseconds: 100));
               return createMockStatistics();
             }),
           ],

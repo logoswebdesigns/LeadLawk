@@ -39,11 +39,11 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
         _logs.add(log);
       });
       // Auto-scroll to bottom
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(Duration(milliseconds: 100), () {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 200),
+            duration: Duration(milliseconds: 200),
             curve: Curves.easeOut,
           );
         }
@@ -71,15 +71,15 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   void _startHttpFallbackPoller() {
     // Poll HTTP logs as a fallback in case WS is blocked or drops events
     _httpPoller?.cancel();
-    _httpPoller = Timer.periodic(const Duration(seconds: 2), (_) async {
+    _httpPoller = Timer.periodic(Duration(seconds: 2), (_) async {
       try {
         final dio = ref.read(dioProvider);
         final resp = await dio.get(
           'http://localhost:8000/jobs/${widget.jobId}/logs',
           queryParameters: {'tail': 500},
           options: Options(
-            receiveTimeout: const Duration(seconds: 2),
-            sendTimeout: const Duration(seconds: 2),
+            receiveTimeout: Duration(seconds: 2),
+            sendTimeout: Duration(seconds: 2),
           ),
         );
         final data = resp.data as Map<String, dynamic>;
@@ -95,7 +95,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
               _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 200),
+              duration: Duration(milliseconds: 200),
               curve: Curves.easeOut,
             );
           }
@@ -145,13 +145,15 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
       // DEBUG: DebugLogger.error('❌ Failed to fetch actual lead count: $e');
     }
     
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
             Icon(Icons.check_circle, color: AppTheme.successGreen),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text('Automation Complete!'),
           ],
         ),
@@ -182,7 +184,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
         title: const Row(
           children: [
             Icon(Icons.error, color: AppTheme.errorRed),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text('Automation Failed'),
           ],
         ),
@@ -209,7 +211,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                   shrinkWrap: true,
                   itemCount: logsPreview.length,
                   itemBuilder: (context, index) {
-                    return Padding(padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+                    return Padding(padding: EdgeInsets.symmetric(vertical: 2, horizontal: 6),
                       child: Text(
                         logsPreview[index],
                         style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12),
@@ -267,7 +269,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.darkGray),
+          icon: Icon(Icons.refresh),
           onPressed: () => context.go('/'),
         ),
         title: Row(
@@ -290,7 +292,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
             const Spacer(),
             if (_jobStatus?['status'] == 'running')
               IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.red),
+                icon: Icon(Icons.refresh),
                 onPressed: () async {
                   final confirmed = await showDialog<bool>(
                     context: context,
@@ -314,17 +316,15 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                     try {
                       final dio = ref.read(dioProvider);
                       await dio.post('http://localhost:8000/jobs/${widget.jobId}/cancel');
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Job cancellation requested')),
-                        );
-                      }
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Job cancellation requested')),
+                      );
                     } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to cancel: $e')),
-                        );
-                      }
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to cancel: $e')),
+                      );
                     }
                   }
                 },
@@ -339,11 +339,11 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
             Container(
               width: double.infinity,
               color: AppTheme.errorRed.withValues(alpha: 0.1),
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error, color: AppTheme.errorRed),
+                  Icon(Icons.refresh),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -356,7 +356,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
             ),
           // Progress section
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20),
             color: Colors.white,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,8 +405,8 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
           // Logs section
           Expanded(
             child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
+              margin: EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.black87,
                 borderRadius: BorderRadius.circular(12),
@@ -438,7 +438,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                       controller: _scrollController,
                       itemCount: _logs.length,
                       itemBuilder: (context, index) {
-                        return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
+                        return Padding(padding: EdgeInsets.symmetric(vertical: 2),
                           child: Text(
                             _logs[index],
                             style: const TextStyle(

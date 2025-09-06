@@ -15,6 +15,7 @@ import 'package:dartz/dartz.dart';
 
 @GenerateMocks([LeadsRemoteDataSource, FilterRepository])
 import 'comprehensive_sort_filter_test.mocks.dart';
+import 'package:flutter/foundation.dart';
 
 void main() {
   group('Comprehensive Sort and Filter Tests', () {
@@ -103,19 +104,19 @@ void main() {
       )).thenAnswer((_) async => defaultResponse);
       
       // Wait for providers to initialize
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
       final notifier = container.read(paginatedLeadsProvider.notifier);
       
       // Test 1: Apply status filter
-      print('\n=== TEST 1: Apply status filter ===');
+      debugPrint('\n=== TEST 1: Apply status filter ===');
       await notifier.updateFilters(status: 'called');
       var state = container.read(paginatedLeadsProvider);
       expect(state.filters.status, 'called');
       expect(state.filters.sortBy, 'created_at'); // Default sort preserved
       
       // Test 2: Add search while keeping status
-      print('\n=== TEST 2: Add search filter ===');
+      debugPrint('\n=== TEST 2: Add search filter ===');
       await notifier.updateFilters(
         status: 'called',
         search: 'test',
@@ -126,7 +127,7 @@ void main() {
       expect(state.filters.sortBy, 'created_at');
       
       // Test 3: Change sort while keeping filters
-      print('\n=== TEST 3: Change sort (keep filters) ===');
+      debugPrint('\n=== TEST 3: Change sort (keep filters) ===');
       await notifier.updateFilters(
         status: 'called',
         search: 'test',
@@ -140,7 +141,7 @@ void main() {
       expect(state.filters.sortAscending, false);
       
       // Test 4: Toggle sort direction only
-      print('\n=== TEST 4: Toggle sort direction ===');
+      debugPrint('\n=== TEST 4: Toggle sort direction ===');
       await notifier.updateFilters(
         status: 'called',
         search: 'test',
@@ -154,7 +155,7 @@ void main() {
       expect(state.filters.sortAscending, true);
       
       // Test 5: Clear search but keep other filters
-      print('\n=== TEST 5: Clear search filter ===');
+      debugPrint('\n=== TEST 5: Clear search filter ===');
       await notifier.updateFilters(
         status: 'called',
         search: null, // Explicitly clear search
@@ -168,7 +169,7 @@ void main() {
       expect(state.filters.sortAscending, true);
       
       // Test 6: Clear all filters but keep sort
-      print('\n=== TEST 6: Clear all filters (keep sort) ===');
+      debugPrint('\n=== TEST 6: Clear all filters (keep sort) ===');
       await notifier.updateFilters(
         status: null,
         search: null,
@@ -183,7 +184,7 @@ void main() {
       expect(state.filters.sortBy, 'rating');
       expect(state.filters.sortAscending, true);
       
-      print('\n=== All tests passed! ===');
+      debugPrint('\n=== All tests passed! ===');
     });
     
     test('should make correct API calls for each sort option', () async {
@@ -208,7 +209,7 @@ void main() {
       )).thenAnswer((_) async => mockResponse);
       
       // Wait for providers to initialize
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
       final notifier = container.read(paginatedLeadsProvider.notifier);
       
@@ -223,7 +224,7 @@ void main() {
       ];
       
       for (final (sortBy, name) in sortOptions) {
-        print('\n=== Testing sort by $name ($sortBy) ===');
+        debugPrint('\n=== Testing sort by $name ($sortBy) ===');
         await notifier.updateFilters(sortBy: sortBy, sortAscending: false);
         
         // Verify API was called with correct sort - should be at least 1 call

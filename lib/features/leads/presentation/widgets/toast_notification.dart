@@ -32,7 +32,7 @@ class ToastNotification {
       message: 'New lead added: $businessName',
       icon: Icons.business,
       backgroundColor: AppTheme.successGreen,
-      duration: const Duration(seconds: 4),
+      duration: Duration(seconds: 4),
     );
   }
 }
@@ -64,7 +64,7 @@ class _ToastWidgetState extends State<_ToastWidget>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
       vsync: this,
     );
     
@@ -87,7 +87,7 @@ class _ToastWidgetState extends State<_ToastWidget>
     _controller.forward();
     
     // Start fade out before removal
-    Future.delayed(widget.duration - const Duration(milliseconds: 300), () {
+    Future.delayed(widget.duration - Duration(milliseconds: 300), () {
       if (mounted) {
         _controller.reverse();
       }
@@ -113,7 +113,7 @@ class _ToastWidgetState extends State<_ToastWidget>
           child: Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: widget.backgroundColor ?? AppTheme.primaryBlue,
                 borderRadius: BorderRadius.circular(12),

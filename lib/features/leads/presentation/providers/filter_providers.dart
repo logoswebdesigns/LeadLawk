@@ -1,6 +1,6 @@
-/// Filter Providers for Lead Management
-/// Pattern: Provider Pattern
-/// SOLID: Single Responsibility - each provider manages one filter
+// Filter Providers for Lead Management
+// Pattern: Provider Pattern
+// SOLID: Single Responsibility - each provider manages one filter
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

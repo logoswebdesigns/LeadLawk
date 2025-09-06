@@ -4,13 +4,15 @@ Pattern: MVC Controller - thin controllers delegating to services.
 Single Responsibility: Job endpoint handling only.
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from typing import Dict, Any, List
 import uuid
 
 from ..schemas import BrowserAutomationRequest, JobResponse
 from ..services.job_service import JobService
 from ..job_management import job_statuses, get_all_jobs, get_job_by_id, cancel_job
+from ..auth.dependencies import get_current_user
+from ..models import User
 
 router = APIRouter(
     prefix="/jobs",
@@ -21,7 +23,8 @@ router = APIRouter(
 @router.post("/browser", response_model=Dict[str, Any])
 async def create_browser_job(
     request: BrowserAutomationRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new browser automation job."""
     service = JobService()
@@ -37,13 +40,13 @@ async def create_browser_job(
 
 
 @router.get("")
-async def list_jobs():
+async def list_jobs(current_user: User = Depends(get_current_user)):
     """Get all jobs with their current status."""
     return get_all_jobs()
 
 
 @router.get("/{job_id}")
-async def get_job(job_id: str):
+async def get_job(job_id: str, current_user: User = Depends(get_current_user)):
     """Get a specific job by ID."""
     job = get_job_by_id(job_id)
     if not job:
@@ -52,7 +55,7 @@ async def get_job(job_id: str):
 
 
 @router.post("/{job_id}/cancel")
-async def cancel_job_endpoint(job_id: str):
+async def cancel_job_endpoint(job_id: str, current_user: User = Depends(get_current_user)):
     """Cancel a running job."""
     success = cancel_job(job_id)
     if not success:
@@ -61,7 +64,7 @@ async def cancel_job_endpoint(job_id: str):
 
 
 @router.get("/{job_id}/logs")
-async def get_job_logs(job_id: str):
+async def get_job_logs(job_id: str, current_user: User = Depends(get_current_user)):
     """Get logs for a specific job."""
     if job_id not in job_statuses:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -69,7 +72,7 @@ async def get_job_logs(job_id: str):
 
 
 @router.get("/{job_id}/screenshots")
-async def get_job_screenshots(job_id: str):
+async def get_job_screenshots(job_id: str, current_user: User = Depends(get_current_user)):
     """Get screenshots for a specific job."""
     from ..job_management import get_job_screenshots
     screenshots = get_job_screenshots(job_id)
@@ -79,7 +82,8 @@ async def get_job_screenshots(job_id: str):
 @router.post("/parallel", response_model=Dict[str, Any])
 async def create_parallel_jobs(
     request: BrowserAutomationRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
 ):
     """Create parallel browser automation jobs."""
     service = JobService()
@@ -95,14 +99,14 @@ async def create_parallel_jobs(
 
 
 @router.get("/parallel/{parent_job_id}/status")
-async def get_parallel_job_status(parent_job_id: str):
+async def get_parallel_job_status(parent_job_id: str, current_user: User = Depends(get_current_user)):
     """Get status of parallel job execution."""
     service = JobService()
     return service.get_parallel_job_status(parent_job_id)
 
 
 @router.post("/{job_id}/pagespeed")
-async def run_pagespeed_for_job(job_id: str, background_tasks: BackgroundTasks):
+async def run_pagespeed_for_job(job_id: str, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)):
     """Run PageSpeed analysis for all leads from a job."""
     service = JobService()
     return service.run_pagespeed_for_job(job_id, background_tasks)

@@ -11,13 +11,13 @@ class TimelineChart extends ConsumerWidget {
 
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.timeline, color: Colors.purple),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text(
                   'Conversion Timeline (30 Days)',
@@ -31,7 +31,7 @@ class TimelineChart extends ConsumerWidget {
             timelineAsync.when(
               data: (timeline) {
                 if (timeline.isEmpty) {
-                  return Center(child: Padding(padding: const EdgeInsets.all(20),
+                  return Center(child: Padding(padding: EdgeInsets.all(20),
                       child: Text(
                         'No timeline data available',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
@@ -118,7 +118,7 @@ class TimelineChart extends ConsumerWidget {
                           color: Colors.blue,
                           label: 'New Leads',
                         ),
-                        SizedBox(width: 24),
+                        const SizedBox(width: 24),
                         _LegendItem(
                           color: Colors.green,
                           label: 'Conversions',
@@ -128,7 +128,7 @@ class TimelineChart extends ConsumerWidget {
                     const SizedBox(height: 12),
                     // Summary stats
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -168,7 +168,7 @@ class TimelineChart extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
@@ -230,7 +230,7 @@ class _ChartBar extends StatelessWidget {
         height: height * 150, // Max height of 150
         decoration: BoxDecoration(
           color: color,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
         ),
         child: value > 0
             ? Center(

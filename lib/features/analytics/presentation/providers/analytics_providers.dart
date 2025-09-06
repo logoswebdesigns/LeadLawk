@@ -12,7 +12,7 @@ final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
 final conversionOverviewProvider = FutureProvider<ConversionOverview>((ref) async {
   final useDummy = ref.watch(useDummyDataProvider);
   if (useDummy) {
-    await Future.delayed(const Duration(milliseconds: 300)); // Simulate loading
+    await Future.delayed(Duration(milliseconds: 300)); // Simulate loading
     return DummyDataGenerator.getDummyOverview();
   }
   final repository = ref.watch(analyticsRepositoryProvider);
@@ -22,7 +22,7 @@ final conversionOverviewProvider = FutureProvider<ConversionOverview>((ref) asyn
 final topSegmentsProvider = FutureProvider<TopSegments>((ref) async {
   final useDummy = ref.watch(useDummyDataProvider);
   if (useDummy) {
-    await Future.delayed(const Duration(milliseconds: 300)); // Simulate loading
+    await Future.delayed(Duration(milliseconds: 300)); // Simulate loading
     return DummyDataGenerator.getDummySegments();
   }
   final repository = ref.watch(analyticsRepositoryProvider);
@@ -32,7 +32,7 @@ final topSegmentsProvider = FutureProvider<TopSegments>((ref) async {
 final conversionTimelineProvider = FutureProvider<List<ConversionTimeline>>((ref) async {
   final useDummy = ref.watch(useDummyDataProvider);
   if (useDummy) {
-    await Future.delayed(const Duration(milliseconds: 300)); // Simulate loading
+    await Future.delayed(Duration(milliseconds: 300)); // Simulate loading
     return DummyDataGenerator.getDummyTimeline();
   }
   final repository = ref.watch(analyticsRepositoryProvider);
@@ -42,7 +42,7 @@ final conversionTimelineProvider = FutureProvider<List<ConversionTimeline>>((ref
 final actionableInsightsProvider = FutureProvider<List<ActionableInsight>>((ref) async {
   final useDummy = ref.watch(useDummyDataProvider);
   if (useDummy) {
-    await Future.delayed(const Duration(milliseconds: 300)); // Simulate loading
+    await Future.delayed(Duration(milliseconds: 300)); // Simulate loading
     return DummyDataGenerator.getDummyInsights();
   }
   final repository = ref.watch(analyticsRepositoryProvider);

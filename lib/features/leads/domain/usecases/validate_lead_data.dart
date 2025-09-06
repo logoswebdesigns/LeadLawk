@@ -1,6 +1,6 @@
-/// Validate Lead Data Use Case
-/// Pattern: Use Case Pattern (Clean Architecture)
-/// SOLID: Single Responsibility - only validates lead data
+// Validate Lead Data Use Case
+// Pattern: Use Case Pattern (Clean Architecture)
+// SOLID: Single Responsibility - only validates lead data
 library;
 
 import 'package:dartz/dartz.dart';

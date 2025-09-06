@@ -28,7 +28,7 @@ class _CallbackReminderBadgeState extends State<CallbackReminderBadge>
     super.initState();
     
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: 1000),
       vsync: this,
     );
     
@@ -41,7 +41,7 @@ class _CallbackReminderBadgeState extends State<CallbackReminderBadge>
     ));
     
     _updateTimer();
-    _timer = Timer.periodic(const Duration(minutes: 1), (_) => _updateTimer());
+    _timer = Timer.periodic(Duration(minutes: 1), (_) => _updateTimer());
   }
   
   @override
@@ -107,7 +107,7 @@ class _CallbackReminderBadgeState extends State<CallbackReminderBadge>
   Widget build(BuildContext context) {
     if (widget.lead.status != LeadStatus.callbackScheduled || 
         widget.lead.followUpDate == null) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     final color = _isOverdue 
@@ -121,7 +121,7 @@ class _CallbackReminderBadgeState extends State<CallbackReminderBadge>
       builder: (context, child) => Transform.scale(
         scale: _pulseAnimation.value,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [

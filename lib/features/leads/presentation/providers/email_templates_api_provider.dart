@@ -11,12 +11,12 @@ final emailTemplatesApiProvider = StateNotifierProvider<EmailTemplatesApiNotifie
 class EmailTemplatesApiNotifier extends StateNotifier<AsyncValue<List<EmailTemplate>>> {
   final EmailTemplatesRemoteDataSource _dataSource;
   
-  EmailTemplatesApiNotifier(this._dataSource) : super(const AsyncValue.loading()) {
+  EmailTemplatesApiNotifier(this._dataSource) : super(AsyncValue.loading()) {
     loadTemplates();
   }
 
   Future<void> loadTemplates() async {
-    state = const AsyncValue.loading();
+    state = AsyncValue.loading();
     try {
       // First try to initialize defaults if needed
       await _dataSource.initializeDefaults();

@@ -39,7 +39,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
       ),
       child: Container(
         width: 500,
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
@@ -49,7 +49,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
               // Header
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.email,
                     color: Colors.teal,
                     size: 24,
@@ -73,7 +73,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
 
               // Business Info
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
@@ -102,7 +102,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                 decoration: InputDecoration(
                   labelText: 'Recipient Email *',
                   hintText: 'Enter client email address',
-                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.teal),
+                  prefixIcon: Icon(Icons.refresh),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -154,7 +154,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                           final template = templates[index];
                           final isSelected = _selectedTemplate?.id == template.id;
                           
-                          return Padding(padding: const EdgeInsets.only(bottom: 8),
+                          return Padding(padding: EdgeInsets.only(bottom: 8),
                             child: InkWell(
                               onTap: () {
                                 setState(() {
@@ -163,7 +163,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                               },
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: isSelected 
                                       ? Colors.teal.withValues(alpha: 0.2)
@@ -242,7 +242,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -251,8 +251,8 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.send, size: 18),
-                        SizedBox(width: 8),
-                        Text('Send Email'),
+                        const SizedBox(width: 8),
+                        const Text('Send Email'),
                       ],
                     ),
                   ),
@@ -267,7 +267,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
 
   Widget _buildNoTemplatesMessage() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -278,7 +278,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.info_outline,
             color: Colors.orange,
             size: 32,
@@ -330,16 +330,16 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
     try {
       if (await canLaunchUrl(emailUri)) {
         await launchUrl(emailUri);
+        if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         Navigator.of(context).pop();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Opening email client...'),
-              backgroundColor: Colors.teal,
-            ),
-          );
-        }
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: const Text('Opening email client...'),
+            backgroundColor: Colors.teal,
+          ),
+        );
       } else {
         throw 'Could not launch email client';
       }

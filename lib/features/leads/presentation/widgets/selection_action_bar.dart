@@ -29,11 +29,11 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
     // final selectedData = paginatedState.leads.where((lead) => selectedLeads.contains(lead.id)).toList();
     
     if (!isSelectionMode) {
-      return const SizedBox.shrink();
+      return SizedBox.shrink();
     }
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         border: Border(
@@ -50,7 +50,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               ref.read(selectedLeadsProvider.notifier).state = {};
               ref.read(isSelectionModeProvider.notifier).state = false;
             },
-            icon: const Icon(Icons.close, size: 20),
+            icon: Icon(Icons.refresh),
             style: IconButton.styleFrom(
               foregroundColor: Colors.white70,
             ),
@@ -61,7 +61,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
           
           // Selection count
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: hasSelection 
                 ? AppTheme.primaryGold.withValues(alpha: 0.2)
@@ -104,7 +104,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               foregroundColor: selectedLeads.length == paginatedState.leads.length
                 ? AppTheme.primaryGold
                 : Colors.white70,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             ),
           ),
           
@@ -114,11 +114,11 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               onPressed: () {
                 ref.read(selectedLeadsProvider.notifier).state = {};
               },
-              icon: const Icon(Icons.clear_all, size: 18),
+              icon: Icon(Icons.refresh),
               label: const Text('Clear'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white70,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
             ),
           
@@ -129,7 +129,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
             // Status update button
             PopupMenuButton<String>(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -137,7 +137,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
                 child: const Row(
                   children: [
                     Icon(Icons.edit, size: 16, color: AppTheme.primaryBlue),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'Status',
                       style: TextStyle(
@@ -168,7 +168,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
             GestureDetector(
               onTap: _showDeleteConfirmation,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppTheme.errorRed.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -176,7 +176,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
                 child: const Row(
                   children: [
                     Icon(Icons.delete_outline, size: 16, color: AppTheme.errorRed),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'Delete',
                       style: TextStyle(
@@ -191,8 +191,8 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
             ),
           ] else ...[
             // Deleting indicator
-            const SizedBox(
-              width: 20,
+            SizedBox(
+        width: 20,
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
@@ -278,7 +278,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }

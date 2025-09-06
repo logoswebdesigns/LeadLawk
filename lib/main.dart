@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/main_scaffold.dart';
+import 'core/errors/error_handler.dart';
+import 'core/errors/error_boundary.dart';
 import 'features/leads/presentation/pages/leads_list_page.dart';
 import 'features/leads/presentation/pages/lead_detail_page.dart';
 import 'features/leads/presentation/pages/lead_search_page.dart';
@@ -20,6 +22,10 @@ import 'features/leads/presentation/services/pagespeed_notification_service.dart
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize error handling
+  ErrorHandler().initialize();
+  
   await dotenv.load(fileName: '.env');
   final prefs = await SharedPreferences.getInstance();
   
@@ -30,7 +36,9 @@ void main() async {
           (ref) => AutomationFormNotifier(prefs),
         ),
       ],
-      child: const LeadLoqApp(),
+      child: const ErrorBoundary(
+        child: LeadLoqApp(),
+      ),
     ),
   );
 }
@@ -124,7 +132,7 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.business, color: Colors.white, size: 20),
+                  Icon(Icons.refresh),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -135,7 +143,7 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
                 ],
               ),
               backgroundColor: AppTheme.successGreen,
-              duration: const Duration(seconds: 4),
+              duration: Duration(seconds: 4),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

@@ -1,6 +1,6 @@
-/// Batch Update Status Command
-/// Pattern: Command Pattern with Composite
-/// SOLID: Open/Closed - extend without modification
+// Batch Update Status Command
+// Pattern: Command Pattern with Composite
+// SOLID: Open/Closed - extend without modification
 library;
 
 import 'package:dartz/dartz.dart';

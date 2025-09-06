@@ -11,10 +11,10 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
       controller: searchController,
       decoration: InputDecoration(
         hintText: 'Search leads by name, phone, location, or industry...',
-        prefixIcon: const Icon(Icons.search),
+        prefixIcon: Icon(Icons.refresh),
         suffixIcon: searchController.text.isNotEmpty
             ? IconButton(
-                icon: const Icon(Icons.clear),
+                icon: Icon(Icons.refresh),
                 onPressed: () {
                   searchController.clear();
                   ref.read(currentFilterStateProvider.notifier).updateSearchFilter('');
@@ -30,7 +30,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
       ),
       onChanged: (value) {
         debounceTimer?.cancel();
-        debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        debounceTimer = Timer(Duration(milliseconds: 300), () {
           if (mounted) {
             ref.read(currentFilterStateProvider.notifier).updateSearchFilter(value);
           }
@@ -75,7 +75,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
               final label = _getStatusLabel(status);
               final isSelected = currentStatus == label.toLowerCase();
               
-              return Padding(padding: const EdgeInsets.only(right: 8),
+              return Padding(padding: EdgeInsets.only(right: 8),
                 child: FilterChip(
                   label: Text(label),
                   selected: isSelected,

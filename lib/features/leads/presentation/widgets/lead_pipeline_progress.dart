@@ -90,17 +90,17 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
     super.initState();
     
     _progressController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: 1500),
       vsync: this,
     );
     
     _celebrationController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: Duration(milliseconds: 2000),
       vsync: this,
     );
     
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: 1000),
       vsync: this,
     )..repeat(reverse: true);
     
@@ -238,7 +238,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
             ),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _getStageColor(stage).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -311,7 +311,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.celebration, color: Colors.white),
+                Icon(Icons.refresh),
                 const SizedBox(width: 8),
                 Text('Advanced to ${_getStatusLabel(newStatus)}!'),
               ],
@@ -341,7 +341,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                       widget.lead.status == LeadStatus.didNotConvert;
     
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      margin: EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -402,7 +402,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
           builder: (context, child) => Transform.scale(
             scale: widget.lead.status == LeadStatus.interested ? _pulseAnimation.value : 1.0,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -422,7 +422,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.emoji_events,
                     color: Colors.white,
                     size: 16,
@@ -503,7 +503,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                 child: GestureDetector(
                   onTap: () => _handleStageAction(stage),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
+                    duration: Duration(milliseconds: 300),
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
@@ -587,10 +587,10 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
           return GestureDetector(
             onTap: canProgress ? () => _handleStageAction(stage) : null,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: Duration(milliseconds: 300),
               width: 140,
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.all(12),
+              margin: EdgeInsets.only(right: 12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -637,7 +637,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                         size: 24,
                       ),
                       if (stage.isGoal)
-                        const Icon(
+                        Icon(
                           Icons.star,
                           color: Colors.yellow,
                           size: 20,
@@ -669,7 +669,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                   ),
                   if (canProgress && !isCurrent)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),

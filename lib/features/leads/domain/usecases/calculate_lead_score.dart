@@ -1,6 +1,6 @@
-/// Calculate Lead Score Use Case
-/// Pattern: Strategy Pattern for scoring algorithms
-/// SOLID: Open/Closed - new scoring strategies without modification
+// Calculate Lead Score Use Case
+// Pattern: Strategy Pattern for scoring algorithms
+// SOLID: Open/Closed - new scoring strategies without modification
 library;
 
 import 'package:dartz/dartz.dart';

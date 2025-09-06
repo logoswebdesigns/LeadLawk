@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
+import 'package:flutter/foundation.dart';
 
 void main() {
   group('Conversion Scoring API Tests', () {
@@ -9,8 +10,8 @@ void main() {
 
     setUp(() {
       dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30), // Increased for large datasets
+        connectTimeout: Duration(seconds: 10),
+        receiveTimeout: Duration(seconds: 30), // Increased for large datasets
       ));
       dataSource = LeadsRemoteDataSourceImpl(
         dio: dio,
@@ -25,20 +26,20 @@ void main() {
         expect(result['status'], isNotNull);
         expect(result['total_leads'], isNotNull);
         
-        print('✅ Conversion scoring API call successful');
-        print('   Status: ${result['status']}');
-        print('   Total leads: ${result['total_leads']}');
-        print('   Message: ${result['message']}');
+        debugPrint('✅ Conversion scoring API call successful');
+        debugPrint('   Status: ${result['status']}');
+        debugPrint('   Total leads: ${result['total_leads']}');
+        debugPrint('   Message: ${result['message']}');
       } catch (e) {
         // Skip test if server is down or taking too long (common with large datasets)
         if (e.toString().contains('Connection error') || 
             e.toString().contains('receiveTimeout') ||
             e.toString().contains('took longer than')) {
-          print('⚠️ Skipping test - server unavailable or dataset too large for test timeout');
-          print('   This is expected with large datasets (7000+ leads)');
+          debugPrint('⚠️ Skipping test - server unavailable or dataset too large for test timeout');
+          debugPrint('   This is expected with large datasets (7000+ leads)');
           return; // Skip test gracefully
         }
-        print('❌ Error calling conversion scoring API: $e');
+        debugPrint('❌ Error calling conversion scoring API: $e');
         // Only fail for unexpected errors
         fail('API call failed: $e');
       }
@@ -56,7 +57,7 @@ void main() {
         fail('Should have thrown an exception');
       } catch (e) {
         expect(e.toString(), contains('Connection error'));
-        print('✅ Properly handles connection errors');
+        debugPrint('✅ Properly handles connection errors');
       }
     });
   });

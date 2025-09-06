@@ -95,7 +95,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
             onRefresh: () async {
               // Refresh job data
               ref.invalidate(jobsListProvider);
-              await Future.delayed(const Duration(milliseconds: 500));
+              await Future.delayed(Duration(milliseconds: 500));
             },
             color: AppTheme.primaryGold,
             backgroundColor: AppTheme.backgroundDark,
@@ -106,8 +106,8 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
               child: SafeArea(
                 bottom: false,
                 child: Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  margin: EdgeInsets.only(top: 8),
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Row(
                     children: [
                       const Expanded(
@@ -121,7 +121,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryGold.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -129,7 +129,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                             color: AppTheme.primaryGold.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.search,
                           color: AppTheme.primaryGold,
                           size: 20,
@@ -146,7 +146,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
               child: Form(
                 key: _formKey,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     children: [
                       // Header Section
@@ -165,16 +165,16 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                             color: AppTheme.primaryGold.withValues(alpha: 0.2),
                           ),
                         ),
-                        child: Padding(padding: const EdgeInsets.all(20),
+                        child: Padding(padding: EdgeInsets.all(20),
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: AppTheme.primaryGold.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.search,
                                   color: AppTheme.primaryGold,
                                   size: 20,
@@ -225,19 +225,19 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                             color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                           ),
                         ),
-                        child: Padding(padding: const EdgeInsets.all(20),
+                        child: Padding(padding: EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: AppTheme.primaryBlue.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.business,
                                       color: AppTheme.primaryBlue,
                                       size: 20,
@@ -277,7 +277,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                             const SizedBox(width: 8),
                                             if (formState.selectedIndustries.isEmpty && !formState.isCustomIndustry)
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                 decoration: BoxDecoration(
                                                   color: Colors.orange.withValues(alpha: 0.2),
                                                   borderRadius: BorderRadius.circular(4),
@@ -381,7 +381,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                     labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                                     hintText: 'e.g., HVAC Contractor, Auto Repair Shop',
                                     hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                                    prefixIcon: const Icon(Icons.edit, color: AppTheme.primaryGold),
+                                    prefixIcon: Icon(Icons.refresh),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
@@ -434,19 +434,19 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                             color: AppTheme.primaryGold.withValues(alpha: 0.2),
                           ),
                         ),
-                        child: Padding(padding: const EdgeInsets.all(20),
+                        child: Padding(padding: EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: AppTheme.primaryGold.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.tune,
                                       color: AppTheme.primaryGold,
                                       size: 20,
@@ -494,7 +494,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                   labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                                   hintText: 'How many leads to find',
                                   hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                                  prefixIcon: const Icon(Icons.format_list_numbered, color: AppTheme.primaryGold),
+                                  prefixIcon: Icon(Icons.refresh),
                                   suffixText: 'leads',
                                   suffixStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                                   border: OutlineInputBorder(
@@ -559,13 +559,13 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                       Card(
                         elevation: 1,
                         color: AppTheme.elevatedSurface,
-                        child: Padding(padding: const EdgeInsets.all(16),
+                        child: Padding(padding: EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.web_outlined, color: AppTheme.primaryGold, size: 24),
+                                  Icon(Icons.refresh),
                                   const SizedBox(width: 12),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,7 +592,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                  Icon(Icons.refresh),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
@@ -613,14 +613,14 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                       Card(
                         elevation: 1,
                         color: AppTheme.elevatedSurface,
-                        child: Padding(padding: const EdgeInsets.all(16),
+                        child: Padding(padding: EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Row(
                                 children: [
                                   Icon(Icons.tune, color: AppTheme.primaryGold, size: 24),
-                                  SizedBox(width: 12),
+                                  const SizedBox(width: 12),
                                   Text(
                                     'Business Search Criteria',
                                     style: TextStyle(
@@ -682,7 +682,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                   const Row(
                                     children: [
                                       Icon(Icons.web_outlined, size: 18, color: AppTheme.primaryGold),
-                                      SizedBox(width: 8),
+                                      const SizedBox(width: 8),
                                       Text(
                                         'Website Filter',
                                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -728,7 +728,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Icon(Icons.lightbulb_outline, size: 14, color: AppTheme.primaryGold),
+                              Icon(Icons.refresh),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
@@ -753,7 +753,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           const Row(
                             children: [
                               Icon(Icons.access_time, size: 18, color: AppTheme.primaryGold),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Recent Review Activity',
                                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -770,7 +770,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           ),
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.blue.withValues(alpha: 0.1),
                               border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
@@ -779,7 +779,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                             child: const Row(
                               children: [
                                 Icon(Icons.info, size: 16, color: Colors.blue),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'Note: This filter requires clicking into business profiles (slower but accurate)',
@@ -837,7 +837,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           const Row(
                             children: [
                               Icon(Icons.photo_camera, size: 18, color: AppTheme.primaryGold),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Digital Presence (Photos)',
                                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -896,7 +896,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                           const Row(
                             children: [
                               Icon(Icons.description, size: 18, color: AppTheme.primaryGold),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Business Description Quality',
                                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -975,7 +975,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
             ],
             if (jobState.error != null) ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   borderRadius: BorderRadius.circular(8),
@@ -1051,7 +1051,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                         await jobNotifier.startAutomation(params);
 
                         // Wait a moment for the state to update
-                        await Future.delayed(const Duration(milliseconds: 100));
+                        await Future.delayed(Duration(milliseconds: 100));
                         
                         final updatedJobState = ref.read(jobProvider);
                         if (updatedJobState.jobId != null && context.mounted) {
@@ -1061,7 +1061,7 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,

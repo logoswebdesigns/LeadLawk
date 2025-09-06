@@ -100,7 +100,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -243,7 +243,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
   Widget build(BuildContext context) {
     return Card(
       color: Colors.white.withValues(alpha: 0.05),
-      child: Padding(padding: const EdgeInsets.all(16),
+      child: Padding(padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -281,7 +281,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
+                      contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
                       ),
@@ -292,7 +292,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: _addSearchQuery,
-                  icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold),
+                  icon: Icon(Icons.refresh),
                   iconSize: 32,
                 ),
               ],
@@ -335,7 +335,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                         ),
                       ],
                     ),
-                    deleteIcon: const Icon(Icons.close, size: 18),
+                    deleteIcon: Icon(Icons.refresh),
                     deleteIconColor: Colors.white.withValues(alpha: 0.7),
                     onDeleted: () => _removeQuery(query),
                     backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
@@ -358,7 +358,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
             
             // Info box
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),

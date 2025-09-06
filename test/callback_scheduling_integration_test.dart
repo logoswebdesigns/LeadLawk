@@ -358,7 +358,7 @@ void main() {
       // Mock with a small delay to see loading state
       when(() => mockDataSource.updateLead(any())).thenAnswer(
         (_) async {
-          await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(Duration(milliseconds: 100));
           return LeadModel.fromEntity(
             testLead.copyWith(status: LeadStatus.callbackScheduled),
           );
@@ -404,7 +404,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       
       // Complete the operation
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(Duration(milliseconds: 100));
       await tester.pumpAndSettle();
       
       // Dialog should be closed after successful operation

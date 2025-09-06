@@ -1,0 +1,89 @@
+# Test Configuration for LeadLawk
+# Pattern: Test Configuration - centralized test settings
+
+# Test Coverage Requirements
+coverage:
+  minimum_percentage: 90
+  exclude_patterns:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/generated/**"
+    - "**/test/**"
+  
+  feature_targets:
+    leads: 95
+    analytics: 85
+    core: 90
+    components: 85
+    responsive: 80
+
+# Test Execution Settings
+execution:
+  parallel: true
+  max_workers: 4
+  timeout_seconds: 300
+  retry_failed: 2
+  
+# Test Categories
+categories:
+  unit:
+    paths:
+      - test/features
+      - test/core
+    exclude_tags:
+      - integration
+      - e2e
+      
+  integration:
+    paths:
+      - test/integration
+    tags:
+      - integration
+      
+  e2e:
+    paths:
+      - test/e2e
+    tags:
+      - e2e
+    browser: chrome
+    headless: true
+    
+  performance:
+    paths:
+      - test/performance
+    tags:
+      - performance
+    thresholds:
+      response_time_ms: 100
+      memory_mb: 512
+      
+# Mutation Testing
+mutation:
+  enabled: true
+  minimum_score: 70
+  operators:
+    - arithmetic
+    - conditional
+    - logical
+    - return_value
+    - constant
+  paths:
+    - lib/features/leads/domain
+    - lib/core/cache
+    - lib/core/events
+    
+# Reporting
+reporting:
+  formats:
+    - console
+    - lcov
+    - html
+    - json
+  output_dir: coverage
+  
+# CI/CD Integration
+ci:
+  fail_on_coverage_drop: true
+  coverage_drop_threshold: 5
+  publish_reports: true
+  artifact_retention_days: 30

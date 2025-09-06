@@ -36,7 +36,7 @@ class _EmptyStateState extends State<EmptyState>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
     
@@ -61,7 +61,7 @@ class _EmptyStateState extends State<EmptyState>
       child: SingleChildScrollView(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -127,12 +127,12 @@ class _EmptyStateState extends State<EmptyState>
                   if (widget.buttonText != null && widget.onButtonPressed != null) ...[
                     ElevatedButton.icon(
                       onPressed: widget.onButtonPressed,
-                      icon: const Icon(Icons.add),
+                      icon: Icon(Icons.refresh),
                       label: Text(widget.buttonText!),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryIndigo,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 16,
                         ),
@@ -150,7 +150,7 @@ class _EmptyStateState extends State<EmptyState>
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primaryGold,
                         side: const BorderSide(color: AppTheme.primaryGold),
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 14,
                         ),

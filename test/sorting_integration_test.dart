@@ -16,7 +16,6 @@ import 'package:leadloq/features/leads/domain/repositories/filter_repository.dar
 import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/services.dart';
 
 @GenerateMocks([LeadsRemoteDataSource, FilterRepository])
 import 'sorting_integration_test.mocks.dart';
@@ -84,7 +83,7 @@ void main() {
               GoRoute(
                 path: '/leads/:id',
                 builder: (context, state) => const Scaffold(
-                  body: Center(child: Text('Lead Detail')),
+                  body: Center(child: const Text('Lead Detail')),
                 ),
               ),
             ],
@@ -124,7 +123,7 @@ void main() {
       await tester.pumpAndSettle();
       
       // Wait for providers to initialize
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(Duration(milliseconds: 100));
       
       // Assert - Sort bar is visible
       expect(find.byType(SortBar), findsOneWidget);
@@ -214,7 +213,7 @@ void main() {
       await tester.pumpAndSettle();
       
       // Wait for providers to initialize
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(Duration(milliseconds: 100));
       
       // Verify initial load
       verify(mockDataSource.getLeadsPaginated(
@@ -291,7 +290,7 @@ void main() {
       await tester.pumpAndSettle();
       
       // Wait for providers to initialize
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(Duration(milliseconds: 100));
       
       // Act - Open sort modal by finding the sort button
       final sortButton = find.byWidgetPredicate((widget) {

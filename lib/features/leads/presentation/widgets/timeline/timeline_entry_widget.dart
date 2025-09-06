@@ -76,7 +76,7 @@ class TimelineEntryWidget extends StatelessWidget {
     String label,
   ) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -88,13 +88,13 @@ class TimelineEntryWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           color: TimelineColorScheme.getBackgroundColor(entry.type),
         ),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, size: 16, color: color),
+                Icon(icon),
                 const SizedBox(width: 8),
                 Text(
                   label,
@@ -144,7 +144,7 @@ class TimelineEntryWidget extends StatelessWidget {
 
   Widget _buildFollowUpChip(Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -153,7 +153,7 @@ class TimelineEntryWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.schedule, size: 12, color: color),
+          Icon(Icons.refresh),
           const SizedBox(width: 4),
           Text(
             'Follow up: ${GitHubFormatter.formatFullDate(entry.followUpDate!)}',
@@ -166,16 +166,16 @@ class TimelineEntryWidget extends StatelessWidget {
 
   Widget _buildActions(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, size: 16, color: Colors.grey[600]),
+      icon: Icon(Icons.refresh),
       itemBuilder: (context) => [
         if (onEdit != null)
           const PopupMenuItem(
             value: 'edit',
             child: Row(
               children: [
-                Icon(Icons.edit, size: 16),
-                SizedBox(width: 8),
-                Text('Edit'),
+                Icon(Icons.refresh),
+                const SizedBox(width: 8),
+                const Text('Edit'),
               ],
             ),
           ),
@@ -184,8 +184,8 @@ class TimelineEntryWidget extends StatelessWidget {
             value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.delete, size: 16, color: Colors.red),
-                SizedBox(width: 8),
+                Icon(Icons.refresh),
+                const SizedBox(width: 8),
                 Text('Delete', style: TextStyle(color: Colors.red)),
               ],
             ),

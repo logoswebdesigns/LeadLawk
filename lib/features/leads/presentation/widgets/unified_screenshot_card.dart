@@ -55,10 +55,10 @@ class UnifiedScreenshotCard extends StatelessWidget {
     final color = isWebsite ? AppTheme.successGreen : AppTheme.primaryBlue;
     
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
         ),
@@ -110,7 +110,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
     return GestureDetector(
       onTap: screenshotPath != null ? (onTap ?? () => _showFullScreenshot(context)) : null,
       child: ClipRRect(
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(12),
           bottomRight: Radius.circular(12),
         ),
@@ -128,7 +128,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
                 bottom: 8,
                 right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(12),
@@ -200,7 +200,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
   
   Widget _buildPlaceholder(BuildContext context) {
     final icon = type == ScreenshotType.website 
-        ? Icons.language_outlined 
+        ? Icons.language 
         : Icons.location_off;
     final message = type == ScreenshotType.website
         ? 'No website screenshot available'
@@ -258,7 +258,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
     final color = _getScoreColor(score);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
@@ -329,7 +329,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
                 mini: true,
                 backgroundColor: Colors.black54,
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, color: Colors.white),
+                child: Icon(Icons.refresh),
               ),
             ),
           );

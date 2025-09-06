@@ -57,7 +57,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
     final groupBy = ref.watch(groupByOptionProvider);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
@@ -176,7 +176,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
     }
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Row(
         children: [
           Expanded(
@@ -212,7 +212,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(
+                contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
@@ -357,10 +357,10 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
       )));
     }
 
-    if (activeFilters.isEmpty) return const SizedBox.shrink();
+    if (activeFilters.isEmpty) return SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -380,7 +380,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                   onPressed: _clearAllFilters,
                   style: TextButton.styleFrom(
                     minimumSize: Size.zero,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
@@ -409,7 +409,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
     required VoidCallback onRemove,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppTheme.primaryGold.withValues(alpha: 0.1),
         border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
@@ -429,7 +429,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: const Icon(
+            child: Icon(
               Icons.close,
               size: 14,
               color: AppTheme.primaryGold,
@@ -460,7 +460,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         children: [
           InkWell(
             onTap: onToggle,
-            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Padding(padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   Icon(
@@ -488,7 +488,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
           ),
           if (isExpanded) ...[
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: child,
             ),
           ],
@@ -575,7 +575,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
           ),
           _buildFilterButton(
             label: '50+ Reviews',
-            icon: Icons.reviews,
+            icon: Icons.rate_review,
             isSelected: reviewCountRangeFilter == '50+',
             color: AppTheme.accentPurple,
             onPressed: () {
@@ -605,7 +605,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
           ),
           _buildFilterButton(
             label: 'No Website',
-            icon: Icons.language_outlined,
+            icon: Icons.language,
             isSelected: hasWebsiteFilter == false,
             color: Colors.grey,
             onPressed: () {
@@ -659,7 +659,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
               ),
               _buildFilterButton(
                 label: 'Untested',
-                icon: Icons.speed_outlined,
+                icon: Icons.speed,
                 isSelected: pageSpeedFilter == 'untested',
                 color: Colors.grey,
                 onPressed: () {
@@ -721,7 +721,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
       onTap: onPressed,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.1) : AppTheme.elevatedSurface,
           borderRadius: BorderRadius.circular(8),

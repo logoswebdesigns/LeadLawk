@@ -121,7 +121,7 @@ void main() {
       );
       addTearDown(container.dispose);
       
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
@@ -202,7 +202,7 @@ void main() {
       // final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
       // Wait longer for async initialization to complete
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 500));
       
       final templates = container.read(emailTemplatesLocalProvider);
       

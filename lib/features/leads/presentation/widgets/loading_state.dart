@@ -29,7 +29,7 @@ class _LoadingStateState extends State<LoadingState>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: 800),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(
@@ -64,7 +64,7 @@ class _LoadingStateState extends State<LoadingState>
         child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -146,7 +146,7 @@ class _LoadingStateState extends State<LoadingState>
                   const SizedBox(height: 24),
                   Container(
                     constraints: const BoxConstraints(maxHeight: 150),
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppTheme.darkGray,
                       borderRadius: BorderRadius.circular(12),
@@ -155,7 +155,7 @@ class _LoadingStateState extends State<LoadingState>
                       reverse: true,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: widget.logs!.map((log) => Padding(padding: const EdgeInsets.only(bottom: 4),
+                        children: widget.logs!.map((log) => Padding(padding: EdgeInsets.only(bottom: 4),
                           child: Text(
                             '• $log',
                             style: const TextStyle(

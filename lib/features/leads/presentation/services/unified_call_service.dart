@@ -41,7 +41,7 @@ class UnifiedCallService {
         
         // Step 3: Show call tracking dialog after a brief delay
         // This gives time for the phone app to open
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 2));
         
         if (context.mounted) {
           await showDialog(
@@ -110,7 +110,7 @@ class UnifiedCallService {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please add sales pitches in account settings'),
+            content: const Text('Please add sales pitches in account settings'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -136,7 +136,7 @@ class UnifiedCallService {
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -144,7 +144,7 @@ class UnifiedCallService {
                       AppTheme.primaryBlue.withValues(alpha: 0.05),
                     ],
                   ),
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
                   ),
@@ -154,7 +154,7 @@ class UnifiedCallService {
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.campaign,
                           color: AppTheme.primaryGold,
                           size: 28,
@@ -187,7 +187,7 @@ class UnifiedCallService {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppTheme.warningOrange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -202,7 +202,7 @@ class UnifiedCallService {
                             size: 16,
                             color: AppTheme.warningOrange,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Pitch selection is required before making the call',
@@ -223,18 +223,18 @@ class UnifiedCallService {
               Flexible(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   itemCount: pitches.length,
                   itemBuilder: (context, index) {
                     final pitch = pitches[index];
-                    return Padding(padding: const EdgeInsets.only(bottom: 12),
+                    return Padding(padding: EdgeInsets.only(bottom: 12),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () => Navigator.pop(context, pitch.id),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: AppTheme.surfaceDark,
                               borderRadius: BorderRadius.circular(12),
@@ -307,7 +307,7 @@ class UnifiedCallService {
               
               // Footer with cancel button
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: AppTheme.surfaceDark,
                   borderRadius: BorderRadius.only(

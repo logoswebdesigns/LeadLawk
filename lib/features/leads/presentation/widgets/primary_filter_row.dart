@@ -14,7 +14,7 @@ class PrimaryFilterRow extends ConsumerWidget {
     
     return Container(
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 20),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -43,7 +43,7 @@ class PrimaryFilterRow extends ConsumerWidget {
 
   Widget _buildSearchChip(String searchTerm, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.primaryGold.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
@@ -55,7 +55,7 @@ class PrimaryFilterRow extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.search,
             size: 14,
             color: AppTheme.primaryGold,
@@ -74,7 +74,7 @@ class PrimaryFilterRow extends ConsumerWidget {
             onTap: () {
               ref.read(domain_filters.currentFilterStateProvider.notifier).updateSearchFilter('');
             },
-            child: const Icon(
+            child: Icon(
               Icons.close,
               size: 14,
               color: AppTheme.primaryGold,
@@ -94,13 +94,13 @@ class PrimaryFilterRow extends ConsumerWidget {
   ) {
     final isSelected = currentValue == value;
     
-    return Padding(padding: const EdgeInsets.only(right: 8),
+    return Padding(padding: EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: () {
           ref.read(domain_filters.currentFilterStateProvider.notifier).updateStatusFilter(value);
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: isSelected 
                 ? (color ?? AppTheme.primaryGold).withValues(alpha: 0.2)

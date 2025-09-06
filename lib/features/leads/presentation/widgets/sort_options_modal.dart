@@ -40,14 +40,14 @@ class SortOptionsModal extends ConsumerWidget {
               Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 20),
+                margin: EdgeInsets.only(top: 12, bottom: 20),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               // Title
-              Padding(padding: const EdgeInsets.symmetric(horizontal: 24),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -68,7 +68,7 @@ class SortOptionsModal extends ConsumerWidget {
                         DebugLogger.log('🔄 SORT MODAL: Sort direction toggled');
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -143,7 +143,7 @@ class SortOptionsModal extends ConsumerWidget {
           Navigator.of(context).pop();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: [
               Icon(
@@ -179,7 +179,7 @@ class SortOptionsModal extends ConsumerWidget {
                 ),
               ),
               if (isSelected)
-                const Icon(
+                Icon(
                   CupertinoIcons.checkmark_circle_fill,
                   size: 22,
                   color: AppTheme.primaryGold,

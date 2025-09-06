@@ -118,7 +118,7 @@ void main() {
         ProviderScope(
           overrides: [
             sortStateProvider.overrideWith((ref) {
-              ref.listenSelf((_, next) => selectedOption = next.option);
+              ref.listen(sortStateProvider, (_, next) => selectedOption = next.option);
               return const SortState();
             }),
           ],

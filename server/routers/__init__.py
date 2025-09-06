@@ -5,6 +5,7 @@ Each router handles a specific domain concern.
 """
 
 from . import (
+    auth_router,
     health_router, 
     leads_router,
     jobs_router,
@@ -18,6 +19,7 @@ from . import (
 )
 
 __all__ = [
+    "auth_router",
     "health_router", 
     "leads_router",
     "jobs_router",

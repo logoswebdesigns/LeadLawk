@@ -48,7 +48,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
             tooltip: 'Toggle Controls',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh),
             onPressed: () {
               ref.invalidate(timeSeriesDataProvider);
             },
@@ -60,13 +60,13 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
         children: [
           // Controls Panel
           AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: Duration(milliseconds: 300),
             width: _showControls ? 350 : 0,
             child: _showControls
                 ? Container(
                     color: const Color(0xFF0D1117),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -119,13 +119,13 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                       ),
                     ),
                   )
-                : const SizedBox.shrink(),
+                : SizedBox.shrink(),
           ),
           
           // Main Chart Area
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -159,7 +159,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline,
                               color: Colors.red,
                               size: 48,
@@ -283,7 +283,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
         color: const Color(0xFF1E2336),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -346,7 +346,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white70,
           side: const BorderSide(color: Colors.white24),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
       ),
     );
@@ -357,14 +357,14 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
     
     return timeSeriesData.maybeWhen(
       data: (metrics) {
-        if (metrics.isEmpty) return const SizedBox.shrink();
+        if (metrics.isEmpty) return SizedBox.shrink();
         
         return Container(
           decoration: BoxDecoration(
             color: const Color(0xFF1E2336),
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -381,7 +381,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                 final trend = _calculateTrend(metric.dataPoints);
                 final average = _calculateAverage(metric.dataPoints);
                 
-                return Padding(padding: const EdgeInsets.only(bottom: 8),
+                return Padding(padding: EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
                       Container(
@@ -431,7 +431,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
           ),
         );
       },
-      orElse: () => const SizedBox.shrink(),
+      orElse: () => SizedBox.shrink(),
     );
   }
 
@@ -445,7 +445,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
             color: Colors.white24,
             size: 64,
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'No metrics selected',
             style: TextStyle(
@@ -453,7 +453,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
               fontSize: 18,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Select metrics from the control panel to view data',
             style: TextStyle(

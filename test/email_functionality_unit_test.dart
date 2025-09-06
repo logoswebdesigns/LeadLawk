@@ -30,14 +30,15 @@ void main() {
       addTearDown(container.dispose);
       
       // Get the notifier to trigger initialization
-      final notifier = container.read(emailTemplatesLocalProvider.notifier);
+      // Notifier is initialized but not used directly in this test
+      container.read(emailTemplatesLocalProvider.notifier);
       
       // Wait longer for async initialization to complete - the provider needs time to:
       // 1. Load from SharedPreferences
       // 2. Check if initialized 
       // 3. Create default templates
       // 4. Save them back to SharedPreferences
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(Duration(milliseconds: 500));
       
       final templates = container.read(emailTemplatesLocalProvider);
       
@@ -60,8 +61,9 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
+      // Get the notifier to manipulate templates
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
       final newTemplate = EmailTemplate(
@@ -91,8 +93,9 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
+      // Get the notifier to manipulate templates
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
       // Add a template first
@@ -140,8 +143,9 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 100));
       
+      // Get the notifier to manipulate templates
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
       // Add a template

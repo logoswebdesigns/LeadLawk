@@ -106,7 +106,7 @@ void main() {
       
       // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       await notifier.loadInitialLeads();
       final state = container.read(paginatedLeadsProvider);
       
@@ -144,7 +144,7 @@ void main() {
       
       // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       await notifier.updatePageSize(50);
       final state = container.read(paginatedLeadsProvider);
       
@@ -190,7 +190,7 @@ void main() {
       
       // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       await notifier.updateFilters(
         status: 'called',
         search: 'test',
@@ -236,7 +236,7 @@ void main() {
       
       // Act - wait for initialization  
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       await notifier.updateFilters(
         sortBy: 'rating',
         sortAscending: false,
@@ -278,7 +278,7 @@ void main() {
       
       // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       
       // First set filters
       await notifier.updateFilters(
@@ -360,7 +360,7 @@ void main() {
       
       // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
-      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
+      await Future.delayed(Duration(milliseconds: 100)); // Allow initialization
       await notifier.loadInitialLeads();
       
       var state = container.read(paginatedLeadsProvider);

@@ -20,7 +20,7 @@ class TimelineStatistics extends StatelessWidget {
     final topTypes = _getTopTypes();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -31,7 +31,7 @@ class TimelineStatistics extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.insights, size: 20),
+              Icon(Icons.refresh),
               const SizedBox(width: 8),
               const Text(
                 'Timeline Insights',
@@ -42,7 +42,7 @@ class TimelineStatistics extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -86,7 +86,7 @@ class TimelineStatistics extends StatelessWidget {
     final icon = TimelineIconMapper.getEntryIcon(type);
     final label = TimelineIconMapper.getEntryLabel(type);
 
-    return Padding(padding: const EdgeInsets.only(bottom: 12),
+    return Padding(padding: EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
