@@ -5,12 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
-import '../providers/job_provider.dart';
+import '../../domain/providers/filter_providers.dart';
 import '../providers/pagespeed_websocket_provider.dart';
 import '../providers/server_status_provider.dart';
 import '../providers/paginated_leads_provider.dart';
 import '../providers/lead_statistics_provider.dart';
-import '../../data/datasources/leads_remote_datasource.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/conversion_pipeline.dart';
 import '../widgets/active_jobs_monitor.dart';
@@ -20,103 +19,9 @@ import '../widgets/selection_action_bar.dart';
 import '../widgets/goals_tracking_card.dart';
 import '../providers/goals_provider.dart';
 import '../providers/auto_refresh_provider.dart';
+import '../../../../core/utils/debug_logger.dart';
 
-// Sorting options
-enum SortOption {
-  newest,
-  rating,
-  reviews,
-  alphabetical,
-  pageSpeed,
-  conversion,
-}
-
-// Combined sort state to avoid race conditions
-class SortState {
-  final SortOption option;
-  final bool ascending;
-  
-  const SortState({
-    this.option = SortOption.newest,
-    this.ascending = false,
-  });
-  
-  SortState copyWith({
-    SortOption? option,
-    bool? ascending,
-  }) {
-    return SortState(
-      option: option ?? this.option,
-      ascending: ascending ?? this.ascending,
-    );
-  }
-  
-  String get sortField {
-    switch (option) {
-      case SortOption.newest:
-        return 'created_at';
-      case SortOption.rating:
-        return 'rating';
-      case SortOption.reviews:
-        return 'review_count';
-      case SortOption.alphabetical:
-        return 'business_name';
-      case SortOption.pageSpeed:
-        return 'pagespeed_mobile_score';
-      case SortOption.conversion:
-        return 'conversion_score';
-    }
-  }
-  
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SortState &&
-          runtimeType == other.runtimeType &&
-          option == other.option &&
-          ascending == other.ascending;
-  
-  @override
-  int get hashCode => option.hashCode ^ ascending.hashCode;
-}
-
-enum GroupByOption {
-  none,
-  status,
-  location,
-  industry,
-  hasWebsite,
-  pageSpeed,
-  rating,
-}
-
-// Filter providers
-final statusFilterProvider = StateProvider<String?>((ref) => null);
-// New provider for multi-select status filtering (stores hidden statuses)
-final hiddenStatusesProvider = StateProvider<Set<String>>((ref) => {});
-final locationFilterProvider = StateProvider<String?>((ref) => null);
-final industryFilterProvider = StateProvider<String?>((ref) => null);
-final sourceFilterProvider = StateProvider<String?>((ref) => null);
-final searchFilterProvider = StateProvider<String>((ref) => '');
-final candidatesOnlyProvider = StateProvider<bool>((ref) => false);
-final calledTodayProvider = StateProvider<bool>((ref) => false);
-final followUpFilterProvider = StateProvider<String?>((ref) => null);
-final hasWebsiteFilterProvider = StateProvider<bool?>((ref) => null);
-final meetsRatingFilterProvider = StateProvider<bool?>((ref) => null);
-final hasRecentReviewsFilterProvider = StateProvider<bool?>((ref) => null);
-final ratingRangeFilterProvider = StateProvider<String?>((ref) => null);
-final reviewCountRangeFilterProvider = StateProvider<String?>((ref) => null);
-final pageSpeedFilterProvider = StateProvider<String?>((ref) => null);
-// Single combined sort provider to avoid race conditions
-final sortStateProvider = StateProvider<SortState>((ref) => const SortState());
-final selectedLeadsProvider = StateProvider<Set<String>>((ref) => {});
-final isSelectionModeProvider = StateProvider<bool>((ref) => false);
-final groupByOptionProvider = StateProvider<GroupByOption>((ref) => GroupByOption.none);
-final expandedGroupsProvider = StateProvider<Set<String>>((ref) => {});
-final refreshTriggerProvider = StateProvider<int>((ref) => 0);
-
-// Page size provider for pagination
-final pageSizeProvider = StateProvider<int>((ref) => 25);
+// Note: Enums and providers moved to domain layer
 
 // Main page widget
 class LeadsListPage extends ConsumerStatefulWidget {
@@ -132,9 +37,12 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   Timer? _debounceTimer;
-  String? _lastIndustry;
-  String? _lastLocation;
   bool _isLoadingMore = false;
+  // These fields are used for tracking filter changes
+  // ignore: unused_field
+  String? _lastIndustry;
+  // ignore: unused_field
+  String? _lastLocation;
   
   @override
   void initState() {
@@ -142,8 +50,9 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     
     // Initialize filters
     if (widget.initialFilter == 'candidates') {
-      Future.microtask(() {
-        ref.read(candidatesOnlyProvider.notifier).state = true;
+      Future.microtask(() async {
+        final filterNotifier = ref.read(currentFilterStateProvider.notifier);
+        await filterNotifier.updateCandidatesOnly(true);
       });
     }
     
@@ -180,7 +89,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   
   void _loadMore() {
     if (!_isLoadingMore) {
-      print('📱 UI: Scroll triggered load more');
+      DebugLogger.log('📱 UI: Scroll triggered load more');
       setState(() => _isLoadingMore = true);
       ref.read(paginatedLeadsProvider.notifier).loadMoreLeads().then((_) {
         if (mounted) setState(() => _isLoadingMore = false);
@@ -226,7 +135,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     // Status filter listener
     ref.listen(statusFilterProvider, (previous, next) {
       if (previous != next) {
-        print('📱 UI: Status filter changed to $next');
+        DebugLogger.log('📱 UI: Status filter changed to $next');
         // Get current state of all other filters
         final search = ref.read(searchFilterProvider);
         final candidatesOnly = ref.read(candidatesOnlyProvider);
@@ -247,7 +156,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       if (previous != next) {
         _debounceTimer?.cancel();
         _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-          print('📱 UI: Search filter changed to "$next"');
+          DebugLogger.log('📱 UI: Search filter changed to "$next"');
           // Get current state of all other filters
           final status = ref.read(statusFilterProvider);
           final candidatesOnly = ref.read(candidatesOnlyProvider);
@@ -267,7 +176,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     // Candidates only filter listener
     ref.listen(candidatesOnlyProvider, (previous, next) {
       if (previous != next) {
-        print('📱 UI: Candidates only filter changed to $next');
+        DebugLogger.log('📱 UI: Candidates only filter changed to $next');
         // Get current state of all other filters
         final status = ref.read(statusFilterProvider);
         final search = ref.read(searchFilterProvider);
@@ -286,7 +195,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     // Called today filter listener
     ref.listen(calledTodayProvider, (previous, next) {
       if (previous != next) {
-        print('📱 UI: Called today filter changed to $next');
+        DebugLogger.log('📱 UI: Called today filter changed to $next');
         // Get current state of all other filters
         final status = ref.read(statusFilterProvider);
         final search = ref.read(searchFilterProvider);
@@ -307,8 +216,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     // Single sort state listener - no race conditions!
     ref.listen(sortStateProvider, (previous, next) {
       if (previous != next) {
-        print('🔀 SORT CHANGED: ${previous?.option.name} (${previous?.ascending == true ? "asc" : "desc"}) -> ${next.option.name} (${next.ascending ? "asc" : "desc"})');
-        print('🔀 SORT FIELD: sortBy = ${next.sortField}, ascending = ${next.ascending}');
+        DebugLogger.log('🔀 SORT CHANGED: ${previous?.option.name} (${previous?.ascending == true ? "asc" : "desc"}) -> ${next.option.name} (${next.ascending ? "asc" : "desc"})');
+        DebugLogger.log('🔀 SORT FIELD: sortBy = ${next.sortField}, ascending = ${next.ascending}');
         
         // Get current state of all filters
         final status = ref.read(statusFilterProvider);
@@ -328,8 +237,6 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     });
     
     // Watch WebSocket state for new leads
-    final wsState = ref.watch(pageSpeedWebSocketProvider);
-    
     // Set up listener for WebSocket state changes
     ref.listen<PageSpeedWebSocketState>(pageSpeedWebSocketProvider, (previous, next) {
       final previousLeads = previous?.newLeads ?? {};
@@ -337,13 +244,13 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       final actuallyNewLeads = currentLeads.difference(previousLeads);
       
       if (actuallyNewLeads.isNotEmpty) {
-        print('🆕 New leads detected: $actuallyNewLeads');
+        DebugLogger.log('🆕 New leads detected: $actuallyNewLeads');
         
         // Check if auto-refresh is enabled
         final autoRefresh = ref.read(autoRefreshLeadsProvider);
         
         if (autoRefresh) {
-          print('🔄 Auto-refresh enabled, refreshing leads...');
+          DebugLogger.log('🔄 Auto-refresh enabled, refreshing leads...');
           Future.microtask(() {
             _refreshData();
           });
@@ -351,7 +258,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
           // Increment pending updates counter
           final currentPending = ref.read(pendingLeadsUpdateProvider);
           ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + actuallyNewLeads.length;
-          print('📦 Auto-refresh disabled, ${actuallyNewLeads.length} new leads pending (total: ${currentPending + actuallyNewLeads.length})');
+          DebugLogger.log('📦 Auto-refresh disabled, ${actuallyNewLeads.length} new leads pending (total: ${currentPending + actuallyNewLeads.length})');
         }
       }
     });
@@ -359,7 +266,6 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     // Use filtered provider that applies hidden statuses
     final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
     final pageSize = ref.watch(pageSizeProvider);
-    final serverState = ref.watch(serverStatusProvider);
     
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
@@ -371,8 +277,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
               // Pipeline at the top - shows overall statistics
               const ConversionPipeline(),
               // Goals tracking card - shows daily call and monthly conversion goals
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: GoalsTrackingCard(),
               ),
               // Active jobs monitor
@@ -387,7 +292,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                     color: AppTheme.elevatedSurface,
                     child: Row(
                       children: [
-                        Text(
+                        const Text(
                           'Show:',
                           style: TextStyle(
                             color: AppTheme.mediumGray,
@@ -408,7 +313,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                             child: DropdownButton<int>(
                               value: pageSize,
                               dropdownColor: AppTheme.elevatedSurface,
-                              icon: Icon(Icons.arrow_drop_down, color: AppTheme.mediumGray),
+                              icon: const Icon(Icons.arrow_drop_down, color: AppTheme.mediumGray),
                               style: const TextStyle(color: Colors.white, fontSize: 14),
                               items: [25, 50, 100, 500].map((size) {
                                 return DropdownMenuItem(
@@ -418,9 +323,9 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                               }).toList(),
                               onChanged: (value) {
                                 if (value != null) {
-                                  print('📱 UI: User changed page size to $value');
-                                  ref.read(pageSizeProvider.notifier).state = value;
-                                  // Update the notifier with new page size
+                                  DebugLogger.log('📱 UI: User changed page size to $value');
+                                  // Update the UI state with new page size
+                                  ref.read(currentUIStateProvider.notifier).updatePageSize(value);
                                   ref.read(paginatedLeadsProvider.notifier).updatePageSize(value);
                                 }
                               },
@@ -431,7 +336,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                         if (paginatedState.total > 0)
                           Text(
                             'Total: ${paginatedState.total} leads',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppTheme.mediumGray,
                               fontSize: 14,
                             ),
@@ -530,8 +435,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       itemBuilder: (context, index) {
         if (index == leads.length) {
           // Loading indicator at the bottom
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
+          return const Padding(padding: EdgeInsets.all(16.0),
             child: Center(
               child: CircularProgressIndicator(),
             ),
@@ -543,47 +447,6 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
     );
   }
   
-  Color _getStatusColor(LeadStatus status) {
-    switch (status) {
-      case LeadStatus.new_:
-        return AppTheme.mediumGray;
-      case LeadStatus.viewed:
-        return AppTheme.darkGray;
-      case LeadStatus.called:
-        return AppTheme.warningOrange;
-      case LeadStatus.interested:
-        return AppTheme.primaryBlue;
-      case LeadStatus.converted:
-        return AppTheme.successGreen;
-      case LeadStatus.didNotConvert:
-        return Colors.deepOrange;
-      case LeadStatus.callbackScheduled:
-        return AppTheme.primaryBlue;
-      case LeadStatus.doNotCall:
-        return AppTheme.errorRed;
-    }
-  }
-  
-  String _getStatusLabel(LeadStatus status) {
-    switch (status) {
-      case LeadStatus.new_:
-        return 'NEW';
-      case LeadStatus.viewed:
-        return 'VIEWED';
-      case LeadStatus.called:
-        return 'CALLED';
-      case LeadStatus.interested:
-        return 'INTERESTED';
-      case LeadStatus.converted:
-        return 'CONVERTED';
-      case LeadStatus.didNotConvert:
-        return 'DID NOT CONVERT';
-      case LeadStatus.callbackScheduled:
-        return 'CALLBACK';
-      case LeadStatus.doNotCall:
-        return 'DO NOT CALL';
-    }
-  }
 }
 
 // Legacy Lead Card - replaced by EnhancedLeadTile
@@ -676,8 +539,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => context.go('/leads/${widget.lead.id}'),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
+              child: Padding(padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
                     // Checkbox
@@ -687,14 +549,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
                       child: Checkbox(
                         value: isSelected,
                         onChanged: (value) {
-                          final current = ref.read(selectedLeadsProvider);
-                          final updated = Set<String>.from(current);
-                          if (value == true) {
-                            updated.add(widget.lead.id);
-                          } else {
-                            updated.remove(widget.lead.id);
-                          }
-                          ref.read(selectedLeadsProvider.notifier).state = updated;
+                          ref.read(currentUIStateProvider.notifier).toggleLeadSelection(widget.lead.id);
                         },
                       ),
                     ),
@@ -737,29 +592,28 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
                           const SizedBox(height: 4),
                           Text(
                             widget.lead.location,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppTheme.mediumGray,
                             ),
                           ),
                           if (widget.lead.rating != null || widget.lead.reviewCount != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
+                            Padding(padding: const EdgeInsets.only(top: 4),
                               child: Row(
                                 children: [
                                   if (widget.lead.rating != null) ...[
-                                    Icon(Icons.star, size: 12, color: AppTheme.warningOrange),
+                                    const Icon(Icons.star, size: 12, color: AppTheme.warningOrange),
                                     const SizedBox(width: 2),
                                     Text(
                                       widget.lead.rating!.toStringAsFixed(1),
-                                      style: TextStyle(fontSize: 12, color: AppTheme.mediumGray),
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.mediumGray),
                                     ),
                                   ],
                                   if (widget.lead.reviewCount != null) ...[
                                     const SizedBox(width: 8),
                                     Text(
                                       '(${widget.lead.reviewCount} reviews)',
-                                      style: TextStyle(fontSize: 12, color: AppTheme.mediumGray),
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.mediumGray),
                                     ),
                                   ],
                                 ],

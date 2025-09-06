@@ -10,9 +10,8 @@ class InsightsCard extends ConsumerWidget {
     final insightsAsync = ref.watch(actionableInsightsProvider);
 
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,16 +27,14 @@ class InsightsCard extends ConsumerWidget {
                 ),
               ],
             ),
-            Divider(color: Colors.white.withOpacity(0.2)),
+            Divider(color: Colors.white.withValues(alpha: 0.2)),
             insightsAsync.when(
               data: (insights) {
                 if (insights.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
+                  return Center(child: Padding(padding: const EdgeInsets.all(20),
                       child: Text(
                         'No insights available yet',
-                        style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                       ),
                     ),
                   );
@@ -48,27 +45,23 @@ class InsightsCard extends ConsumerWidget {
                   }).toList(),
                 );
               },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 32,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'No insights available yet',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                         ),
                       ),
@@ -76,7 +69,7 @@ class InsightsCard extends ConsumerWidget {
                       Text(
                         'Start converting leads to see insights',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -131,13 +124,13 @@ class _InsightTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color, size: 20),
         ),
         title: Text(
@@ -153,13 +146,13 @@ class _InsightTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               insight.description,
-              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(

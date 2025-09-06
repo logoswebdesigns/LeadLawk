@@ -13,13 +13,13 @@ class UnifiedScreenshotCard extends StatelessWidget {
   final bool showInCard; // Whether to show in a card container
   
   const UnifiedScreenshotCard({
-    Key? key,
+    super.key,
     required this.screenshotPath,
     required this.type,
     this.lead,
     this.onTap,
     this.showInCard = true,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -57,14 +57,14 @@ class UnifiedScreenshotCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
         ),
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -82,7 +82,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 if (type == ScreenshotType.website && lead?.websiteUrl != null)
@@ -90,7 +90,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
                     lead!.websiteUrl!.replaceAll(RegExp(r'https?://'), ''),
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -130,7 +130,7 @@ class UnifiedScreenshotCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -139,14 +139,14 @@ class UnifiedScreenshotCard extends StatelessWidget {
                       Icon(
                         Icons.fullscreen,
                         size: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'View',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -207,20 +207,20 @@ class UnifiedScreenshotCard extends StatelessWidget {
         : 'No Google Maps screenshot available';
     
     return Container(
-      color: AppTheme.backgroundDark.withOpacity(0.5),
+      color: AppTheme.backgroundDark.withValues(alpha: 0.5),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
             size: 48,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 13,
             ),
             textAlign: TextAlign.center,
@@ -232,20 +232,20 @@ class UnifiedScreenshotCard extends StatelessWidget {
   
   Widget _buildErrorState(BuildContext context) {
     return Container(
-      color: AppTheme.backgroundDark.withOpacity(0.5),
+      color: AppTheme.backgroundDark.withValues(alpha: 0.5),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.image_not_supported,
             size: 48,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 8),
           Text(
             'Failed to load image',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 13,
             ),
           ),
@@ -260,10 +260,10 @@ class UnifiedScreenshotCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.4),
+          color: color.withValues(alpha: 0.4),
           width: 1,
         ),
       ),

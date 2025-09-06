@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leadloq/features/leads/presentation/pages/leads_list_page.dart';
 import 'package:leadloq/features/leads/domain/entities/lead.dart';
 
 void main() {

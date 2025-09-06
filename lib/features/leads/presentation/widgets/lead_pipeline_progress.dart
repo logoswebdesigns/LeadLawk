@@ -6,17 +6,16 @@ import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
-import 'lead_status_actions.dart';
 
 class LeadPipelineProgress extends ConsumerStatefulWidget {
   final Lead lead;
   final VoidCallback? onStatusChanged;
   
   const LeadPipelineProgress({
-    Key? key,
+    super.key,
     required this.lead,
     this.onStatusChanged,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LeadPipelineProgress> createState() => _LeadPipelineProgressState();
@@ -207,7 +206,9 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
     // Can't progress from terminal states
     if (widget.lead.status == LeadStatus.converted ||
         widget.lead.status == LeadStatus.doNotCall ||
-        widget.lead.status == LeadStatus.didNotConvert) return false;
+        widget.lead.status == LeadStatus.didNotConvert) {
+      return false;
+    }
     
     return true;
   }
@@ -223,7 +224,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
             const SizedBox(width: 12),
             Text(
               'Progress to ${stage.label}',
-              style: TextStyle(color: AppTheme.primaryGold),
+              style: const TextStyle(color: AppTheme.primaryGold),
             ),
           ],
         ),
@@ -239,10 +240,10 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: _getStageColor(stage).withOpacity(0.1),
+                color: _getStageColor(stage).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: _getStageColor(stage).withOpacity(0.3),
+                  color: _getStageColor(stage).withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -335,7 +336,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
 
   @override
   Widget build(BuildContext context) {
-    final isTerminal = widget.lead.status == LeadStatus.converted ||
+    // final isTerminal = widget.lead.status == LeadStatus.converted ||
                       widget.lead.status == LeadStatus.doNotCall ||
                       widget.lead.status == LeadStatus.didNotConvert;
     
@@ -382,7 +383,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
             Text(
               'Sales Pipeline',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
@@ -406,13 +407,13 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                 gradient: LinearGradient(
                   colors: [
                     AppTheme.primaryGold,
-                    AppTheme.primaryGold.withOpacity(0.7),
+                    AppTheme.primaryGold.withValues(alpha: 0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryGold.withOpacity(0.3),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -453,7 +454,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
             Container(
               height: 8,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -478,8 +479,8 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                     boxShadow: [
                       BoxShadow(
                         color: widget.lead.status == LeadStatus.converted
-                            ? AppTheme.successGreen.withOpacity(0.5)
-                            : AppTheme.primaryGold.withOpacity(0.3),
+                            ? AppTheme.successGreen.withValues(alpha: 0.5)
+                            : AppTheme.primaryGold.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -509,17 +510,17 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                       shape: BoxShape.circle,
                       color: isActive
                           ? _getStageColor(stage)
-                          : Colors.white.withOpacity(0.1),
+                          : Colors.white.withValues(alpha: 0.1),
                       border: Border.all(
                         color: isCurrent
                             ? Colors.white
-                            : Colors.white.withOpacity(0.3),
+                            : Colors.white.withValues(alpha: 0.3),
                         width: isCurrent ? 3 : 1,
                       ),
                       boxShadow: isActive
                           ? [
                               BoxShadow(
-                                color: _getStageColor(stage).withOpacity(0.5),
+                                color: _getStageColor(stage).withValues(alpha: 0.5),
                                 blurRadius: 12,
                                 offset: const Offset(0, 2),
                               ),
@@ -529,7 +530,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                     child: Center(
                       child: Icon(
                         stage.icon,
-                        color: isActive ? Colors.white : Colors.white.withOpacity(0.3),
+                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3),
                         size: isCurrent ? 24 : 20,
                       ),
                     ),
@@ -555,7 +556,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -597,11 +598,11 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                   colors: isActive
                       ? [
                           _getStageColor(stage),
-                          _getStageColor(stage).withOpacity(0.7),
+                          _getStageColor(stage).withValues(alpha: 0.7),
                         ]
                       : [
-                          Colors.white.withOpacity(0.05),
-                          Colors.white.withOpacity(0.02),
+                          Colors.white.withValues(alpha: 0.05),
+                          Colors.white.withValues(alpha: 0.02),
                         ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -609,14 +610,14 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                   color: isCurrent
                       ? Colors.white
                       : isActive
-                          ? _getStageColor(stage).withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                          ? _getStageColor(stage).withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                   width: isCurrent ? 2 : 1,
                 ),
                 boxShadow: isActive
                     ? [
                         BoxShadow(
-                          color: _getStageColor(stage).withOpacity(0.3),
+                          color: _getStageColor(stage).withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -632,11 +633,11 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                     children: [
                       Icon(
                         stage.icon,
-                        color: isActive ? Colors.white : Colors.white.withOpacity(0.3),
+                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3),
                         size: 24,
                       ),
                       if (stage.isGoal)
-                        Icon(
+                        const Icon(
                           Icons.star,
                           color: Colors.yellow,
                           size: 20,
@@ -649,7 +650,7 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                       Text(
                         stage.label,
                         style: TextStyle(
-                          color: isActive ? Colors.white : Colors.white.withOpacity(0.5),
+                          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -659,8 +660,8 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                         '+${stage.points} pts',
                         style: TextStyle(
                           color: isActive
-                              ? Colors.white.withOpacity(0.8)
-                              : Colors.white.withOpacity(0.3),
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : Colors.white.withValues(alpha: 0.3),
                           fontSize: 10,
                         ),
                       ),
@@ -670,13 +671,13 @@ class _LeadPipelineProgressState extends ConsumerState<LeadPipelineProgress>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Tap to progress',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 8,
                         ),
                       ),
@@ -754,7 +755,7 @@ class PipelineStage {
   final String description;
   final bool isGoal;
 
-  const PipelineStage({
+  PipelineStage({
     required this.status,
     required this.label,
     required this.icon,
@@ -785,13 +786,13 @@ class ConfettiPainter extends CustomPainter {
 
     for (int i = 0; i < 50; i++) {
       final x = random.nextDouble() * size.width;
-      final startY = -50.0;
+      const startY = -50.0;
       final endY = size.height + 50;
       final y = startY + (endY - startY) * progress;
       
       final rotation = random.nextDouble() * math.pi * 2 * progress;
       
-      paint.color = colors[i % colors.length].withOpacity((1 - progress) * 0.8);
+      paint.color = colors[i % colors.length].withValues(alpha: (1 - progress) * 0.8);
       
       canvas.save();
       canvas.translate(x, y);

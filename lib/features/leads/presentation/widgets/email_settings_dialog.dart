@@ -108,11 +108,11 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppTheme.surfaceDark,
-      title: Row(
+      title: const Row(
         children: [
           Icon(Icons.email_outlined, color: AppTheme.primaryGold, size: 24),
-          const SizedBox(width: 12),
-          const Text(
+          SizedBox(width: 12),
+          Text(
             'Email Settings',
             style: TextStyle(color: Colors.white),
           ),
@@ -129,14 +129,14 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGold.withOpacity(0.1),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Quick Setup',
                       style: TextStyle(
                         color: AppTheme.primaryGold,
@@ -182,7 +182,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
               Text(
                 'SMTP Configuration',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -195,22 +195,22 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
                   labelText: 'SMTP Host',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
                   hintText: 'smtp.gmail.com',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -226,22 +226,22 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Port',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
                   hintText: '587',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -256,22 +256,22 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
                   labelText: 'Username (Email)',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
                   hintText: 'logoswebdesigninfo@gmail.com',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -287,27 +287,27 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                 obscureText: !_showPassword,
                 decoration: InputDecoration(
                   labelText: 'App Password',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
                   hintText: 'Enter your app password',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _showPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       size: 18,
                     ),
                     onPressed: () => setState(() => _showPassword = !_showPassword),
@@ -324,17 +324,17 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(Icons.info_outline, color: Colors.blue, size: 16),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           'Gmail Setup Instructions',
                           style: TextStyle(
@@ -353,7 +353,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                       '4. Generate new app password for "Mail"\n'
                       '5. Copy the 16-character password here',
                       style: TextStyle(
-                        color: Colors.blue.withOpacity(0.9),
+                        color: Colors.blue.withValues(alpha: 0.9),
                         fontSize: 11,
                       ),
                     ),

@@ -11,7 +11,7 @@ class PipelineStage extends StatelessWidget {
   final int totalLeads;
   final int maxCount;
 
-  const PipelineStage({
+  const PipelineStage({super.key, 
     required this.stage,
     required this.leadCount,
     required this.leads,

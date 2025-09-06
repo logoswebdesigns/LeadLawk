@@ -7,18 +7,19 @@ void main() {
   group('Contrast Ratio Tests', () {
     test('Section headers have sufficient contrast on dark cards', () {
       // Test the old problematic combination
+      // ignore: unused_local_variable
       const Color darkGrayOnElevated = AppTheme.darkGray;
       const Color elevatedSurface = AppTheme.elevatedSurface;
       
-      final double badContrast = calculateContrastRatio(
-        darkGrayOnElevated, 
-        elevatedSurface
-      );
+    // final double badContrast = calculateContrastRatio(
+    //     darkGrayOnElevated, 
+    //     elevatedSurface
+    //   );
       
       // Old contrast (darkGray on elevatedSurface): ${badContrast.toStringAsFixed(2)}:1
       
       // Test the new improved combination
-      final Color whiteOpacity = Colors.white.withOpacity(0.9);
+      final Color whiteOpacity = Colors.white.withValues(alpha: 0.9);
       
       final double goodContrast = calculateContrastRatio(
         whiteOpacity,
@@ -61,7 +62,7 @@ void main() {
       // Success indicator contrast: ${successContrast.toStringAsFixed(2)}:1
       
       // Test error red
-      final Color errorRed = AppTheme.errorRed.withOpacity(0.8);
+      final Color errorRed = AppTheme.errorRed.withValues(alpha: 0.8);
       
       final double errorContrast = calculateContrastRatio(
         errorRed,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
+import '../providers/use_case_providers.dart';
 
 class EnhancedLeadCard extends ConsumerWidget {
   final Lead lead;
@@ -28,6 +29,10 @@ class EnhancedLeadCard extends ConsumerWidget {
     final hasScreenshot = lead.screenshotPath != null;
     final hasPageSpeed = lead.pagespeedMobileScore != null || lead.pagespeedDesktopScore != null;
     
+    // Use the lead scoring use case
+    final leadScore = ref.watch(leadScoreProvider(lead));
+    final qualityTier = ref.watch(leadQualityTierProvider(lead));
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -35,8 +40,8 @@ class EnhancedLeadCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected 
-              ? AppTheme.primaryGold.withOpacity(0.5)
-              : Colors.white.withOpacity(0.05),
+              ? AppTheme.primaryGold.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -48,8 +53,7 @@ class EnhancedLeadCard extends ConsumerWidget {
           child: Column(
             children: [
               // Main content row
-              Padding(
-                padding: const EdgeInsets.all(12),
+              Padding(padding: const EdgeInsets.all(12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -66,7 +70,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                         activeColor: AppTheme.primaryGold,
                         checkColor: Colors.black,
                         side: BorderSide(
-                          color: isSelected ? AppTheme.primaryGold : AppTheme.mediumGray.withOpacity(0.5),
+                          color: isSelected ? AppTheme.primaryGold : AppTheme.mediumGray.withValues(alpha: 0.5),
                           width: 1.5,
                         ),
                       ),
@@ -81,7 +85,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         child: ClipRRect(
@@ -100,7 +104,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                             ),
                             errorWidget: (context, url, error) => Container(
                               color: AppTheme.darkGray,
-                              child: Icon(
+                              child: const Icon(
                                 Icons.image_not_supported,
                                 color: AppTheme.mediumGray,
                                 size: 24,
@@ -142,6 +146,12 @@ class EnhancedLeadCard extends ConsumerWidget {
                           // Key metrics row
                           Row(
                             children: [
+                              // Lead quality score from use case
+                              if (leadScore != null) ...[
+                                _buildQualityIndicator(leadScore, qualityTier),
+                                const SizedBox(width: 12),
+                              ],
+                              
                               // PageSpeed score (high priority)
                               if (hasPageSpeed) ...[
                                 _buildPageSpeedIndicator(lead),
@@ -163,13 +173,13 @@ class EnhancedLeadCard extends ConsumerWidget {
                                 Icon(
                                   Icons.phone,
                                   size: 14,
-                                  color: AppTheme.successGreen.withOpacity(0.8),
+                                  color: AppTheme.successGreen.withValues(alpha: 0.8),
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
                                     lead.phone,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       color: AppTheme.lightGray,
                                     ),
@@ -184,7 +194,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                           // Location and industry
                           Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.location_on,
                                 size: 12,
                                 color: AppTheme.mediumGray,
@@ -192,13 +202,13 @@ class EnhancedLeadCard extends ConsumerWidget {
                               const SizedBox(width: 4),
                               Text(
                                 lead.location,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.mediumGray,
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Icon(
+                              const Icon(
                                 Icons.business,
                                 size: 12,
                                 color: AppTheme.mediumGray,
@@ -206,7 +216,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                               const SizedBox(width: 4),
                               Text(
                                 lead.industry,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.mediumGray,
                                 ),
@@ -224,7 +234,7 @@ class EnhancedLeadCard extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(lead.status).withOpacity(0.15),
+                            color: _getStatusColor(lead.status).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -268,8 +278,8 @@ class EnhancedLeadCard extends ConsumerWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppTheme.primaryGold.withOpacity(0.8),
-                        AppTheme.primaryGold.withOpacity(0.2),
+                        AppTheme.primaryGold.withValues(alpha: 0.8),
+                        AppTheme.primaryGold.withValues(alpha: 0.2),
                         Colors.transparent,
                       ],
                     ),
@@ -295,7 +305,7 @@ class EnhancedLeadCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryGold.withOpacity(0.25),
+            color: AppTheme.primaryGold.withValues(alpha: 0.25),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -318,14 +328,14 @@ class EnhancedLeadCard extends ConsumerWidget {
       margin: const EdgeInsets.only(left: 4),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.accentCyan.withOpacity(0.2),
+        color: AppTheme.accentCyan.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: AppTheme.accentCyan.withOpacity(0.5),
+          color: AppTheme.accentCyan.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
@@ -333,7 +343,7 @@ class EnhancedLeadCard extends ConsumerWidget {
             size: 10,
             color: AppTheme.accentCyan,
           ),
-          const SizedBox(width: 2),
+          SizedBox(width: 2),
           Text(
             'CANDIDATE',
             style: TextStyle(
@@ -357,7 +367,7 @@ class EnhancedLeadCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -407,7 +417,7 @@ class EnhancedLeadCard extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
+        const Icon(
           Icons.star,
           size: 14,
           color: AppTheme.warningOrange,
@@ -415,7 +425,7 @@ class EnhancedLeadCard extends ConsumerWidget {
         const SizedBox(width: 2),
         Text(
           rating.toStringAsFixed(1),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
             color: AppTheme.warningOrange,
             fontWeight: FontWeight.w600,
@@ -424,13 +434,71 @@ class EnhancedLeadCard extends ConsumerWidget {
         if (reviewCount != null) ...[
           Text(
             ' ($reviewCount)',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10,
               color: AppTheme.mediumGray,
             ),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildQualityIndicator(int score, String tier) {
+    Color tierColor;
+    IconData tierIcon;
+    
+    switch (tier) {
+      case 'Hot':
+        tierColor = AppTheme.errorRed;
+        tierIcon = Icons.local_fire_department;
+        break;
+      case 'Warm':
+        tierColor = AppTheme.warningOrange;
+        tierIcon = Icons.wb_sunny;
+        break;
+      case 'Cool':
+        tierColor = AppTheme.primaryBlue;
+        tierIcon = Icons.ac_unit;
+        break;
+      case 'Cold':
+        tierColor = AppTheme.accentCyan;
+        tierIcon = Icons.severe_cold;
+        break;
+      default:
+        tierColor = AppTheme.mediumGray;
+        tierIcon = Icons.help_outline;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: tierColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: tierColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            tierIcon,
+            size: 12,
+            color: tierColor,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '$score',
+            style: TextStyle(
+              fontSize: 11,
+              color: tierColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -445,7 +513,7 @@ class EnhancedLeadCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Icon(

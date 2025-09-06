@@ -7,11 +7,11 @@ class LeadInfoRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   const LeadInfoRow({
-    Key? key,
+    super.key,
     required this.icon,
     required this.text,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +26,7 @@ class LeadInfoRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(4),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Padding(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
             child: Row(
               children: [
                 Icon(
@@ -44,7 +43,7 @@ class LeadInfoRow extends StatelessWidget {
                       decoration: isClickable ? TextDecoration.underline : null,
                       color: isClickable 
                           ? AppTheme.primaryGold 
-                          : Colors.white.withOpacity(0.9),
+                          : Colors.white.withValues(alpha: 0.9),
                       fontSize: 15,
                     ),
                   ),
@@ -53,7 +52,7 @@ class LeadInfoRow extends StatelessWidget {
                   Icon(
                     Icons.open_in_new,
                     size: 16,
-                    color: AppTheme.primaryGold.withOpacity(0.7),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.7),
                     semanticLabel: null,
                   ),
               ],

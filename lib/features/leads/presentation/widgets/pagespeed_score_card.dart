@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/pagespeed_status_provider.dart';
 
@@ -114,13 +113,12 @@ class PageSpeedScoreCard extends ConsumerWidget {
           ),
           
           // Content section
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Padding(padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Show test status if running
-                if (isTestRunning && testStatus != null) ...[
+                if (isTestRunning) ...[
                   _buildTestStatusSection(testStatus),
                   const SizedBox(height: 16),
                 ],
@@ -172,7 +170,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                               'Values are estimated and may vary. The performance score is calculated directly from these metrics.',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -182,7 +180,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                                 'Captured at ${_formatDate(lead.pagespeedTestedAt!)}',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: Colors.white.withOpacity(0.4),
+                                  color: Colors.white.withValues(alpha: 0.4),
                                 ),
                               ),
                             ],
@@ -203,7 +201,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                                 letterSpacing: 1,
                               ),
                             ),
@@ -291,7 +289,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 11,
           ),
         ),
@@ -330,7 +328,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
             Text(
               'Performance',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -361,7 +359,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 13,
             ),
           ),
@@ -394,10 +392,10 @@ class PageSpeedScoreCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF4E42).withOpacity(0.1),
+        color: const Color(0xFFFF4E42).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFFF4E42).withOpacity(0.3),
+          color: const Color(0xFFFF4E42).withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -424,7 +422,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                     error,
                     style: TextStyle(
                       fontSize: 12,
-                      color: const Color(0xFFFF4E42).withOpacity(0.8),
+                      color: const Color(0xFFFF4E42).withValues(alpha: 0.8),
                     ),
                   ),
               ],
@@ -442,13 +440,13 @@ class PageSpeedScoreCard extends ConsumerWidget {
           Icon(
             Icons.speed,
             size: 48,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
             'No PageSpeed data available',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 16,
             ),
           ),
@@ -457,7 +455,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
             'Run a test to analyze website performance',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -500,15 +498,15 @@ class PageSpeedScoreCard extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            statusColor.withOpacity(0.15),
-            statusColor.withOpacity(0.05),
+            statusColor.withValues(alpha: 0.15),
+            statusColor.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: statusColor.withOpacity(0.4),
+          color: statusColor.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -547,7 +545,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                         status.currentStep!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: statusColor.withOpacity(0.8),
+                          color: statusColor.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -561,9 +559,9 @@ class PageSpeedScoreCard extends ConsumerWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     border: Border.all(
-                      color: statusColor.withOpacity(0.3),
+                      color: statusColor.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -572,7 +570,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                     children: [
                       CircularProgressIndicator(
                         value: status.progress / 100,
-                        backgroundColor: statusColor.withOpacity(0.2),
+                        backgroundColor: statusColor.withValues(alpha: 0.2),
                         valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                         strokeWidth: 3,
                       ),
@@ -604,7 +602,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                   'Testing website performance...',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -612,7 +610,7 @@ class PageSpeedScoreCard extends ConsumerWidget {
                   'Elapsed: ${status.elapsedTime!.inSeconds}s',
                   style: TextStyle(
                     fontSize: 11,
-                    color: statusColor.withOpacity(0.7),
+                    color: statusColor.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

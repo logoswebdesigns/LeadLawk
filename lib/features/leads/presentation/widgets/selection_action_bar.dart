@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
 import '../providers/paginated_leads_provider.dart';
 import '../providers/job_provider.dart' show leadsRemoteDataSourceProvider;
+import '../../../../core/utils/debug_logger.dart';
+import '../providers/filter_providers.dart';
+import '../providers/auto_refresh_provider.dart';
 
 class SelectionActionBar extends ConsumerStatefulWidget {
   const SelectionActionBar({super.key});
@@ -24,7 +26,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
     final hasSelection = selectedLeads.isNotEmpty;
     
     // Calculate selected leads data
-    final selectedData = paginatedState.leads.where((lead) => selectedLeads.contains(lead.id)).toList();
+    // final selectedData = paginatedState.leads.where((lead) => selectedLeads.contains(lead.id)).toList();
     
     if (!isSelectionMode) {
       return const SizedBox.shrink();
@@ -132,10 +134,10 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
                   color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.edit, size: 16, color: AppTheme.primaryBlue),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Status',
                       style: TextStyle(
@@ -171,10 +173,10 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
                   color: AppTheme.errorRed.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.delete_outline, size: 16, color: AppTheme.errorRed),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'Delete',
                       style: TextStyle(
@@ -198,7 +200,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
+            const Text(
               'Deleting...',
               style: TextStyle(
                 color: AppTheme.errorRed,
@@ -252,7 +254,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
       
       if (!mounted) return;
       
-      print('✅ Successfully deleted $selectedCount leads');
+      DebugLogger.log('✅ Successfully deleted $selectedCount leads');
       
       // Clear selection and exit selection mode
       ref.read(selectedLeadsProvider.notifier).state = {};
@@ -281,7 +283,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
         );
       }
     } catch (e) {
-      print('❌ Error during deletion: $e');
+      DebugLogger.error('❌ Error during deletion: $e');
       if (mounted) {
         setState(() {
           _isDeleting = false;

@@ -13,3 +13,6 @@ final autoRefreshLeadsProvider = StateProvider<bool>((ref) {
 final pendingLeadsUpdateProvider = StateProvider<int>((ref) {
   return 0;
 });
+
+// Trigger for manual refresh
+final refreshTriggerProvider = StateProvider<int>((ref) => 0);

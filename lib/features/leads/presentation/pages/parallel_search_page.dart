@@ -80,9 +80,8 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
     final estimatedTime = totalSearches * 2; // Estimate 2 minutes per search
     
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -112,7 +111,7 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
                         Text(
                           'Estimated time: ${estimatedTime ~/ 60}h ${estimatedTime % 60}m with parallel execution',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -127,9 +126,9 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
+                  color: Colors.orange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -155,9 +154,8 @@ class _ParallelSearchPageState extends ConsumerState<ParallelSearchPage> {
   }
 Widget _buildSearchParameters() {
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -177,7 +175,7 @@ Widget _buildSearchParameters() {
               children: [
                 Text(
                   'Results per search',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                 ),
                 Row(
                   children: [
@@ -190,7 +188,7 @@ Widget _buildSearchParameters() {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -213,11 +211,11 @@ Widget _buildSearchParameters() {
             SwitchListTile(
               title: Text(
                 'Find businesses WITHOUT websites',
-                style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
               ),
               subtitle: Text(
                 'Ideal for finding prospects',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
               ),
               value: requiresNoWebsite,
               onChanged: (value) => setState(() => requiresNoWebsite = value),
@@ -230,7 +228,7 @@ Widget _buildSearchParameters() {
               children: [
                 Text(
                   'Recent reviews (months)',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                 ),
                 Row(
                   children: [
@@ -243,7 +241,7 @@ Widget _buildSearchParameters() {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -273,7 +271,7 @@ Widget _buildSearchParameters() {
       decoration: BoxDecoration(
         color: AppTheme.backgroundDark,
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.1)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
       ),
       child: SafeArea(
@@ -329,28 +327,27 @@ Widget _buildSearchParameters() {
           children: [
             Text(
               'This will launch ${generatedSearches.length} searches in parallel.',
-              style: TextStyle(color: Colors.white.withOpacity(0.8)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 12),
             Text(
               'Searches to execute:',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            ...generatedSearches.take(5).map((search) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+            ...generatedSearches.take(5).map((search) => Padding(padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 '• ${search['industry']} in ${search['location']}',
-                style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
               ),
             )),
             if (generatedSearches.length > 5)
               Text(
                 '... and ${generatedSearches.length - 5} more',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
               ),
           ],
         ),

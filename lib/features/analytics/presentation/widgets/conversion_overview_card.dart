@@ -10,9 +10,8 @@ class ConversionOverviewCard extends ConsumerWidget {
     final overviewAsync = ref.watch(conversionOverviewProvider);
 
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,7 +27,7 @@ class ConversionOverviewCard extends ConsumerWidget {
                 ),
               ],
             ),
-            Divider(color: Colors.white.withOpacity(0.2)),
+            Divider(color: Colors.white.withValues(alpha: 0.2)),
             overviewAsync.when(
               data: (overview) => Column(
                 children: [
@@ -61,9 +60,9 @@ class ConversionOverviewCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       children: [
@@ -111,27 +110,23 @@ class ConversionOverviewCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 32,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'No data available yet',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                         ),
                       ),
@@ -139,7 +134,7 @@ class ConversionOverviewCard extends ConsumerWidget {
                       Text(
                         'Toggle "Demo" above to see sample data',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -184,7 +179,7 @@ class _MetricTile extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -210,7 +205,7 @@ class _RateRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         Text(
           value,
@@ -243,8 +238,8 @@ class _StatusChip extends StatelessWidget {
         '$label: $count',
         style: const TextStyle(fontSize: 12),
       ),
-      backgroundColor: color.withOpacity(0.1),
-      side: BorderSide(color: color.withOpacity(0.3)),
+      backgroundColor: color.withValues(alpha: 0.1),
+      side: BorderSide(color: color.withValues(alpha: 0.3)),
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/lead_detail_provider.dart';
@@ -13,10 +12,10 @@ class LeadSkillTreePipeline extends ConsumerStatefulWidget {
   final VoidCallback? onStatusChanged;
   
   const LeadSkillTreePipeline({
-    Key? key,
+    super.key,
     required this.lead,
     this.onStatusChanged,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LeadSkillTreePipeline> createState() => _LeadSkillTreePipelineState();
@@ -32,11 +31,11 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
   
   // Layout configuration
   static const double nodeSize = 56.0;
-  static const double nodeSpacing = 100.0;
-  static const double verticalSpacing = 80.0;
+    // static const double nodeSpacing = 100.0;
+    // static const double verticalSpacing = 80.0;
   static const double containerHeight = 500.0;
-  static const double headerHeight = 80.0;
-  static const double contentStartY = 120.0;
+    // static const double headerHeight = 80.0;
+    // static const double contentStartY = 120.0;
   
   @override
   void initState() {
@@ -121,10 +120,10 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.elevatedSurface,
-          title: Row(
+          title: const Row(
             children: [
               Icon(Icons.event, color: AppTheme.primaryGold),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Text(
                 'Schedule Callback',
                 style: TextStyle(color: AppTheme.primaryGold),
@@ -138,14 +137,14 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
               children: [
                 // Date picker
                 ListTile(
-                  leading: Icon(Icons.calendar_today, color: AppTheme.primaryBlue),
+                  leading: const Icon(Icons.calendar_today, color: AppTheme.primaryBlue),
                   title: Text(
                     selectedDate == null
                         ? 'Select Date'
                         : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -161,18 +160,18 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 
                 // Time picker
                 ListTile(
-                  leading: Icon(Icons.access_time, color: AppTheme.primaryBlue),
+                  leading: const Icon(Icons.access_time, color: AppTheme.primaryBlue),
                   title: Text(
                     selectedTime == null
                         ? 'Select Time'
                         : selectedTime!.format(context),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     final time = await showTimePicker(
                       context: context,
-                      initialTime: TimeOfDay(hour: 10, minute: 0),
+                      initialTime: const TimeOfDay(hour: 10, minute: 0),
                     );
                     if (time != null) {
                       setState(() => selectedTime = time);
@@ -191,10 +190,10 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    prefixIcon: Icon(Icons.note, color: AppTheme.primaryGold),
+                    prefixIcon: const Icon(Icons.note, color: AppTheme.primaryGold),
                   ),
                   maxLines: 3,
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 
                 const SizedBox(height: 16),
@@ -203,21 +202,21 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withOpacity(0.1),
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppTheme.primaryBlue.withOpacity(0.3),
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppTheme.primaryBlue, size: 20),
+                      const Icon(Icons.info_outline, color: AppTheme.primaryBlue, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'You\'ll receive a notification when it\'s time to call back',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 12,
                           ),
                         ),
@@ -291,7 +290,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
             const SizedBox(width: 12),
             Text(
               isUndo ? 'Revert to ${node.label}' : 'Progress to ${node.label}',
-              style: TextStyle(color: AppTheme.primaryGold),
+              style: const TextStyle(color: AppTheme.primaryGold),
             ),
           ],
         ),
@@ -300,7 +299,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
           children: [
             Text(
               node.description,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
             if (node.points > 0) ...[
               const SizedBox(height: 16),
@@ -309,12 +308,12 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      node.color.withOpacity(0.2),
-                      node.color.withOpacity(0.1),
+                      node.color.withValues(alpha: 0.2),
+                      node.color.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: node.color.withOpacity(0.3)),
+                  border: Border.all(color: node.color.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -433,20 +432,19 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.primaryBlue.withOpacity(0.05),
-                  AppTheme.primaryGold.withOpacity(0.02),
+                  AppTheme.primaryBlue.withValues(alpha: 0.05),
+                  AppTheme.primaryGold.withValues(alpha: 0.02),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppTheme.primaryGold.withOpacity(0.1),
+                color: AppTheme.primaryGold.withValues(alpha: 0.1),
               ),
             ),
           ),
           
           // Skill tree visualization
-          Padding(
-            padding: const EdgeInsets.all(20),
+          Padding(padding: const EdgeInsets.all(20),
             child: CustomPaint(
               painter: SkillTreePainter(
                 nodes: _allNodes,
@@ -479,14 +477,14 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface.withOpacity(0.9),
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -502,13 +500,13 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
               gradient: LinearGradient(
                 colors: [
                   AppTheme.primaryGold,
-                  AppTheme.primaryGold.withOpacity(0.7),
+                  AppTheme.primaryGold.withValues(alpha: 0.7),
                 ],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryGold.withOpacity(0.5),
+                  color: AppTheme.primaryGold.withValues(alpha: 0.5),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -518,7 +516,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     'LVL',
                     style: TextStyle(
                       color: Colors.white,
@@ -528,7 +526,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                   ),
                   Text(
                     '$level',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -548,7 +546,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Sales Journey',
                       style: TextStyle(
                         color: Colors.white,
@@ -557,7 +555,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                     ),
                     Text(
                       '$xp / $nextLevelXP XP',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppTheme.primaryGold,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -570,8 +568,8 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: Colors.white.withOpacity(0.1),
-                    valueColor: AlwaysStoppedAnimation(AppTheme.primaryGold),
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
+                    valueColor: const AlwaysStoppedAnimation(AppTheme.primaryGold),
                     minHeight: 6,
                   ),
                 ),
@@ -607,27 +605,27 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                       colors: isActive
                           ? [
                               node.color,
-                              node.color.withOpacity(0.6),
+                              node.color.withValues(alpha: 0.6),
                             ]
                           : [
-                              Colors.grey.withOpacity(0.3),
-                              Colors.grey.withOpacity(0.1),
+                              Colors.grey.withValues(alpha: 0.3),
+                              Colors.grey.withValues(alpha: 0.1),
                             ],
                     ),
                     border: Border.all(
                       color: isCurrent
                           ? Colors.white
                           : isUndoable
-                              ? AppTheme.warningOrange.withOpacity(0.6)
+                              ? AppTheme.warningOrange.withValues(alpha: 0.6)
                               : isActive
                                   ? node.color
-                                  : Colors.grey.withOpacity(0.3),
+                                  : Colors.grey.withValues(alpha: 0.3),
                       width: isCurrent ? 3 : isUndoable ? 2.5 : 2,
                     ),
                     boxShadow: isActive
                         ? [
                             BoxShadow(
-                              color: node.color.withOpacity(0.5),
+                              color: node.color.withValues(alpha: 0.5),
                               blurRadius: 12,
                               spreadRadius: 2,
                             ),
@@ -639,14 +637,14 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
                     children: [
                       Icon(
                         node.icon,
-                        color: isActive ? Colors.white : Colors.white.withOpacity(0.3),
+                        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3),
                         size: 20,
                       ),
                       if (node.points > 0)
                         Text(
                           '+${node.points}',
                           style: TextStyle(
-                            color: isActive ? Colors.white : Colors.white.withOpacity(0.3),
+                            color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3),
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
                           ),
@@ -745,7 +743,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.new_,
       label: 'NEW',
       icon: Icons.fiber_new,
-      position: Offset(60, 200),
+      position: const Offset(60, 200),
       color: AppTheme.mediumGray,
       points: 0,
       description: 'Fresh lead discovered',
@@ -756,7 +754,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.viewed,
       label: 'VIEWED',
       icon: Icons.visibility,
-      position: Offset(160, 200),
+      position: const Offset(160, 200),
       color: Colors.blueGrey,
       points: 10,
       description: 'Lead reviewed and qualified',
@@ -767,7 +765,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.called,
       label: 'CALLED',
       icon: Icons.phone_in_talk,
-      position: Offset(260, 200),
+      position: const Offset(260, 200),
       color: AppTheme.warningOrange,
       points: 25,
       description: 'Initial contact made',
@@ -779,7 +777,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.interested,
       label: 'INTERESTED',
       icon: Icons.star,
-      position: Offset(380, 140),
+      position: const Offset(380, 140),
       color: AppTheme.primaryBlue,
       points: 50,
       description: 'Lead shows strong interest',
@@ -790,7 +788,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.converted,
       label: 'CONVERTED',
       icon: Icons.emoji_events,
-      position: Offset(500, 140),
+      position: const Offset(500, 140),
       color: AppTheme.successGreen,
       points: 100,
       description: 'Deal closed! Victory!',
@@ -803,7 +801,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.callbackScheduled,
       label: 'CALLBACK',
       icon: Icons.event,
-      position: Offset(380, 200),
+      position: const Offset(380, 200),
       color: Colors.purple,
       points: 15,
       description: 'Scheduled for follow-up',
@@ -815,7 +813,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.didNotConvert,
       label: 'NO CONVERT',
       icon: Icons.trending_down,
-      position: Offset(380, 260),
+      position: const Offset(380, 260),
       color: Colors.deepOrange,
       points: 5,
       description: 'Could not close the deal',
@@ -827,7 +825,7 @@ class _LeadSkillTreePipelineState extends ConsumerState<LeadSkillTreePipeline>
       status: LeadStatus.doNotCall,
       label: 'DO NOT CALL',
       icon: Icons.phone_disabled,
-      position: Offset(380, 320),
+      position: const Offset(380, 320),
       color: AppTheme.errorRed,
       points: 0,
       description: 'Lead requested no contact',
@@ -849,7 +847,7 @@ class SkillNode {
   final bool isGoal;
   final bool requiresReason;
   
-  const SkillNode({
+  SkillNode({
     required this.id,
     this.status,
     required this.label,
@@ -897,8 +895,8 @@ class SkillTreePainter extends CustomPainter {
         
         // Set the paint color based on active state
         paint.color = isActive
-            ? theme.withOpacity(0.6)
-            : Colors.white.withOpacity(0.1);
+            ? theme.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: 0.1);
         
         // Draw the connection with 90-degree angles
         _drawConnection(canvas, paint, node.position, targetNode.position, isActive);
@@ -953,8 +951,8 @@ class SkillTreePainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 6
         ..strokeCap = StrokeCap.round
-        ..color = theme.withOpacity(0.2)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
+        ..color = theme.withValues(alpha: 0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       canvas.drawPath(path, glowPaint);
     } else {
       canvas.drawPath(path, paint);
@@ -966,8 +964,8 @@ class SkillTreePainter extends CustomPainter {
     final pathMetrics = source.computeMetrics();
     
     for (final metric in pathMetrics) {
-      final dashLength = 10.0;
-      final dashSpace = 5.0;
+      const dashLength = 10.0;
+      const dashSpace = 5.0;
       final distance = metric.length;
       double start = phase * (dashLength + dashSpace);
       
@@ -986,10 +984,10 @@ class SkillTreePainter extends CustomPainter {
   
   bool _isPathActive(SkillNode from, SkillNode to) {
     // Check if this path has been traversed
-    final currentNode = nodes.firstWhere(
-      (n) => n.status == currentStatus,
-      orElse: () => nodes.first,
-    );
+    // final currentNode = nodes.firstWhere(
+    //   (n) => n.status == currentStatus,
+    //   orElse: () => nodes.first,
+    // );
     
     // Simple check - path is active if we've reached the target
     return to.status != null && _getStatusIndex(to.status!) <= _getStatusIndex(currentStatus);

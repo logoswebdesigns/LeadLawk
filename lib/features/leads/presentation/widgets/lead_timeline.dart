@@ -171,43 +171,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
     return DateFormat('MMM d, yyyy • h:mm a').format(local);
   }
 
-  String _formatTimeOnly(DateTime dateTime) {
-    // Assume dateTime from server is UTC and convert to local
-    final utc = dateTime.isUtc ? dateTime : DateTime.utc(
-      dateTime.year, dateTime.month, dateTime.day,
-      dateTime.hour, dateTime.minute, dateTime.second,
-      dateTime.millisecond, dateTime.microsecond
-    );
-    final local = utc.toLocal();
-    final hour = local.hour == 0 ? 12 : (local.hour > 12 ? local.hour - 12 : local.hour);
-    final minute = local.minute.toString().padLeft(2, '0');
-    final period = local.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
-  }
 
-  String _formatDateOnly(DateTime dateTime) {
-    // Assume dateTime from server is UTC and convert to local
-    final utc = dateTime.isUtc ? dateTime : DateTime.utc(
-      dateTime.year, dateTime.month, dateTime.day,
-      dateTime.hour, dateTime.minute, dateTime.second,
-      dateTime.millisecond, dateTime.microsecond
-    );
-    final local = utc.toLocal();
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final date = DateTime(local.year, local.month, local.day);
-    
-    if (date == today) {
-      return 'Today';
-    } else if (date == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
-    } else if (local.year == now.year) {
-      return '${_getMonthName(local.month)} ${local.day}';
-    } else {
-      return '${_getMonthName(local.month)} ${local.day}, ${local.year}';
-    }
-  }
-
+  // ignore: unused_element
   String _getMonthName(int month) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -432,13 +397,13 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
-          left: BorderSide(color: const Color(0xFF30363D), width: 1),
-          right: BorderSide(color: const Color(0xFF30363D), width: 1),
-          bottom: BorderSide(color: const Color(0xFF30363D), width: 1),
+          left: BorderSide(color: Color(0xFF30363D), width: 1),
+          right: BorderSide(color: Color(0xFF30363D), width: 1),
+          bottom: BorderSide(color: Color(0xFF30363D), width: 1),
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(6),
           bottomRight: Radius.circular(6),
         ),
@@ -530,14 +495,14 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isSynthetic 
-            ? const Color(0xFF0D1117).withOpacity(0.5) // Dimmer for synthetic
+            ? const Color(0xFF0D1117).withValues(alpha: 0.5) // Dimmer for synthetic
             : const Color(0xFF0D1117), // GitHub dark background
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isOverdue 
               ? const Color(0xFFDA3633) // GitHub red
               : isSynthetic 
-                  ? const Color(0xFF30363D).withOpacity(0.5) // Subtle border for synthetic
+                  ? const Color(0xFF30363D).withValues(alpha: 0.5) // Subtle border for synthetic
                   : Colors.transparent,
           width: isOverdue || isSynthetic ? 1 : 0,
         ),
@@ -584,7 +549,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF30363D).withOpacity(0.3),
+                        color: const Color(0xFF30363D).withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
@@ -602,8 +567,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: isOverdue 
-                            ? const Color(0xFFDA3633).withOpacity(0.15)
-                            : const Color(0xFFFB8500).withOpacity(0.15),
+                            ? const Color(0xFFDA3633).withValues(alpha: 0.15)
+                            : const Color(0xFFFB8500).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -637,10 +602,10 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.warningOrange.withOpacity(0.1),
+                color: AppTheme.warningOrange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.warningOrange.withOpacity(0.3),
+                  color: AppTheme.warningOrange.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -697,7 +662,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.5),
+          color: AppTheme.primaryGold.withValues(alpha: 0.5),
         ),
       ),
       child: Column(
@@ -708,7 +673,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -741,23 +706,23 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Title',
-              labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+              labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
               hintText: 'Enter a brief title...',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
               ),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.05),
+              fillColor: Colors.white.withValues(alpha: 0.05),
             ),
             cursorColor: AppTheme.primaryGold,
           ),
@@ -770,23 +735,23 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
             maxLines: 3,
             decoration: InputDecoration(
               labelText: 'Description (Optional)',
-              labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+              labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
               hintText: 'Add additional details...',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
               ),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.05),
+              fillColor: Colors.white.withValues(alpha: 0.05),
             ),
             cursorColor: AppTheme.primaryGold,
           ),
@@ -802,9 +767,9 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(8),
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                     ),
                     child: Row(
                       children: [
@@ -816,7 +781,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                               : DateFormat('MMM d, yyyy • h:mm a').format(_editingFollowUpDate!),
                           style: TextStyle(
                             color: _editingFollowUpDate == null 
-                                ? Colors.white.withOpacity(0.6)
+                                ? Colors.white.withValues(alpha: 0.6)
                                 : AppTheme.warningOrange,
                             fontWeight: _editingFollowUpDate == null 
                                 ? FontWeight.normal
@@ -838,7 +803,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   },
                   icon: const Icon(Icons.clear, size: 20),
                   style: IconButton.styleFrom(
-                    foregroundColor: Colors.white.withOpacity(0.7),
+                    foregroundColor: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -853,8 +818,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 child: OutlinedButton(
                   onPressed: _cancelEditing,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white.withOpacity(0.7),
-                    side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    foregroundColor: Colors.white.withValues(alpha: 0.7),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -913,10 +878,10 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 color: Color(0xFF8B949E), // GitHub muted
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'Activity Log',
                 style: TextStyle(
-                  color: const Color(0xFF8B949E),
+                  color: Color(0xFF8B949E),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -944,7 +909,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   icon: const Icon(Icons.add),
                   style: IconButton.styleFrom(
                     foregroundColor: AppTheme.primaryGold,
-                    backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
+                    backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.1),
                   ),
                   tooltip: 'Add Timeline Entry',
                 ),
@@ -961,7 +926,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               color: AppTheme.elevatedSurface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppTheme.primaryGold.withOpacity(0.3),
+                color: AppTheme.primaryGold.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -983,7 +948,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       onPressed: _cancelAdd,
                       icon: const Icon(Icons.close, size: 20),
                       style: IconButton.styleFrom(
-                        foregroundColor: Colors.white.withOpacity(0.7),
+                        foregroundColor: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1033,7 +998,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       side: BorderSide(
                         color: isSelected 
                             ? _getEntryColor(type) 
-                            : _getEntryColor(type).withOpacity(0.3),
+                            : _getEntryColor(type).withValues(alpha: 0.3),
                       ),
                     );
                   }).toList(),
@@ -1046,23 +1011,23 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Title',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                     hintText: 'Enter a brief title...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha: 0.05),
                   ),
                   cursorColor: AppTheme.primaryGold,
                 ),
@@ -1075,23 +1040,23 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Description (Optional)',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                     hintText: 'Add additional details...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha: 0.05),
                   ),
                   cursorColor: AppTheme.primaryGold,
                 ),
@@ -1107,9 +1072,9 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                             borderRadius: BorderRadius.circular(8),
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                           ),
                           child: Row(
                             children: [
@@ -1121,7 +1086,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                                     : DateFormat('MMM d, yyyy • h:mm a').format(_selectedFollowUpDate!),
                                 style: TextStyle(
                                   color: _selectedFollowUpDate == null 
-                                      ? Colors.white.withOpacity(0.6)
+                                      ? Colors.white.withValues(alpha: 0.6)
                                       : AppTheme.warningOrange,
                                   fontWeight: _selectedFollowUpDate == null 
                                       ? FontWeight.normal
@@ -1143,7 +1108,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                         },
                         icon: const Icon(Icons.clear, size: 20),
                         style: IconButton.styleFrom(
-                          foregroundColor: Colors.white.withOpacity(0.7),
+                          foregroundColor: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -1158,8 +1123,8 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       child: OutlinedButton(
                         onPressed: _cancelAdd,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white.withOpacity(0.7),
-                          side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                          foregroundColor: Colors.white.withValues(alpha: 0.7),
+                          side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: const Text('Cancel'),
                       ),
@@ -1191,22 +1156,22 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: AppTheme.elevatedSurface.withOpacity(0.5),
+              color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Column(
               children: [
                 Icon(
                   Icons.timeline,
                   size: 48,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No timeline entries yet',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1215,7 +1180,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 Text(
                   'Start tracking your interactions with this lead',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 14,
                   ),
                 ),

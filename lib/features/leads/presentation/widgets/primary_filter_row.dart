@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../domain/providers/filter_providers.dart' as domain_filters;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart';
 
 class PrimaryFilterRow extends ConsumerWidget {
   const PrimaryFilterRow({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentStatus = ref.watch(statusFilterProvider);
-    final searchFilter = ref.watch(searchFilterProvider);
+    final currentStatus = ref.watch(domain_filters.statusFilterProvider);
+    final searchFilter = ref.watch(domain_filters.searchFilterProvider);
     
     return Container(
       height: 44,
@@ -55,7 +55,7 @@ class PrimaryFilterRow extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const Icon(
             Icons.search,
             size: 14,
             color: AppTheme.primaryGold,
@@ -63,7 +63,7 @@ class PrimaryFilterRow extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(
             '"$searchTerm"',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryGold,
@@ -72,9 +72,9 @@ class PrimaryFilterRow extends ConsumerWidget {
           const SizedBox(width: 6),
           GestureDetector(
             onTap: () {
-              ref.read(searchFilterProvider.notifier).state = '';
+              ref.read(domain_filters.currentFilterStateProvider.notifier).updateSearchFilter('');
             },
-            child: Icon(
+            child: const Icon(
               Icons.close,
               size: 14,
               color: AppTheme.primaryGold,
@@ -94,11 +94,10 @@ class PrimaryFilterRow extends ConsumerWidget {
   ) {
     final isSelected = currentValue == value;
     
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
+    return Padding(padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: () {
-          ref.read(statusFilterProvider.notifier).state = value;
+          ref.read(domain_filters.currentFilterStateProvider.notifier).updateStatusFilter(value);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

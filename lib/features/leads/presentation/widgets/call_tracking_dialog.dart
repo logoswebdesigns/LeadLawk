@@ -15,12 +15,12 @@ class CallTrackingDialog extends ConsumerStatefulWidget {
   final String? salesPitchId;
 
   const CallTrackingDialog({
-    Key? key,
+    super.key,
     required this.lead,
     required this.callStartTime,
     required this.callDuration,
     this.salesPitchId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CallTrackingDialog> createState() => _CallTrackingDialogState();
@@ -169,8 +169,8 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryGold.withOpacity(0.1),
-                    AppTheme.primaryBlue.withOpacity(0.05),
+                    AppTheme.primaryGold.withValues(alpha: 0.1),
+                    AppTheme.primaryBlue.withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -180,7 +180,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.phone_in_talk, color: AppTheme.primaryGold),
+                  const Icon(Icons.phone_in_talk, color: AppTheme.primaryGold),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +193,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                         'Duration: ${widget.callDuration.inMinutes}:${(widget.callDuration.inSeconds % 60).toString().padLeft(2, '0')}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -209,9 +209,8 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sales Pitch Reference (if applicable)
-                    if (widget.salesPitchId != null || widget.lead.salesPitchId != null)
-                      _buildSalesPitchSection(),
+                    // Always show sales pitch section (will use default if none selected)
+                    _buildSalesPitchSection(),
                     
                     // Call Outcome
                     _buildSection(
@@ -236,7 +235,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                     
                     // Phone Number (optional)
                     Visibility(
-                      visible: (widget.lead.phone?.isEmpty ?? true) || widget.lead.phone == 'No phone',
+                      visible: widget.lead.phone.isEmpty || widget.lead.phone == 'No phone',
                       child: _buildSection(
                         'Phone Number (Optional)',
                         TextField(
@@ -244,23 +243,23 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: 'Add Phone Number',
-                            labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                             hintText: 'Enter phone number if available',
-                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                            prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold.withOpacity(0.7)),
+                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                            prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold.withValues(alpha: 0.7)),
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.05),
+                            fillColor: Colors.white.withValues(alpha: 0.05),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                              borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                             ),
                           ),
                           keyboardType: TextInputType.phone,
@@ -276,22 +275,22 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Notes',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                           hintText: 'Key points from the conversation...',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                           filled: true,
-                          fillColor: Colors.white.withOpacity(0.05),
+                          fillColor: Colors.white.withValues(alpha: 0.05),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                            borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                           ),
                         ),
                         maxLines: 4,
@@ -366,14 +365,13 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
   }
 
   Widget _buildSection(String title, Widget content) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+    return Padding(padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryGold,
@@ -385,139 +383,262 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
       ),
     );
   }
+  
+  // Helper method following Single Responsibility Principle
+  // Encapsulates default pitch selection logic
+  dynamic _getDefaultPitch(List<dynamic> pitches) {
+    // First try to find one marked as default
+    try {
+      return pitches.firstWhere((p) => p.isDefault == true);
+    } catch (_) {
+      // Fallback to first pitch if no default is marked
+      return pitches.first;
+    }
+  }
 
   Widget _buildSalesPitchSection() {
-    final pitchId = widget.salesPitchId ?? widget.lead.salesPitchId;
-    if (pitchId == null) return const SizedBox.shrink();
-    
+    // Strategy Pattern: Determine pitch selection strategy
+    // Following Null Object Pattern - always show a pitch (default if none selected)
     final pitches = ref.watch(salesPitchesProvider);
     
-    if (pitches.isEmpty) return const SizedBox.shrink();
-    
-    final selectedPitch = pitches.firstWhere(
-      (p) => p.id == pitchId,
-      orElse: () => pitches.first,
-    );
-    
-    return _buildSection(
-      'Sales Pitch Used',
-      Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppTheme.primaryGold.withOpacity(0.3),
-              ),
-            ),
+    // Show loading indicator while pitches are being loaded
+    if (pitches.isEmpty) {
+      return Card(
+        color: AppTheme.primaryGold.withValues(alpha: 0.08),
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+            width: 2,
+          ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Pitch header with copy button
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        selectedPitch.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryGold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.copy,
-                        size: 18,
-                        color: AppTheme.primaryGold.withOpacity(0.7),
-                      ),
-                      tooltip: 'Copy pitch to clipboard',
-                      onPressed: () {
-                        final personalizedPitch = selectedPitch.content
-                            .replaceAll('[Business Name]', widget.lead.businessName)
-                            .replaceAll('[Location]', widget.lead.location);
-                        
-                        Clipboard.setData(ClipboardData(text: personalizedPitch));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Pitch copied to clipboard'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                const CircularProgressIndicator(
+                  color: AppTheme.primaryGold,
                 ),
-                const SizedBox(height: 12),
-                
-                // Pitch content (collapsible)
-                ExpansionTile(
-                  title: Text(
-                    'View Pitch Script',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 13,
-                    ),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading sales pitches...',
+                  style: TextStyle(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                    fontSize: 14,
                   ),
-                  initiallyExpanded: true,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: SelectableText(
-                        selectedPitch.content
-                            .replaceAll('[Business Name]', widget.lead.businessName)
-                            .replaceAll('[Location]', widget.lead.location),
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 13,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                
-                // Simple pitch effectiveness tracking
-                Column(
-                  children: [
-                    CheckboxListTile(
-                      title: Text(
-                        'Pitch delivered successfully',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 13,
-                        ),
-                      ),
-                      value: _pitchDeliveredSuccessfully,
-                      onChanged: (val) => setState(() => _pitchDeliveredSuccessfully = val ?? false),
-                      activeColor: AppTheme.successGreen,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    if (_pitchDeliveredSuccessfully)
-                      CheckboxListTile(
-                        title: Text(
-                          'Prospect showed interest',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 13,
-                          ),
-                        ),
-                        value: _pitchResonated,
-                        onChanged: (val) => setState(() => _pitchResonated = val ?? false),
-                        activeColor: AppTheme.successGreen,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                  ],
                 ),
               ],
             ),
           ),
-        );
+        ),
+      );
+    }
+    
+    // Pitch Resolution Strategy (in order of preference):
+    // 1. Explicitly passed pitch ID (from sales pitch modal)
+    // 2. Lead's saved pitch ID
+    // 3. Default pitch (marked as default)
+    // 4. First available pitch (fallback)
+    final pitchId = widget.salesPitchId ?? widget.lead.salesPitchId;
+    
+    final selectedPitch = pitchId != null
+        ? pitches.firstWhere(
+            (p) => p.id == pitchId,
+            orElse: () => _getDefaultPitch(pitches), // Fallback to default
+          )
+        : _getDefaultPitch(pitches); // No pitch selected, use default
+    
+    // Following Material Design's emphasis guidelines for important content during calls
+    // Using a Card with elevated surface as recommended in Material Design 3
+    return Card(
+      color: AppTheme.primaryGold.withValues(alpha: 0.08),
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: AppTheme.primaryGold.withValues(alpha: 0.4),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with clear visual hierarchy (Material Design principle)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withValues(alpha: 0.15),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.campaign,
+                  color: AppTheme.primaryGold,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pitchId == null ? 'DEFAULT SALES PITCH' : 'ACTIVE SALES PITCH',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.2,
+                          color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        selectedPitch.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.copy_all,
+                    color: AppTheme.primaryGold,
+                  ),
+                  tooltip: 'Copy pitch to clipboard',
+                  onPressed: () {
+                    final personalizedPitch = selectedPitch.content
+                        .replaceAll('[Business Name]', widget.lead.businessName)
+                        .replaceAll('[Location]', widget.lead.location);
+                    
+                    Clipboard.setData(ClipboardData(text: personalizedPitch));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pitch copied to clipboard'),
+                        backgroundColor: AppTheme.successGreen,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          // Pitch content - Always visible for easy reading during calls
+          // Using good contrast and readability as per WCAG guidelines
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Script content with enhanced readability
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: SelectableText(
+                    selectedPitch.content
+                        .replaceAll('[Business Name]', widget.lead.businessName)
+                        .replaceAll('[Location]', widget.lead.location),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,  // Larger for easier reading during calls
+                      height: 1.6,    // Better line height for readability
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Pitch tracking with clear touch targets (48dp minimum as per Material Design)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setState(() => _pitchDeliveredSuccessfully = !_pitchDeliveredSuccessfully),
+                        child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _pitchDeliveredSuccessfully,
+                                  onChanged: (val) => setState(() => _pitchDeliveredSuccessfully = val ?? false),
+                                  activeColor: AppTheme.successGreen,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Pitch delivered successfully',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_pitchDeliveredSuccessfully)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => setState(() => _pitchResonated = !_pitchResonated),
+                          child: Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    value: _pitchResonated,
+                                    onChanged: (val) => setState(() => _pitchResonated = val ?? false),
+                                    activeColor: AppTheme.successGreen,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Prospect showed interest',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

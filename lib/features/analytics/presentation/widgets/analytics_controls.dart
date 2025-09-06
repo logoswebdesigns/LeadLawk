@@ -50,7 +50,7 @@ class MetricSelector extends StatelessWidget {
                   }
                   onMetricsChanged(newMetrics);
                 },
-                selectedColor: const Color(0xFF00E5FF).withOpacity(0.3),
+                selectedColor: const Color(0xFF00E5FF).withValues(alpha: 0.3),
                 backgroundColor: const Color(0xFF2A3142),
                 labelStyle: TextStyle(
                   color: isSelected ? const Color(0xFF00E5FF) : Colors.white70,
@@ -224,7 +224,7 @@ class TimeRangeSelector extends StatelessWidget {
     return OutlinedButton(
       onPressed: () => onRangeChanged(range),
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? const Color(0xFF00E5FF).withOpacity(0.2) : null,
+        backgroundColor: isSelected ? const Color(0xFF00E5FF).withValues(alpha: 0.2) : null,
         foregroundColor: isSelected ? const Color(0xFF00E5FF) : Colors.white70,
         side: BorderSide(
           color: isSelected ? const Color(0xFF00E5FF) : Colors.white24,
@@ -402,15 +402,14 @@ class ChartOptionsPanel extends StatelessWidget {
             child: Row(
               children: ChartType.values.map((type) {
                 final isSelected = chartType == type;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                return Padding(padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
                     label: Text(_getChartTypeLabel(type)),
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) onChartTypeChanged(type);
                     },
-                    selectedColor: const Color(0xFF00E5FF).withOpacity(0.3),
+                    selectedColor: const Color(0xFF00E5FF).withValues(alpha: 0.3),
                     backgroundColor: const Color(0xFF2A3142),
                     labelStyle: TextStyle(
                       color: isSelected ? const Color(0xFF00E5FF) : Colors.white70,

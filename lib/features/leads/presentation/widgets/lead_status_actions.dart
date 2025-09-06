@@ -5,6 +5,8 @@ import '../../domain/entities/lead.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../providers/goals_provider.dart';
+import '../providers/use_case_providers.dart';
+import '../providers/command_provider.dart';
 import '../services/unified_call_service.dart';
 import 'callback_scheduling_dialog.dart';
 
@@ -46,9 +48,9 @@ class LeadStatusActions extends ConsumerStatefulWidget {
   final Lead lead;
   
   const LeadStatusActions({
-    Key? key,
+    super.key,
     required this.lead,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LeadStatusActions> createState() => _LeadStatusActionsState();
@@ -66,22 +68,43 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
 
   Future<void> _updateStatus(LeadStatus newStatus, {Map<String, dynamic>? metadata}) async {
     try {
-      final repository = ref.read(leadsRepositoryProvider);
+      // Validate the transition using pipeline use case
+      final pipeline = ref.read(manageLeadPipelineProvider);
+      final validationResult = pipeline.validateTransition(widget.lead.status, newStatus);
       
-      // Create timeline entry
+      if (validationResult.isLeft()) {
+        // Show error if transition is invalid
+        validationResult.fold(
+          (failure) => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failure.message)),
+          ),
+          (_) {},
+        );
+        return;
+      }
+      
+      // Use command pattern for update
+      final updateCommand = ref.read(updateLeadCommandProvider);
+      final result = await updateCommand(widget.lead, {'status': newStatus});
+      
+      if (result.isLeft()) {
+        result.fold(
+          (failure) => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update status: ${failure.message}')),
+          ),
+          (_) {},
+        );
+        return;
+      }
+      
+      // Add timeline entry separately (still using repository for now)
+      final repository = ref.read(leadsRepositoryProvider);
       final timelineData = {
         'type': 'STATUS_CHANGE',
         'title': 'Status changed to ${_getStatusLabel(newStatus)}',
         'description': metadata?['notes'] ?? '',
         'metadata': metadata,
       };
-      
-      // Update the lead
-      final updatedLead = widget.lead.copyWith(
-        status: newStatus,
-      );
-      
-      await repository.updateLead(updatedLead);
       
       // Add timeline entry
       await repository.addTimelineEntry(widget.lead.id, timelineData);
@@ -134,7 +157,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: Text(
+        title: const Text(
           'Mark as Do Not Call',
           style: TextStyle(color: AppTheme.errorRed),
         ),
@@ -152,22 +175,22 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Reason (Optional)',
-                labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                 hintText: 'Enter reason if needed...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                  borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                 ),
               ),
               maxLines: 2,
@@ -206,7 +229,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.elevatedSurface,
-          title: Text(
+          title: const Text(
             'Mark as Did Not Convert',
             style: TextStyle(color: AppTheme.warningOrange),
           ),
@@ -221,7 +244,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
               const SizedBox(height: 16),
               DropdownButtonFormField<ConversionFailureReason>(
                 value: selectedReason,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Reason Code',
                   border: OutlineInputBorder(),
                 ),
@@ -245,22 +268,22 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   labelText: 'Additional Notes',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   hintText: 'Enter any additional details...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                 ),
                 maxLines: 3,
@@ -295,24 +318,26 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
 
   @override
   Widget build(BuildContext context) {
-    final isTerminalStatus = widget.lead.status == LeadStatus.converted || 
-                            widget.lead.status == LeadStatus.doNotCall || 
-                            widget.lead.status == LeadStatus.didNotConvert;
+    // Use pipeline use case to get available transitions
+    final availableTransitions = ref.watch(availableTransitionsProvider(widget.lead.status));
+    // final pipelineProgress = ref.watch(pipelineProgressProvider(widget.lead.status));
+    
+    final isTerminalStatus = availableTransitions.isEmpty;
     
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryGold.withOpacity(0.1),
-            AppTheme.primaryBlue.withOpacity(0.05),
+            AppTheme.primaryGold.withValues(alpha: 0.1),
+            AppTheme.primaryBlue.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.2),
+          color: AppTheme.primaryGold.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -328,14 +353,13 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                   _isExpanded = !_isExpanded;
                 });
               } : null,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              child: Padding(padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(widget.lead.status).withOpacity(0.2),
+                        color: _getStatusColor(widget.lead.status).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -351,7 +375,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                         Text(
                           'Current Status',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 12,
                           ),
                         ),
@@ -370,7 +394,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                       AnimatedRotation(
                         duration: const Duration(milliseconds: 200),
                         turns: _isExpanded ? 0.5 : 0.0,
-                        child: Icon(
+                        child: const Icon(
                           Icons.expand_more,
                           color: AppTheme.primaryGold,
                         ),
@@ -389,8 +413,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 200),
                 opacity: _isExpanded ? 1.0 : 0.0,
-                child: _isExpanded ? Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _isExpanded ? Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -401,7 +424,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
                       Text(
                         'Quick Actions',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -512,14 +535,14 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
       ),
       label: Text(label),
       onPressed: () => _updateStatus(status),
-      backgroundColor: _getStatusColor(status).withOpacity(0.2),
+      backgroundColor: _getStatusColor(status).withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: _getStatusColor(status),
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
       side: BorderSide(
-        color: _getStatusColor(status).withOpacity(0.4),
+        color: _getStatusColor(status).withValues(alpha: 0.4),
         width: 1,
       ),
     );
@@ -527,7 +550,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
   
   Widget _buildCallbackChip() {
     return ActionChip(
-      avatar: Icon(
+      avatar: const Icon(
         Icons.event,
         size: 16,
         color: Colors.purple,
@@ -539,14 +562,14 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
           builder: (context) => CallbackSchedulingDialog(lead: widget.lead),
         );
       },
-      backgroundColor: Colors.purple.withOpacity(0.2),
-      labelStyle: TextStyle(
+      backgroundColor: Colors.purple.withValues(alpha: 0.2),
+      labelStyle: const TextStyle(
         color: Colors.purple,
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
       side: BorderSide(
-        color: Colors.purple.withOpacity(0.4),
+        color: Colors.purple.withValues(alpha: 0.4),
         width: 1,
       ),
     );
@@ -561,7 +584,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
     bool isDanger = false,
   }) {
     return Material(
-      color: isProminent ? color : (isDanger ? color.withOpacity(0.1) : Colors.transparent),
+      color: isProminent ? color : (isDanger ? color.withValues(alpha: 0.1) : Colors.transparent),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -571,7 +594,7 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: color.withOpacity(isDanger ? 0.5 : 0.3),
+              color: color.withValues(alpha: isDanger ? 0.5 : 0.3),
               width: 1,
             ),
           ),

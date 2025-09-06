@@ -39,7 +39,7 @@ class EmailTemplatesApiNotifier extends StateNotifier<AsyncValue<List<EmailTempl
       });
     } catch (e) {
       // Handle error but don't change the main state
-      throw e;
+      rethrow;
     }
   }
 
@@ -55,7 +55,7 @@ class EmailTemplatesApiNotifier extends StateNotifier<AsyncValue<List<EmailTempl
       });
     } catch (e) {
       // Handle error but don't change the main state
-      throw e;
+      rethrow;
     }
   }
 
@@ -71,7 +71,7 @@ class EmailTemplatesApiNotifier extends StateNotifier<AsyncValue<List<EmailTempl
       });
     } catch (e) {
       // Handle error but don't change the main state
-      throw e;
+      rethrow;
     }
   }
 

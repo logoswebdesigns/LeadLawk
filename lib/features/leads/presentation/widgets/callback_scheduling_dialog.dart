@@ -9,14 +9,15 @@ import '../../domain/services/calendar_service.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../providers/email_settings_provider.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class CallbackSchedulingDialog extends ConsumerStatefulWidget {
   final Lead lead;
   
   const CallbackSchedulingDialog({
-    Key? key,
+    super.key,
     required this.lead,
-  }) : super(key: key);
+  });
   
   @override
   ConsumerState<CallbackSchedulingDialog> createState() => _CallbackSchedulingDialogState();
@@ -56,7 +57,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: const ColorScheme.dark(
               primary: AppTheme.primaryGold,
               onPrimary: Colors.black,
               surface: AppTheme.elevatedSurface,
@@ -82,7 +83,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: const ColorScheme.dark(
               primary: AppTheme.primaryGold,
               onPrimary: Colors.black,
               surface: AppTheme.elevatedSurface,
@@ -118,7 +119,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
         _selectedTime.minute,
       );
       
-      print('📅 Scheduling callback for: ${callbackDateTime.toIso8601String()}');
+      DebugLogger.log('📅 Scheduling callback for: ${callbackDateTime.toIso8601String()}');
       
       // Update lead status and follow-up date
       final updatedLead = widget.lead.copyWith(
@@ -126,15 +127,15 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
         followUpDate: callbackDateTime,
       );
       
-      print('🔄 Updating lead ${widget.lead.id} with status: ${updatedLead.status.name}');
-      print('📝 Follow-up date: ${updatedLead.followUpDate?.toIso8601String()}');
+      DebugLogger.log('🔄 Updating lead ${widget.lead.id} with status: ${updatedLead.status.name}');
+      DebugLogger.log('📝 Follow-up date: ${updatedLead.followUpDate?.toIso8601String()}');
       
       final updateResult = await repository.updateLead(updatedLead);
       
       bool updateSuccess = false;
       updateResult.fold(
         (failure) {
-          print('❌ Failed to update lead: $failure');
+          DebugLogger.error('❌ Failed to update lead: $failure');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -145,7 +146,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
           }
         },
         (lead) {
-          print('✅ Lead updated successfully: ${lead.status.name}');
+          DebugLogger.log('✅ Lead updated successfully: ${lead.status.name}');
           updateSuccess = true;
         },
       );
@@ -159,7 +160,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       }
       
       // Add timeline entry
-      print('📝 Adding timeline entry for callback');
+      DebugLogger.log('📝 Adding timeline entry for callback');
       final timelineData = {
         'type': 'follow_up',
         'title': 'Callback scheduled',
@@ -168,12 +169,12 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             : 'Callback scheduled for ${_formatDateTime(callbackDateTime)}',
         'follow_up_date': callbackDateTime.toIso8601String(),
       };
-      print('📝 Timeline data: $timelineData');
+      DebugLogger.log('📝 Timeline data: $timelineData');
       
       final timelineResult = await repository.addTimelineEntry(widget.lead.id, timelineData);
       timelineResult.fold(
-        (failure) => print('❌ Failed to add timeline entry: $failure'),
-        (_) => print('✅ Timeline entry added successfully'),
+        (failure) => DebugLogger.error('❌ Failed to add timeline entry: $failure'),
+        (_) => DebugLogger.log('✅ Timeline entry added successfully'),
       );
       
       // Handle calendar options
@@ -181,21 +182,21 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
       bool inviteSent = false;
       
       if (_addToCalendar) {
-        print('📅 Adding to native calendar...');
+        DebugLogger.log('📅 Adding to native calendar...');
         calendarAdded = await CalendarService.addToNativeCalendar(
           lead: widget.lead,
           callbackDateTime: callbackDateTime,
           notes: _notesController.text,
         );
         if (calendarAdded) {
-          print('✅ Added to native calendar');
+          DebugLogger.log('✅ Added to native calendar');
         } else {
-          print('⚠️ Could not add to native calendar');
+          DebugLogger.log('⚠️ Could not add to native calendar');
         }
       }
       
       if (_sendEmailInvite && _emailController.text.isNotEmpty) {
-        print('📧 Sending calendar invite to ${_emailController.text}...');
+        DebugLogger.log('📧 Sending calendar invite to ${_emailController.text}...');
         try {
           // Get email settings
           final emailSettings = ref.read(emailSettingsProvider);
@@ -217,9 +218,9 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             );
             
             if (inviteSent) {
-              print('✅ Calendar invite sent to ${_emailController.text}');
+              DebugLogger.log('✅ Calendar invite sent to ${_emailController.text}');
             } else {
-              print('⚠️ Failed to send calendar invite');
+              DebugLogger.error('⚠️ Failed to send calendar invite');
             }
           } else {
             // Fallback: Just create the ICS file
@@ -230,8 +231,8 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               recipientEmail: _emailController.text,
             );
             
-            print('✅ ICS file created: ${icsFile.path}');
-            print('ℹ️ Configure email settings to send invites automatically');
+            DebugLogger.log('✅ ICS file created: ${icsFile.path}');
+            DebugLogger.log('ℹ️ Configure email settings to send invites automatically');
             
             // Show a message to configure email settings
             if (mounted) {
@@ -245,12 +246,12 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             }
           }
         } catch (e) {
-          print('❌ Failed to send calendar invite: $e');
+          DebugLogger.error('❌ Failed to send calendar invite: $e');
         }
       }
       
       // Refresh the lead details
-      print('🔄 Refreshing lead details');
+      DebugLogger.log('🔄 Refreshing lead details');
       ref.invalidate(leadDetailProvider(widget.lead.id));
       
       if (mounted) {
@@ -278,8 +279,8 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
         );
       }
     } catch (e, stackTrace) {
-      print('❌ Exception in _scheduleCallback: $e');
-      print('Stack trace: $stackTrace');
+      DebugLogger.error('❌ Exception in _scheduleCallback: $e');
+      DebugLogger.log('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -334,7 +335,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
+              color: Colors.purple.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -359,7 +360,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             Text(
               'Date',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -371,12 +372,12 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       CupertinoIcons.calendar,
                       color: AppTheme.primaryGold,
                       size: 20,
@@ -389,7 +390,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                     const Spacer(),
                     Icon(
                       Icons.arrow_drop_down,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ],
                 ),
@@ -402,7 +403,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             Text(
               'Time',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -414,12 +415,12 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       CupertinoIcons.clock,
                       color: AppTheme.primaryGold,
                       size: 20,
@@ -432,7 +433,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                     const Spacer(),
                     Icon(
                       Icons.arrow_drop_down,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ],
                 ),
@@ -445,7 +446,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             Text(
               'Notes (Optional)',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -457,20 +458,20 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Add any notes about this callback...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                  borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                 ),
               ),
             ),
@@ -481,21 +482,21 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.05),
+                color: AppTheme.primaryGold.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+                border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(
                         Icons.calendar_today,
                         color: AppTheme.primaryGold,
                         size: 18,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'Calendar Options',
                         style: TextStyle(
@@ -519,14 +520,14 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                     title: Text(
                       'Add to my calendar',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 13,
                       ),
                     ),
                     subtitle: Text(
                       _getCalendarSubtitle(),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 11,
                       ),
                     ),
@@ -549,14 +550,14 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                     title: Text(
                       'Send calendar invite to lead',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 13,
                       ),
                     ),
                     subtitle: Text(
                       'Email a calendar invite to the lead (requires email)',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 11,
                       ),
                     ),
@@ -576,31 +577,31 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                       decoration: InputDecoration(
                         labelText: 'Lead Email Address',
                         labelStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 12,
                         ),
                         hintText: 'Enter lead\'s email...',
                         hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           fontSize: 12,
                         ),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
+                        fillColor: Colors.white.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                          borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                         ),
                         prefixIcon: Icon(
                           Icons.email,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           size: 18,
                         ),
                         isDense: true,
@@ -618,13 +619,13 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.1),
+                color: Colors.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.info_outline,
                     color: Colors.purple,
                     size: 16,
@@ -633,7 +634,7 @@ class _CallbackSchedulingDialogState extends ConsumerState<CallbackSchedulingDia
                   Expanded(
                     child: Text(
                       'Callback: ${_formatDateTime(callbackDateTime)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.purple,
                         fontSize: 13,
                       ),

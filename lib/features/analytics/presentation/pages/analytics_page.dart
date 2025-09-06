@@ -58,30 +58,30 @@ class AnalyticsPage extends ConsumerWidget {
           ref.invalidate(conversionTimelineProvider);
           ref.invalidate(actionableInsightsProvider);
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        child: const SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Conversion Overview
-              const ConversionOverviewCard(),
-              const SizedBox(height: 20),
+              ConversionOverviewCard(),
+              SizedBox(height: 20),
               
               // Custom Comparison Analysis
-              const CustomComparisonCard(),
-              const SizedBox(height: 20),
+              CustomComparisonCard(),
+              SizedBox(height: 20),
               
               // Actionable Insights
-              const InsightsCard(),
-              const SizedBox(height: 20),
+              InsightsCard(),
+              SizedBox(height: 20),
               
               // Conversion Timeline Chart
-              const TimelineChart(),
-              const SizedBox(height: 20),
+              TimelineChart(),
+              SizedBox(height: 20),
               
               // Top Converting Segments
-              const TopSegmentsCard(),
+              TopSegmentsCard(),
             ],
           ),
         ),

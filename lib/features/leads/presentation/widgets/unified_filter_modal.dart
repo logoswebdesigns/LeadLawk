@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../domain/providers/filter_providers.dart' as domain_providers;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart';
-import '../providers/paginated_leads_provider.dart';
+import '../../domain/entities/filter_state.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class UnifiedFilterModal extends ConsumerStatefulWidget {
   const UnifiedFilterModal({super.key});
@@ -37,16 +38,16 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     super.initState();
     
     // Initialize with current filter values
-    searchController = TextEditingController(text: ref.read(searchFilterProvider));
+    searchController = TextEditingController(text: ref.read(domain_providers.searchFilterProvider));
     
     // Initialize visible statuses (inverse of hidden)
-    final hiddenStatuses = ref.read(hiddenStatusesProvider);
+    final hiddenStatuses = ref.read(domain_providers.hiddenStatusesProvider);
     visibleStatuses = LeadStatus.values
         .where((status) => !hiddenStatuses.contains(status.name))
         .toSet();
     
-    candidatesOnly = ref.read(candidatesOnlyProvider);
-    final sortState = ref.read(sortStateProvider);
+    candidatesOnly = ref.read(domain_providers.candidatesOnlyProvider);
+    final sortState = ref.read(domain_providers.sortStateProvider);
     sortOption = sortState.option;
     sortAscending = sortState.ascending;
   }
@@ -81,7 +82,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   CupertinoIcons.slider_horizontal_3,
                   color: AppTheme.primaryGold,
                   size: 24,
@@ -101,7 +102,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                     if (activeFilterCount > 0)
                       Text(
                         '$activeFilterCount active filter${activeFilterCount > 1 ? 's' : ''}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.primaryGold,
                         ),
@@ -143,7 +144,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                     decoration: InputDecoration(
                       hintText: 'Search by business name or phone...',
                       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-                      prefixIcon: Icon(
+                      prefixIcon: const Icon(
                         CupertinoIcons.search,
                         color: AppTheme.primaryGold,
                         size: 20,
@@ -169,7 +170,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppTheme.primaryGold),
+                        borderSide: const BorderSide(color: AppTheme.primaryGold),
                       ),
                     ),
                     onChanged: (_) => setState(() {}),
@@ -301,7 +302,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: AppTheme.primaryGold,
@@ -572,20 +573,41 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
   }
 
   void _applyFilters() {
-    // Update all providers
-    ref.read(searchFilterProvider.notifier).state = searchController.text;
-    ref.read(candidatesOnlyProvider.notifier).state = candidatesOnly;
-    ref.read(sortStateProvider.notifier).state = SortState(
-      option: sortOption,
-      ascending: sortAscending,
-    );
+    // Following the Command Pattern for filter application
+    // Each filter change triggers a new API query, not client-side filtering
     
-    // Convert visible statuses to hidden statuses
-    final hiddenStatuses = LeadStatus.values
-        .where((status) => !visibleStatuses.contains(status))
-        .map((status) => status.name)
-        .toSet();
-    ref.read(hiddenStatusesProvider.notifier).state = hiddenStatuses;
+    // Update search filter
+    ref.read(domain_providers.currentFilterStateProvider.notifier).updateSearchFilter(searchController.text);
+    
+    // Update candidates only filter  
+    ref.read(domain_providers.currentFilterStateProvider.notifier).updateCandidatesOnly(candidatesOnly);
+    
+    // Update sort state atomically
+    ref.read(domain_providers.currentSortStateProvider.notifier).updateSort(sortOption, sortAscending);
+    
+    // Status filtering: Convert selection to API-compatible format
+    // Following Riverpod's Filter Pattern - single selected status for API query
+    String? selectedStatus;
+    if (visibleStatuses.length == 1) {
+      // Single status selected - pass it to API
+      selectedStatus = visibleStatuses.first.name;
+      DebugLogger.network('🔍 FILTER: Single status selected for API query: $selectedStatus');
+    } else if (visibleStatuses.length < LeadStatus.values.length) {
+      // Multiple but not all - for now we'll use the first one
+      // TODO: Backend should support multiple status filtering
+      selectedStatus = visibleStatuses.isEmpty ? null : visibleStatuses.first.name;
+      DebugLogger.log('🔍 FILTER: Multiple statuses selected, using first: $selectedStatus');
+    }
+    
+    // Update the status filter provider which triggers API call
+    ref.read(domain_providers.currentFilterStateProvider.notifier).updateStatusFilter(selectedStatus);
+    
+    // Also update hidden statuses for UI consistency
+    // final hiddenStatuses = LeadStatus.values
+    //     .where((status) => !visibleStatuses.contains(status))
+    //     .map((status) => status.name)
+    //     .toSet();
+    // Note: hiddenStatusesProvider is computed, need to update via filter state
     
     Navigator.pop(context);
   }

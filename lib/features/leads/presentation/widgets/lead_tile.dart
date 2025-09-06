@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/pagespeed_websocket_provider.dart';
-import '../pages/leads_list_page.dart';
+import '../providers/filter_providers.dart';
 
 class LeadTile extends ConsumerStatefulWidget {
   final Lead lead;
@@ -151,8 +151,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
                   ref.read(selectedLeadsProvider.notifier).state = {widget.lead.id};
                 }
               },
-              child: Padding(
-                padding: const EdgeInsets.all(14),
+              child: Padding(padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
                     // Checkbox (only show in selection mode)
@@ -312,7 +311,7 @@ class _LeadTileState extends ConsumerState<LeadTile>
               ],
             ),
           ),
-          child: Icon(
+          child: const Icon(
             CupertinoIcons.speedometer,
             size: 10,
             color: Colors.white,
@@ -348,14 +347,14 @@ class _LeadTileState extends ConsumerState<LeadTile>
                 width: 1,
               ),
             ),
-            child: Icon(
+            child: const Icon(
               CupertinoIcons.exclamationmark,
               size: 10,
               color: Colors.orange,
             ),
           ),
           const SizedBox(width: 3),
-          Text(
+          const Text(
             '!',
             style: TextStyle(
               fontSize: 11,
@@ -385,14 +384,14 @@ class _LeadTileState extends ConsumerState<LeadTile>
                 width: 1,
               ),
             ),
-            child: Icon(
+            child: const Icon(
               CupertinoIcons.minus,
               size: 10,
               color: Colors.grey,
             ),
           ),
           const SizedBox(width: 3),
-          Text(
+          const Text(
             '-',
             style: TextStyle(
               fontSize: 11,

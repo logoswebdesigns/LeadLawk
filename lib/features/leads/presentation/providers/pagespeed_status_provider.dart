@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../services/pagespeed_notification_service.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 enum PageSpeedTestStatus {
   idle,
@@ -150,7 +151,7 @@ class PageSpeedStatusNotifier extends StateNotifier<Map<String, PageSpeedTestSta
               lead['pagespeed_desktop_score'] != null ||
               lead['pagespeed_test_error'] != null) {
             // Test completed
-            print('🎯 PageSpeed test completed for $leadId - Mobile: ${lead['pagespeed_mobile_score']}, Desktop: ${lead['pagespeed_desktop_score']}');
+            DebugLogger.log('🎯 PageSpeed test completed for $leadId - Mobile: ${lead['pagespeed_mobile_score']}, Desktop: ${lead['pagespeed_desktop_score']}');
             
             // Show notification
             notificationService.showPageSpeedComplete(
@@ -174,18 +175,18 @@ class PageSpeedStatusNotifier extends StateNotifier<Map<String, PageSpeedTestSta
             timer.cancel();
             _pollers.remove(leadId);
             
-            print('📊 PageSpeed test completed for lead $leadId');
+            DebugLogger.log('📊 PageSpeed test completed for lead $leadId');
             
             // Clear state after a longer delay to allow UI to see the completion
             Future.delayed(const Duration(seconds: 15), () {
               if (state.containsKey(leadId)) {
-                print('🧹 Clearing PageSpeed status for $leadId');
+                DebugLogger.log('🧹 Clearing PageSpeed status for $leadId');
                 state = Map.from(state)..remove(leadId);
               }
             });
           }
         } catch (e) {
-          print('⚠️ Error polling PageSpeed status for $leadId: $e');
+          DebugLogger.error('⚠️ Error polling PageSpeed status for $leadId: $e');
           // Continue polling
         }
       }

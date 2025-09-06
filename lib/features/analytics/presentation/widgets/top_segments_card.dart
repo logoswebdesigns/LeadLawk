@@ -10,9 +10,8 @@ class TopSegmentsCard extends ConsumerWidget {
     final segmentsAsync = ref.watch(topSegmentsProvider);
 
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,7 +27,7 @@ class TopSegmentsCard extends ConsumerWidget {
                 ),
               ],
             ),
-            Divider(color: Colors.white.withOpacity(0.2)),
+            Divider(color: Colors.white.withValues(alpha: 0.2)),
             segmentsAsync.when(
               data: (segments) => Column(
                 children: [
@@ -69,27 +68,23 @@ class TopSegmentsCard extends ConsumerWidget {
                   ],
                 ],
               ),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
                         Icons.bar_chart_outlined,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 32,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'No segment data yet',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                         ),
                       ),
@@ -97,7 +92,7 @@ class TopSegmentsCard extends ConsumerWidget {
                       Text(
                         'Segments will appear with 3+ leads per category',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -169,9 +164,9 @@ class _SegmentSection extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -197,7 +192,7 @@ class _SegmentSection extends StatelessWidget {
                           const SizedBox(width: 8),
                           _StatChip(
                             label: 'Conv',
-                            value: '${conversionRate}%',
+                            value: '$conversionRate%',
                             color: Colors.green,
                           ),
                         ],
@@ -211,10 +206,10 @@ class _SegmentSection extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getScoreColor(successScore).withOpacity(0.1),
+                    color: _getScoreColor(successScore).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: _getScoreColor(successScore).withOpacity(0.3),
+                      color: _getScoreColor(successScore).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -239,7 +234,7 @@ class _SegmentSection extends StatelessWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -267,7 +262,7 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(

@@ -3,17 +3,23 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
+import 'package:dartz/dartz.dart' as _i4;
+import 'package:leadloq/core/error/failures.dart' as _i10;
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart'
-    as _i4;
+    as _i5;
 import 'package:leadloq/features/leads/data/models/lead_model.dart' as _i3;
 import 'package:leadloq/features/leads/data/models/paginated_response.dart'
     as _i2;
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart'
+    as _i11;
+import 'package:leadloq/features/leads/domain/repositories/filter_repository.dart'
+    as _i9;
 import 'package:leadloq/features/leads/domain/usecases/browser_automation_usecase.dart'
-    as _i6;
+    as _i7;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
+import 'package:mockito/src/dummies.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -50,17 +56,27 @@ class _FakeLeadModel_1 extends _i1.SmartFake implements _i3.LeadModel {
         );
 }
 
+class _FakeEither_2<L, R> extends _i1.SmartFake implements _i4.Either<L, R> {
+  _FakeEither_2(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [LeadsRemoteDataSource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockLeadsRemoteDataSource extends _i1.Mock
-    implements _i4.LeadsRemoteDataSource {
+    implements _i5.LeadsRemoteDataSource {
   MockLeadsRemoteDataSource() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<List<_i3.LeadModel>> getLeads({
+  _i6.Future<List<_i3.LeadModel>> getLeads({
     String? status,
     String? search,
     bool? candidatesOnly,
@@ -75,11 +91,11 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             #candidatesOnly: candidatesOnly,
           },
         ),
-        returnValue: _i5.Future<List<_i3.LeadModel>>.value(<_i3.LeadModel>[]),
-      ) as _i5.Future<List<_i3.LeadModel>>);
+        returnValue: _i6.Future<List<_i3.LeadModel>>.value(<_i3.LeadModel>[]),
+      ) as _i6.Future<List<_i3.LeadModel>>);
 
   @override
-  _i5.Future<_i2.PaginatedResponse<_i3.LeadModel>> getLeadsPaginated({
+  _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>> getLeadsPaginated({
     required int? page,
     required int? perPage,
     String? status,
@@ -102,7 +118,7 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             #sortAscending: sortAscending,
           },
         ),
-        returnValue: _i5.Future<_i2.PaginatedResponse<_i3.LeadModel>>.value(
+        returnValue: _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>>.value(
             _FakePaginatedResponse_0<_i3.LeadModel>(
           this,
           Invocation.method(
@@ -119,41 +135,69 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             },
           ),
         )),
-      ) as _i5.Future<_i2.PaginatedResponse<_i3.LeadModel>>);
+      ) as _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>>);
 
   @override
-  _i5.Future<_i3.LeadModel> getLead(String? id) => (super.noSuchMethod(
+  _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>> getLeadsCalledToday({
+    required int? page,
+    required int? perPage,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getLeadsCalledToday,
+          [],
+          {
+            #page: page,
+            #perPage: perPage,
+          },
+        ),
+        returnValue: _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>>.value(
+            _FakePaginatedResponse_0<_i3.LeadModel>(
+          this,
+          Invocation.method(
+            #getLeadsCalledToday,
+            [],
+            {
+              #page: page,
+              #perPage: perPage,
+            },
+          ),
+        )),
+      ) as _i6.Future<_i2.PaginatedResponse<_i3.LeadModel>>);
+
+  @override
+  _i6.Future<_i3.LeadModel> getLead(String? id) => (super.noSuchMethod(
         Invocation.method(
           #getLead,
           [id],
         ),
-        returnValue: _i5.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
+        returnValue: _i6.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
           this,
           Invocation.method(
             #getLead,
             [id],
           ),
         )),
-      ) as _i5.Future<_i3.LeadModel>);
+      ) as _i6.Future<_i3.LeadModel>);
 
   @override
-  _i5.Future<_i3.LeadModel> updateLead(_i3.LeadModel? lead) =>
+  _i6.Future<_i3.LeadModel> updateLead(_i3.LeadModel? lead) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateLead,
           [lead],
         ),
-        returnValue: _i5.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
+        returnValue: _i6.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
           this,
           Invocation.method(
             #updateLead,
             [lead],
           ),
         )),
-      ) as _i5.Future<_i3.LeadModel>);
+      ) as _i6.Future<_i3.LeadModel>);
 
   @override
-  _i5.Future<_i3.LeadModel> updateTimelineEntry(
+  _i6.Future<_i3.LeadModel> updateTimelineEntry(
     String? leadId,
     String? entryId,
     Map<String, dynamic>? updates,
@@ -167,7 +211,7 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             updates,
           ],
         ),
-        returnValue: _i5.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
+        returnValue: _i6.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
           this,
           Invocation.method(
             #updateTimelineEntry,
@@ -178,10 +222,10 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             ],
           ),
         )),
-      ) as _i5.Future<_i3.LeadModel>);
+      ) as _i6.Future<_i3.LeadModel>);
 
   @override
-  _i5.Future<void> addTimelineEntry(
+  _i6.Future<void> addTimelineEntry(
     String? leadId,
     Map<String, dynamic>? entryData,
   ) =>
@@ -193,74 +237,521 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             entryData,
           ],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i5.Future<String> startAutomation(_i6.BrowserAutomationParams? params) =>
+  _i6.Future<String> startAutomation(_i7.BrowserAutomationParams? params) =>
       (super.noSuchMethod(
         Invocation.method(
           #startAutomation,
           [params],
         ),
-        returnValue: _i5.Future<String>.value(_i7.dummyValue<String>(
+        returnValue: _i6.Future<String>.value(_i8.dummyValue<String>(
           this,
           Invocation.method(
             #startAutomation,
             [params],
           ),
         )),
-      ) as _i5.Future<String>);
+      ) as _i6.Future<String>);
 
   @override
-  _i5.Future<Map<String, dynamic>> getJobStatus(String? jobId) =>
+  _i6.Future<Map<String, dynamic>> getJobStatus(String? jobId) =>
       (super.noSuchMethod(
         Invocation.method(
           #getJobStatus,
           [jobId],
         ),
         returnValue:
-            _i5.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i5.Future<Map<String, dynamic>>);
+            _i6.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i6.Future<Map<String, dynamic>>);
 
   @override
-  _i5.Future<int> deleteMockLeads() => (super.noSuchMethod(
+  _i6.Future<int> deleteMockLeads() => (super.noSuchMethod(
         Invocation.method(
           #deleteMockLeads,
           [],
         ),
-        returnValue: _i5.Future<int>.value(0),
-      ) as _i5.Future<int>);
+        returnValue: _i6.Future<int>.value(0),
+      ) as _i6.Future<int>);
 
   @override
-  _i5.Future<Map<String, dynamic>> recalculateConversionScores() =>
+  _i6.Future<Map<String, dynamic>> recalculateConversionScores() =>
       (super.noSuchMethod(
         Invocation.method(
           #recalculateConversionScores,
           [],
         ),
         returnValue:
-            _i5.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i5.Future<Map<String, dynamic>>);
+            _i6.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
+      ) as _i6.Future<Map<String, dynamic>>);
 
   @override
-  _i5.Future<void> deleteLead(String? id) => (super.noSuchMethod(
+  _i6.Future<void> deleteLead(String? id) => (super.noSuchMethod(
         Invocation.method(
           #deleteLead,
           [id],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i5.Future<void> deleteLeads(List<String>? ids) => (super.noSuchMethod(
+  _i6.Future<void> deleteLeads(List<String>? ids) => (super.noSuchMethod(
         Invocation.method(
           #deleteLeads,
           [ids],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+}
+
+/// A class which mocks [FilterRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockFilterRepository extends _i1.Mock implements _i9.FilterRepository {
+  MockFilterRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, _i11.LeadsFilterState>>
+      getFilterState() => (super.noSuchMethod(
+            Invocation.method(
+              #getFilterState,
+              [],
+            ),
+            returnValue: _i6
+                .Future<_i4.Either<_i10.Failure, _i11.LeadsFilterState>>.value(
+                _FakeEither_2<_i10.Failure, _i11.LeadsFilterState>(
+              this,
+              Invocation.method(
+                #getFilterState,
+                [],
+              ),
+            )),
+          ) as _i6.Future<_i4.Either<_i10.Failure, _i11.LeadsFilterState>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> saveFilterState(
+          _i11.LeadsFilterState? filterState) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveFilterState,
+          [filterState],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #saveFilterState,
+            [filterState],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearFilterState() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearFilterState,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearFilterState,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, _i11.SortState>> getSortState() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSortState,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, _i11.SortState>>.value(
+            _FakeEither_2<_i10.Failure, _i11.SortState>(
+          this,
+          Invocation.method(
+            #getSortState,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, _i11.SortState>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> saveSortState(
+          _i11.SortState? sortState) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveSortState,
+          [sortState],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #saveSortState,
+            [sortState],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearSortState() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearSortState,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearSortState,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, _i11.LeadsUIState>> getUIState() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getUIState,
+          [],
+        ),
+        returnValue:
+            _i6.Future<_i4.Either<_i10.Failure, _i11.LeadsUIState>>.value(
+                _FakeEither_2<_i10.Failure, _i11.LeadsUIState>(
+          this,
+          Invocation.method(
+            #getUIState,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, _i11.LeadsUIState>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> saveUIState(
+          _i11.LeadsUIState? uiState) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveUIState,
+          [uiState],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #saveUIState,
+            [uiState],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearUIState() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearUIState,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearUIState,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> updateStatusFilter(
+          String? status) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateStatusFilter,
+          [status],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #updateStatusFilter,
+            [status],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> updateSearchFilter(
+          String? search) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateSearchFilter,
+          [search],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #updateSearchFilter,
+            [search],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> updateCandidatesOnlyFilter(
+          bool? candidatesOnly) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateCandidatesOnlyFilter,
+          [candidatesOnly],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #updateCandidatesOnlyFilter,
+            [candidatesOnly],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> updateCalledTodayFilter(
+          bool? calledToday) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updateCalledTodayFilter,
+          [calledToday],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #updateCalledTodayFilter,
+            [calledToday],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> addHiddenStatus(String? status) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addHiddenStatus,
+          [status],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #addHiddenStatus,
+            [status],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> removeHiddenStatus(
+          String? status) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeHiddenStatus,
+          [status],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #removeHiddenStatus,
+            [status],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearHiddenStatuses() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearHiddenStatuses,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearHiddenStatuses,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> updatePageSize(int? pageSize) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #updatePageSize,
+          [pageSize],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #updatePageSize,
+            [pageSize],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, int>> getPageSize() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getPageSize,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, int>>.value(
+            _FakeEither_2<_i10.Failure, int>(
+          this,
+          Invocation.method(
+            #getPageSize,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, int>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> addSelectedLead(String? leadId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addSelectedLead,
+          [leadId],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #addSelectedLead,
+            [leadId],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> removeSelectedLead(
+          String? leadId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeSelectedLead,
+          [leadId],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #removeSelectedLead,
+            [leadId],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearSelectedLeads() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearSelectedLeads,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearSelectedLeads,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> toggleSelectionMode(
+          bool? enabled) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #toggleSelectionMode,
+          [enabled],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #toggleSelectionMode,
+            [enabled],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> saveScrollPosition(
+          double? position) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveScrollPosition,
+          [position],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #saveScrollPosition,
+            [position],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, double?>> getScrollPosition() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getScrollPosition,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, double?>>.value(
+            _FakeEither_2<_i10.Failure, double?>(
+          this,
+          Invocation.method(
+            #getScrollPosition,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, double?>>);
+
+  @override
+  _i6.Future<_i4.Either<_i10.Failure, void>> clearScrollPosition() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearScrollPosition,
+          [],
+        ),
+        returnValue: _i6.Future<_i4.Either<_i10.Failure, void>>.value(
+            _FakeEither_2<_i10.Failure, void>(
+          this,
+          Invocation.method(
+            #clearScrollPosition,
+            [],
+          ),
+        )),
+      ) as _i6.Future<_i4.Either<_i10.Failure, void>>);
 }

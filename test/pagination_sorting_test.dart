@@ -7,24 +7,45 @@ import 'package:leadloq/features/leads/presentation/providers/job_provider.dart'
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:leadloq/features/leads/data/models/paginated_response.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/domain/repositories/filter_repository.dart';
+import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dartz/dartz.dart';
 
-@GenerateMocks([LeadsRemoteDataSource])
+@GenerateMocks([LeadsRemoteDataSource, FilterRepository])
 import 'pagination_sorting_test.mocks.dart';
 
 void main() {
   group('Pagination and Sorting Tests', () {
     late ProviderContainer container;
     late MockLeadsRemoteDataSource mockDataSource;
+    late MockFilterRepository mockFilterRepository;
     
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
     });
     
-    setUp(() {
+    setUp(() async {
       mockDataSource = MockLeadsRemoteDataSource();
+      mockFilterRepository = MockFilterRepository();
+      
+      // Setup SharedPreferences mock
+      SharedPreferences.setMockInitialValues({});
+      
+      // Setup mock filter repository responses
+      when(mockFilterRepository.getFilterState()).thenAnswer((_) async => const Right(LeadsFilterState()));
+      when(mockFilterRepository.getSortState()).thenAnswer((_) async => const Right(SortState()));
+      when(mockFilterRepository.getUIState()).thenAnswer((_) async => const Right(LeadsUIState()));
+      when(mockFilterRepository.saveFilterState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveSortState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveUIState(any)).thenAnswer((_) async => const Right(null));
+      
       container = ProviderContainer(
         overrides: [
           leadsRemoteDataSourceProvider.overrideWithValue(mockDataSource),
+          sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+          filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
         ],
       );
     });
@@ -83,8 +104,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponse);
       
-      // Act
+      // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       await notifier.loadInitialLeads();
       final state = container.read(paginatedLeadsProvider);
       
@@ -120,8 +142,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponse50);
       
-      // Act
+      // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       await notifier.updatePageSize(50);
       final state = container.read(paginatedLeadsProvider);
       
@@ -165,8 +188,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponse);
       
-      // Act
+      // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       await notifier.updateFilters(
         status: 'called',
         search: 'test',
@@ -210,8 +234,9 @@ void main() {
         sortAscending: false,
       )).thenAnswer((_) async => mockResponse);
       
-      // Act
+      // Act - wait for initialization  
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       await notifier.updateFilters(
         sortBy: 'rating',
         sortAscending: false,
@@ -251,8 +276,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponse);
       
-      // Act
+      // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       
       // First set filters
       await notifier.updateFilters(
@@ -332,8 +358,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponsePage2);
       
-      // Act
+      // Act - wait for initialization
       final notifier = container.read(paginatedLeadsProvider.notifier);
+      await Future.delayed(const Duration(milliseconds: 100)); // Allow initialization
       await notifier.loadInitialLeads();
       
       var state = container.read(paginatedLeadsProvider);

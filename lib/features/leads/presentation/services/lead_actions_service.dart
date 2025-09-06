@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 import '../../domain/entities/lead.dart';
-import '../../data/datasources/leads_remote_datasource.dart';
 import '../providers/lead_detail_provider.dart';
 import '../providers/server_status_provider.dart' show dioProvider;
 

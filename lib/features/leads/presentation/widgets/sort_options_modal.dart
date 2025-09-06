@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
+import '../../../../core/utils/debug_logger.dart';
+import '../providers/filter_providers.dart' as presentation_providers;
+import '../../domain/entities/filter_state.dart';
 
 class SortOptionsModal extends ConsumerWidget {
   const SortOptionsModal({super.key});
@@ -17,14 +19,14 @@ class SortOptionsModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sortState = ref.watch(sortStateProvider);
+    final sortState = ref.watch(presentation_providers.sortStateProvider);
     final currentSort = sortState.option;
     final isAscending = sortState.ascending;
     
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.elevatedSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Container(
@@ -45,12 +47,11 @@ class SortOptionsModal extends ConsumerWidget {
                 ),
               ),
               // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       'Sort By',
                       style: TextStyle(
                         fontSize: 20,
@@ -61,10 +62,10 @@ class SortOptionsModal extends ConsumerWidget {
                     // Direction toggle
                     GestureDetector(
                       onTap: () {
-                        print('🔄 SORT MODAL: Toggling sort direction from ${isAscending ? "ascending" : "descending"} to ${!isAscending ? "ascending" : "descending"}');
+                        DebugLogger.log('🔄 SORT MODAL: Toggling sort direction from ${isAscending ? "ascending" : "descending"} to ${!isAscending ? "ascending" : "descending"}');
                         // Update only the ascending property of the combined state
-                        ref.read(sortStateProvider.notifier).state = sortState.copyWith(ascending: !isAscending);
-                        print('🔄 SORT MODAL: Sort direction toggled');
+                        ref.read(presentation_providers.sortStateProvider.notifier).state = sortState.copyWith(ascending: !isAscending);
+                        DebugLogger.log('🔄 SORT MODAL: Sort direction toggled');
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -84,7 +85,7 @@ class SortOptionsModal extends ConsumerWidget {
                             const SizedBox(width: 6),
                             Text(
                               isAscending ? 'Ascending' : 'Descending',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.primaryGold,
@@ -130,10 +131,10 @@ class SortOptionsModal extends ConsumerWidget {
           // For others, keep current direction or use default
           final newAscending = option == SortOption.pageSpeed 
               ? true 
-              : ref.read(sortStateProvider).ascending;
+              : ref.read(presentation_providers.sortStateProvider).ascending;
           
           // Update the entire sort state atomically - no race conditions!
-          ref.read(sortStateProvider.notifier).state = SortState(
+          ref.read(presentation_providers.sortStateProvider.notifier).state = SortState(
             option: option,
             ascending: newAscending,
           );
@@ -178,7 +179,7 @@ class SortOptionsModal extends ConsumerWidget {
                 ),
               ),
               if (isSelected)
-                Icon(
+                const Icon(
                   CupertinoIcons.checkmark_circle_fill,
                   size: 22,
                   color: AppTheme.primaryGold,

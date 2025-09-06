@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../domain/entities/job.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class ActiveJobsState {
   final List<Job> jobs;
@@ -34,8 +35,8 @@ class ActiveJobsState {
 class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
   final Dio dio;
   Timer? _pollTimer;
-  Map<String, WebSocketChannel> _wsChannels = {};
-  Map<String, StreamSubscription> _wsSubscriptions = {};
+  final Map<String, WebSocketChannel> _wsChannels = {};
+  final Map<String, StreamSubscription> _wsSubscriptions = {};
 
   ActiveJobsNotifier(this.dio) : super(ActiveJobsState()) {
     _startPolling();
@@ -131,7 +132,7 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
       // Only log non-timeout errors to reduce console spam
       if (!e.toString().contains('Connection closed') && 
           !e.toString().contains('timeout')) {
-        print('Error fetching active jobs: $e');
+        DebugLogger.error('Error fetching active jobs: $e');
       }
       // Don't set error state for network issues, just keep trying
       // The polling will retry in 2 seconds
@@ -163,11 +164,11 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
             final data = json.decode(message);
             _updateJobFromWebSocket(jobId, data);
           } catch (e) {
-            print('Error parsing WebSocket message: $e');
+            DebugLogger.websocket('Error parsing WebSocket message: $e');
           }
         },
         onError: (error) {
-          print('WebSocket error for job $jobId: $error');
+          DebugLogger.websocket('WebSocket error for job $jobId: $error');
           // Clean up on error
           _wsChannels.remove(jobId);
           _wsSubscriptions[jobId]?.cancel();
@@ -185,14 +186,14 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
           }
         },
         onDone: () {
-          print('WebSocket closed for job $jobId');
+          DebugLogger.websocket('WebSocket closed for job $jobId');
           _wsChannels.remove(jobId);
           _wsSubscriptions.remove(jobId);
         },
         cancelOnError: true,
       );
     } catch (e) {
-      print('Failed to connect to WebSocket for job $jobId: $e');
+      DebugLogger.websocket('Failed to connect to WebSocket for job $jobId: $e');
       // Clean up on failure
       _wsChannels.remove(jobId);
       _wsSubscriptions[jobId]?.cancel();

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../domain/entities/lead.dart';
 import 'lead_statistics_provider.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class GoalsState {
   final int dailyCallGoal;
@@ -102,8 +103,8 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
         final todaysCalls = response.data['calls_today'] ?? 0;
         final conversionsToday = response.data['conversions_today'] ?? 0;
         
-        print('📊 Goals: Today\'s calls: $todaysCalls');
-        print('📊 Goals: Today\'s conversions: $conversionsToday');
+        DebugLogger.log('📊 Goals: Today\'s calls: $todaysCalls');
+        DebugLogger.log('📊 Goals: Today\'s conversions: $conversionsToday');
         
         // Also get month's conversions from general statistics
         final statisticsAsync = ref.read(leadStatisticsProvider);
@@ -117,7 +118,7 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
         });
       }
     } catch (e) {
-      print('📊 Goals: Error fetching today\'s metrics: $e');
+      DebugLogger.error('📊 Goals: Error fetching today\'s metrics: $e');
       // Fall back to general statistics if today endpoint fails
       _fallbackToGeneralStatistics();
     }
@@ -140,7 +141,7 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
         );
       });
     } catch (e) {
-      print('📊 Goals: Error reading statistics: $e');
+      DebugLogger.error('📊 Goals: Error reading statistics: $e');
     }
   }
 

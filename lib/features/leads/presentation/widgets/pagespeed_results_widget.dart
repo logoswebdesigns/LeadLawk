@@ -7,11 +7,11 @@ class PageSpeedResultsWidget extends StatelessWidget {
   final bool isLoading;
 
   const PageSpeedResultsWidget({
-    Key? key,
+    super.key,
     required this.lead,
     required this.onTestPressed,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,21 +32,20 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildNoWebsiteCard(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.speed, color: Colors.grey),
+                const Icon(Icons.speed, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 8),
-            Text('No website available for testing',
+            const Text('No website available for testing',
                 style: TextStyle(color: Colors.grey)),
           ],
         ),
@@ -60,14 +59,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
     
     return Card(
       color: Colors.red.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.red),
+                const Icon(Icons.error_outline, color: Colors.red),
                 const SizedBox(width: 8),
                 Text('Website Issue Detected',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -76,12 +74,12 @@ class PageSpeedResultsWidget extends StatelessWidget {
             const SizedBox(height: 12),
             if (isUnreachable) ...[
               Chip(
-                label: Text('UNREACHABLE WEBSITE'),
+                label: const Text('UNREACHABLE WEBSITE'),
                 backgroundColor: Colors.red.shade100,
-                avatar: Icon(Icons.wifi_off, size: 16),
+                avatar: const Icon(Icons.wifi_off, size: 16),
               ),
               const SizedBox(height: 8),
-              Text('Website is broken or extremely slow',
+              const Text('Website is broken or extremely slow',
                   style: TextStyle(fontWeight: FontWeight.bold)),
             ],
             const SizedBox(height: 4),
@@ -91,11 +89,11 @@ class PageSpeedResultsWidget extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: isLoading ? null : onTestPressed,
               icon: isLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.refresh),
+                  : const Icon(Icons.refresh),
               label: Text(isLoading ? 'Testing...' : 'Retry Test'),
             ),
           ],
@@ -106,30 +104,29 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildNotTestedCard(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.speed, color: Colors.blue),
+                const Icon(Icons.speed, color: Colors.blue),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),
-            Text('Website performance not tested yet'),
+            const Text('Website performance not tested yet'),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: isLoading ? null : onTestPressed,
               icon: isLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.play_arrow),
+                  : const Icon(Icons.play_arrow),
               label: Text(isLoading ? 'Testing...' : 'Run PageSpeed Test'),
             ),
           ],
@@ -140,14 +137,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
 
   Widget _buildResultsCard(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.speed, color: Colors.green),
+                const Icon(Icons.speed, color: Colors.green),
                 const SizedBox(width: 8),
                 Text('PageSpeed Results',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -155,7 +151,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
                 if (lead.pagespeedTestedAt != null)
                   Text(
                     _formatTestDate(lead.pagespeedTestedAt!),
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
               ],
             ),
@@ -174,7 +170,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
             const SizedBox(height: 12),
             TextButton.icon(
               onPressed: isLoading ? null : onTestPressed,
-              icon: Icon(Icons.refresh, size: 16),
+              icon: const Icon(Icons.refresh, size: 16),
               label: Text(isLoading ? 'Testing...' : 'Retest'),
             ),
           ],
@@ -190,13 +186,13 @@ class PageSpeedResultsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color),
       ),
       child: Column(
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
             score?.toString() ?? 'N/A',
@@ -216,7 +212,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Performance Metrics', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Performance Metrics', style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         if (lead.pagespeedFirstContentfulPaint != null)
           _buildMetricRow('First Contentful Paint', 
@@ -232,13 +228,12 @@ class PageSpeedResultsWidget extends StatelessWidget {
   }
 
   Widget _buildMetricRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12)),
-          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(label, style: const TextStyle(fontSize: 12)),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );

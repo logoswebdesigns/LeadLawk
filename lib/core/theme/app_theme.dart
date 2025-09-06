@@ -85,7 +85,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        selectedColor: primaryGold.withOpacity(0.2),
+        selectedColor: primaryGold.withValues(alpha: 0.2),
         backgroundColor: elevatedSurface,
         labelStyle: const TextStyle(
           fontSize: 14,
@@ -114,7 +114,7 @@ class AppTheme {
           borderSide: const BorderSide(color: errorRed),
         ),
         labelStyle: const TextStyle(color: mediumGray),
-        hintStyle: TextStyle(color: mediumGray.withOpacity(0.7)),
+        hintStyle: TextStyle(color: mediumGray.withValues(alpha: 0.7)),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -175,13 +175,13 @@ class AppTheme {
   }
   
   static BoxShadow cardShadow = BoxShadow(
-    color: Colors.black.withOpacity(0.04),
+    color: Colors.black.withValues(alpha: 0.04),
     blurRadius: 10,
     offset: const Offset(0, 2),
   );
   
   static BoxShadow elevatedShadow = BoxShadow(
-    color: Colors.black.withOpacity(0.08),
+    color: Colors.black.withValues(alpha: 0.08),
     blurRadius: 20,
     offset: const Offset(0, 4),
   );

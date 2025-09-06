@@ -1,19 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/entities/filter_state.dart';
+import '../../domain/providers/filter_providers.dart';
 import '../../data/datasources/leads_remote_datasource.dart';
 import '../../data/models/paginated_response.dart';
 import '../../data/models/lead_model.dart';
-import 'job_provider.dart' show leadsRemoteDataSourceProvider, dioProvider;
-import '../pages/leads_list_page.dart' show hiddenStatusesProvider;
+import 'job_provider.dart' show leadsRemoteDataSourceProvider;
+import '../../../../core/utils/debug_logger.dart';
 
 // Helper class for handling explicit null values in copyWith
 class _Undefined {
   const _Undefined();
 }
 
-// Filter state that persists across pagination
-class LeadsFilterState {
+// Simple filter state for API calls - uses basic values from domain filter state
+class ApiFilterState {
   final String? status;
   final String? search;
   final bool? candidatesOnly;
@@ -21,7 +22,7 @@ class LeadsFilterState {
   final String sortBy;
   final bool sortAscending;
   
-  const LeadsFilterState({
+  const ApiFilterState({
     this.status,
     this.search,
     this.candidatesOnly,
@@ -29,8 +30,29 @@ class LeadsFilterState {
     this.sortBy = 'created_at',
     this.sortAscending = false,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ApiFilterState &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          search == other.search &&
+          candidatesOnly == other.candidatesOnly &&
+          calledToday == other.calledToday &&
+          sortBy == other.sortBy &&
+          sortAscending == other.sortAscending;
+
+  @override
+  int get hashCode =>
+      status.hashCode ^
+      search.hashCode ^
+      candidatesOnly.hashCode ^
+      calledToday.hashCode ^
+      sortBy.hashCode ^
+      sortAscending.hashCode;
   
-  LeadsFilterState copyWith({
+  ApiFilterState copyWith({
     Object? status = const _Undefined(),
     Object? search = const _Undefined(),
     Object? candidatesOnly = const _Undefined(),
@@ -38,15 +60,25 @@ class LeadsFilterState {
     Object? sortBy = const _Undefined(),
     Object? sortAscending = const _Undefined(),
   }) {
-    return LeadsFilterState(
+    return ApiFilterState(
       status: status is _Undefined ? this.status : status as String?,
       search: search is _Undefined ? this.search : search as String?,
       candidatesOnly: candidatesOnly is _Undefined ? this.candidatesOnly : candidatesOnly as bool?,
       calledToday: calledToday is _Undefined ? this.calledToday : calledToday as bool?,
-      // Fix: Don't reset to 'created_at' when null is passed - keep current value
       sortBy: sortBy is _Undefined ? this.sortBy : (sortBy as String? ?? this.sortBy),
-      // Fix: Don't reset to false when null is passed - keep current value  
       sortAscending: sortAscending is _Undefined ? this.sortAscending : (sortAscending as bool? ?? this.sortAscending),
+    );
+  }
+
+  // Factory method to create from domain filter state and sort state
+  factory ApiFilterState.fromDomain(LeadsFilterState filterState, SortState sortState) {
+    return ApiFilterState(
+      status: filterState.statusFilter,
+      search: filterState.searchFilter.isEmpty ? null : filterState.searchFilter,
+      candidatesOnly: filterState.candidatesOnly,
+      calledToday: filterState.calledToday,
+      sortBy: sortState.sortField,
+      sortAscending: sortState.ascending,
     );
   }
 }
@@ -61,9 +93,9 @@ class PaginatedLeadsState {
   final int totalPages;
   final int total;
   final String? error;
-  final LeadsFilterState filters;
+  final ApiFilterState filters;
   
-  const PaginatedLeadsState({
+  PaginatedLeadsState({
     this.leads = const [],
     this.isLoading = false,
     this.isLoadingMore = false,
@@ -72,7 +104,7 @@ class PaginatedLeadsState {
     this.totalPages = 1,
     this.total = 0,
     this.error,
-    this.filters = const LeadsFilterState(),
+    this.filters = const ApiFilterState(),
   });
   
   PaginatedLeadsState copyWith({
@@ -84,7 +116,7 @@ class PaginatedLeadsState {
     int? totalPages,
     int? total,
     String? error,
-    LeadsFilterState? filters,
+    ApiFilterState? filters,
   }) {
     return PaginatedLeadsState(
       leads: leads ?? this.leads,
@@ -105,7 +137,7 @@ class PaginatedLeadsState {
 // Main provider for paginated leads
 final paginatedLeadsProvider = StateNotifierProvider<PaginatedLeadsNotifier, PaginatedLeadsState>((ref) {
   final dataSource = ref.watch(leadsRemoteDataSourceProvider);
-  return PaginatedLeadsNotifier(dataSource);
+  return PaginatedLeadsNotifier(dataSource, ref);
 });
 
 // Filtered provider that applies hidden statuses filter
@@ -136,14 +168,77 @@ final filteredPaginatedLeadsProvider = Provider<PaginatedLeadsState>((ref) {
 
 class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   final LeadsRemoteDataSource _dataSource;
+  final Ref _ref;
   int _perPage = 25;
   
-  PaginatedLeadsNotifier(this._dataSource) : super(const PaginatedLeadsState()) {
+  PaginatedLeadsNotifier(this._dataSource, this._ref) : super(PaginatedLeadsState()) {
+    _initializeWithDomainState();
+  }
+
+  Future<void> _initializeWithDomainState() async {
+    // Listen to domain state changes
+    _ref.listen<AsyncValue<LeadsFilterState>>(currentFilterStateProvider, (previous, next) {
+      next.whenData((filterState) {
+        _syncWithDomainState();
+      });
+    });
+    
+    _ref.listen<AsyncValue<SortState>>(currentSortStateProvider, (previous, next) {
+      next.whenData((sortState) {
+        _syncWithDomainState();
+      });
+    });
+    
+    _ref.listen<AsyncValue<LeadsUIState>>(currentUIStateProvider, (previous, next) {
+      next.whenData((uiState) {
+        final oldPageSize = _perPage;
+        _perPage = uiState.pageSize;
+        // If page size changed, refresh leads
+        if (oldPageSize != _perPage) {
+          refreshLeads();
+        }
+      });
+    });
+    
+    // Initial sync and load
+    await _syncWithDomainState();
     loadInitialLeads();
+  }
+  
+  Future<void> _syncWithDomainState() async {
+    // Read current domain states
+    final filterStateAsync = _ref.read(currentFilterStateProvider);
+    final sortStateAsync = _ref.read(currentSortStateProvider);
+    final uiStateAsync = _ref.read(currentUIStateProvider);
+    
+    // Only sync if all states are available
+    if (filterStateAsync.hasValue && sortStateAsync.hasValue && uiStateAsync.hasValue) {
+      final filterState = filterStateAsync.value!;
+      final sortState = sortStateAsync.value!;
+      final uiState = uiStateAsync.value!;
+      
+      // Update page size
+      _perPage = uiState.pageSize;
+      
+      // Create API filter state from domain states
+      final apiFilters = ApiFilterState.fromDomain(filterState, sortState);
+      
+      // Check if filters actually changed before updating
+      if (state.filters != apiFilters) {
+        state = state.copyWith(filters: apiFilters);
+        // Don't auto-refresh here to avoid loops, let the UI trigger refreshes
+      }
+    }
   }
   
   Future<void> loadInitialLeads() async {
     if (state.isLoading) return;
+    
+    DebugLogger.network('📊 API QUERY: Loading leads with filters:');
+    DebugLogger.state('  • Status: ${state.filters.status ?? "all"}');
+    DebugLogger.state('  • Search: ${state.filters.search ?? "none"}');
+    DebugLogger.state('  • Candidates only: ${state.filters.candidatesOnly}');
+    DebugLogger.state('  • Sort: ${state.filters.sortBy} (${state.filters.sortAscending ? "asc" : "desc"})');
     
     state = state.copyWith(isLoading: true, error: null);
     
@@ -151,7 +246,7 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
       // If calledToday filter is active, use the special endpoint
       final PaginatedResponse<LeadModel> response;
       if (state.filters.calledToday == true) {
-        print('📊 PAGINATION: Using called-today endpoint');
+        DebugLogger.log('📊 PAGINATION: Using called-today endpoint');
         response = await _dataSource.getLeadsCalledToday(
           page: 1,
           perPage: _perPage,
@@ -190,13 +285,13 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   Future<void> loadMoreLeads() async {
     if (state.isLoadingMore || state.hasReachedEnd) {
       if (state.hasReachedEnd) {
-        print('📊 PAGINATION: Already at last page, not loading more');
+        DebugLogger.log('📊 PAGINATION: Already at last page, not loading more');
       }
       return;
     }
     
     final nextPage = state.currentPage + 1;
-    print('📊 PAGINATION: Loading more leads - requesting page $nextPage with page size: $_perPage');
+    DebugLogger.network('📊 PAGINATION: Loading more leads - requesting page $nextPage with page size: $_perPage');
     
     state = state.copyWith(isLoadingMore: true, error: null);
     
@@ -204,7 +299,7 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
       // If calledToday filter is active, use the special endpoint
       final PaginatedResponse<LeadModel> response;
       if (state.filters.calledToday == true) {
-        print('📊 PAGINATION: Using called-today endpoint for page $nextPage');
+        DebugLogger.log('📊 PAGINATION: Using called-today endpoint for page $nextPage');
         response = await _dataSource.getLeadsCalledToday(
           page: nextPage,
           perPage: _perPage,
@@ -221,9 +316,9 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
         );
       }
       
-      print('📊 PAGINATION: Received page $nextPage/${response.totalPages}');
-      print('📊 PAGINATION: Items received: ${response.items.length} (Total loaded: ${state.leads.length + response.items.length}/${response.total})');
-      print('📊 PAGINATION: Has next page: ${response.hasNext}');
+      DebugLogger.network('📊 PAGINATION: Received page $nextPage/${response.totalPages}');
+      DebugLogger.network('📊 PAGINATION: Items received: ${response.items.length} (Total loaded: ${state.leads.length + response.items.length}/${response.total})');
+      DebugLogger.network('📊 PAGINATION: Has next page: ${response.hasNext}');
       
       // Convert LeadModel to Lead entity
       final newLeads = response.items.map((model) => model.toEntity()).toList();
@@ -237,9 +332,9 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
         hasReachedEnd: !response.hasNext,
       );
       
-      print('📊 PAGINATION: Load more complete. Total leads in memory: ${state.leads.length}');
+      DebugLogger.state('📊 PAGINATION: Load more complete. Total leads in memory: ${state.leads.length}');
     } catch (e) {
-      print('📊 PAGINATION ERROR: Failed to load more leads: $e');
+      DebugLogger.error('📊 PAGINATION ERROR: Failed to load more leads: $e');
       state = state.copyWith(
         isLoadingMore: false,
         error: e.toString(),
@@ -256,7 +351,7 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     await loadInitialLeads();
   }
   
-  // Update filters and reload
+  // Update filters and reload - this now syncs back to domain state
   Future<void> updateFilters({
     Object? status = const _Undefined(),
     Object? search = const _Undefined(),
@@ -265,13 +360,12 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     Object? sortBy = const _Undefined(),
     Object? sortAscending = const _Undefined(),
   }) async {
-    print('📊 PAGINATION: updateFilters called with:');
-    print('  sortBy: ${sortBy is _Undefined ? "undefined" : sortBy}');
-    print('  sortAscending: ${sortAscending is _Undefined ? "undefined" : sortAscending}');
+    DebugLogger.log('📊 PAGINATION: updateFilters called with:');
+    DebugLogger.log('  sortBy: ${sortBy is _Undefined ? "undefined" : sortBy}');
+    DebugLogger.log('  sortAscending: ${sortAscending is _Undefined ? "undefined" : sortAscending}');
     
-    // When only updating sort parameters, preserve existing filter values
-    // Only pass values that were explicitly provided (not _Undefined)
-    final newFilters = state.filters.copyWith(
+    // Update domain state
+    await _updateDomainState(
       status: status,
       search: search,
       candidatesOnly: candidatesOnly,
@@ -280,37 +374,69 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
       sortAscending: sortAscending,
     );
     
-    print('📊 PAGINATION: After copyWith, filters are:');
-    print('  sortBy: ${newFilters.sortBy}');
-    print('  sortAscending: ${newFilters.sortAscending}');
-    
-    // If calledToday filter is being toggled, clear other filters but preserve sort settings
-    final adjustedFilters = newFilters.calledToday == true 
-        ? newFilters.copyWith(
-            status: null,  // Clear status filter
-            search: null,  // Clear search filter
-            candidatesOnly: null,  // Clear candidates filter
-            // sortBy and sortAscending are intentionally NOT cleared
-          )
-        : newFilters;
-    
-    // Check if filters actually changed
-    final filtersChanged = 
-        adjustedFilters.status != state.filters.status ||
-        adjustedFilters.search != state.filters.search ||
-        adjustedFilters.candidatesOnly != state.filters.candidatesOnly ||
-        adjustedFilters.calledToday != state.filters.calledToday ||
-        adjustedFilters.sortBy != state.filters.sortBy ||
-        adjustedFilters.sortAscending != state.filters.sortAscending;
-    
-    if (!filtersChanged) {
-      return;
+    // Refresh leads with current filters
+    await refreshLeads();
+  }
+
+  Future<void> _updateDomainState({
+    Object? status = const _Undefined(),
+    Object? search = const _Undefined(),
+    Object? candidatesOnly = const _Undefined(),
+    Object? calledToday = const _Undefined(),
+    Object? sortBy = const _Undefined(),
+    Object? sortAscending = const _Undefined(),
+  }) async {
+    // Update filter state in domain
+    final currentFilterAsync = _ref.read(currentFilterStateProvider);
+    if (currentFilterAsync.hasValue) {
+      final currentFilter = currentFilterAsync.value!;
+      
+      final updatedFilter = LeadsFilterState(
+        statusFilter: status is _Undefined ? currentFilter.statusFilter : status as String?,
+        searchFilter: search is _Undefined ? currentFilter.searchFilter : (search as String? ?? ''),
+        candidatesOnly: candidatesOnly is _Undefined ? currentFilter.candidatesOnly : (candidatesOnly as bool? ?? false),
+        calledToday: calledToday is _Undefined ? currentFilter.calledToday : (calledToday as bool? ?? false),
+        hiddenStatuses: currentFilter.hiddenStatuses,
+        // Keep other filter properties unchanged
+        locationFilter: currentFilter.locationFilter,
+        industryFilter: currentFilter.industryFilter,
+        sourceFilter: currentFilter.sourceFilter,
+        followUpFilter: currentFilter.followUpFilter,
+        hasWebsiteFilter: currentFilter.hasWebsiteFilter,
+        meetsRatingFilter: currentFilter.meetsRatingFilter,
+        hasRecentReviewsFilter: currentFilter.hasRecentReviewsFilter,
+        ratingRangeFilter: currentFilter.ratingRangeFilter,
+        reviewCountRangeFilter: currentFilter.reviewCountRangeFilter,
+        pageSpeedFilter: currentFilter.pageSpeedFilter,
+      );
+      
+      await _ref.read(currentFilterStateProvider.notifier).updateFilterState(updatedFilter);
     }
     
-    // Update state with new filters FIRST
-    state = state.copyWith(filters: adjustedFilters);
-    // Then refresh the leads with the updated filters
-    await refreshLeads();
+    // Update sort state if sort parameters were provided
+    if (sortBy is! _Undefined || sortAscending is! _Undefined) {
+      final currentSortAsync = _ref.read(currentSortStateProvider);
+      if (currentSortAsync.hasValue) {
+        final currentSort = currentSortAsync.value!;
+        
+        // Convert sortBy string back to SortOption if provided
+        SortOption? option;
+        if (sortBy is! _Undefined) {
+          final sortByString = sortBy as String?;
+          option = SortOption.values.firstWhere(
+            (opt) => opt.sortField == sortByString,
+            orElse: () => SortOption.newest,
+          );
+        }
+        
+        final updatedSort = SortState(
+          option: option ?? currentSort.option,
+          ascending: sortAscending is _Undefined ? currentSort.ascending : (sortAscending as bool? ?? false),
+        );
+        
+        await _ref.read(currentSortStateProvider.notifier).updateSortState(updatedSort);
+      }
+    }
   }
   
   // Update a single lead in the list (after edit)
@@ -332,7 +458,7 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   
   // Update page size and reload
   Future<void> updatePageSize(int newPageSize) async {
-    print('📊 PAGINATION: Changing page size from $_perPage to $newPageSize');
+    DebugLogger.log('📊 PAGINATION: Changing page size from $_perPage to $newPageSize');
     _perPage = newPageSize;
     await refreshLeads();
   }

@@ -11,11 +11,11 @@ class SalesPitchSelector extends ConsumerStatefulWidget {
   final Function(String pitchId)? onPitchSelected;
   
   const SalesPitchSelector({
-    Key? key,
+    super.key,
     required this.lead,
     this.isRequired = false,
     this.onPitchSelected,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<SalesPitchSelector> createState() => _SalesPitchSelectorState();
@@ -70,7 +70,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
       onTap: () => setState(() => _isExpanded = !_isExpanded),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.campaign,
             size: 20,
             color: AppTheme.primaryGold,
@@ -82,14 +82,14 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                 Text(
                   'Sales Pitch',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (widget.isRequired) ...[
                   const SizedBox(width: 4),
-                  Text(
+                  const Text(
                     '*',
                     style: TextStyle(
                       color: AppTheme.errorRed,
@@ -103,10 +103,10 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.successGreen.withOpacity(0.2),
+                      color: AppTheme.successGreen.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Selected',
                       style: TextStyle(
                         color: AppTheme.successGreen,
@@ -134,8 +134,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
     }
 
     return Column(
-      children: pitches.map((pitch) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+      children: pitches.map((pitch) => Padding(padding: const EdgeInsets.only(bottom: 12),
         child: _buildPitchCard(pitch),
       )).toList(),
     );
@@ -147,13 +146,13 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
     return Container(
       decoration: BoxDecoration(
         color: isSelected 
-          ? AppTheme.primaryGold.withOpacity(0.1)
+          ? AppTheme.primaryGold.withValues(alpha: 0.1)
           : Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isSelected 
             ? AppTheme.primaryGold 
-            : AppTheme.primaryGold.withOpacity(0.3),
+            : AppTheme.primaryGold.withValues(alpha: 0.3),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -164,7 +163,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(7),
                 topRight: Radius.circular(7),
@@ -175,7 +174,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                 Expanded(
                   child: Text(
                     pitch.name,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -186,8 +185,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
             ),
           ),
           // Content
-          Padding(
-            padding: const EdgeInsets.all(12),
+          Padding(padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -196,7 +194,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     .replaceAll('[Business Name]', widget.lead.businessName)
                     .replaceAll('[Location]', widget.lead.location),
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 13,
                     height: 1.5,
                   ),
@@ -228,17 +226,17 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.successGreen.withOpacity(0.2),
+                          color: AppTheme.successGreen.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Row(
+                        child: const Row(
                           children: [
                             Icon(
                               Icons.check_circle,
                               size: 16,
                               color: AppTheme.successGreen,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text(
                               'Selected',
                               style: TextStyle(
@@ -269,31 +267,6 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
     );
   }
 
-  Widget _buildStatChip(String label, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -301,7 +274,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -309,13 +282,13 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
           Icon(
             Icons.campaign_outlined,
             size: 48,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
             'No Sales Pitches Available',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -324,7 +297,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
           Text(
             'Please add at least 2 sales pitches in your account settings',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,

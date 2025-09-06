@@ -11,10 +11,10 @@ class GitHubStylePipeline extends ConsumerStatefulWidget {
   final VoidCallback? onStatusChanged;
   
   const GitHubStylePipeline({
-    Key? key,
+    super.key,
     required this.lead,
     this.onStatusChanged,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<GitHubStylePipeline> createState() => _GitHubStylePipelineState();
@@ -38,7 +38,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
         color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -53,7 +53,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
               border: Border(
                 bottom: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -63,13 +63,13 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
                 Icon(
                   Icons.account_tree,
                   size: 16,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Lead Pipeline',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -100,23 +100,23 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
     final status = widget.lead.status;
     final isSuccess = status == LeadStatus.converted;
     final isFailed = status == LeadStatus.doNotCall || status == LeadStatus.didNotConvert;
-    final isInProgress = !isSuccess && !isFailed;
+    // final isInProgress = !isSuccess && !isFailed;
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isSuccess 
-            ? Colors.green.withOpacity(0.1)
+            ? Colors.green.withValues(alpha: 0.1)
             : isFailed 
-                ? Colors.red.withOpacity(0.1)
-                : Colors.blue.withOpacity(0.1),
+                ? Colors.red.withValues(alpha: 0.1)
+                : Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSuccess 
-              ? Colors.green.withOpacity(0.3)
+              ? Colors.green.withValues(alpha: 0.3)
               : isFailed 
-                  ? Colors.red.withOpacity(0.3)
-                  : Colors.blue.withOpacity(0.3),
+                  ? Colors.red.withValues(alpha: 0.3)
+                  : Colors.blue.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -216,14 +216,14 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
                 color: isCurrent
                     ? Colors.white
                     : isActive
-                        ? _getNodeColor(node.status!).withOpacity(0.6)
-                        : Colors.white.withOpacity(0.2),
+                        ? _getNodeColor(node.status!).withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.2),
                 width: isCurrent ? 2 : 1.5,
               ),
               boxShadow: isCurrent
                   ? [
                       BoxShadow(
-                        color: _getNodeColor(node.status!).withOpacity(0.4),
+                        color: _getNodeColor(node.status!).withValues(alpha: 0.4),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -236,7 +236,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
                 size: 16,
                 color: isActive
                     ? Colors.white
-                    : Colors.white.withOpacity(0.4),
+                    : Colors.white.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -245,8 +245,8 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
             node.label,
             style: TextStyle(
               color: isActive
-                  ? Colors.white.withOpacity(0.9)
-                  : Colors.white.withOpacity(0.4),
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : Colors.white.withValues(alpha: 0.4),
               fontSize: 11,
               fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
             ),
@@ -255,7 +255,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
             Text(
               node.subtitle!,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 fontSize: 9,
               ),
             ),
@@ -276,17 +276,17 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
         gradient: LinearGradient(
           colors: isActive
               ? [
-                  AppTheme.primaryGold.withOpacity(0.6),
-                  AppTheme.primaryGold.withOpacity(0.3),
+                  AppTheme.primaryGold.withValues(alpha: 0.6),
+                  AppTheme.primaryGold.withValues(alpha: 0.3),
                 ]
               : isNext
                   ? [
-                      Colors.white.withOpacity(0.2),
-                      Colors.white.withOpacity(0.1),
+                      Colors.white.withValues(alpha: 0.2),
+                      Colors.white.withValues(alpha: 0.1),
                     ]
                   : [
-                      Colors.white.withOpacity(0.1),
-                      Colors.white.withOpacity(0.1),
+                      Colors.white.withValues(alpha: 0.1),
+                      Colors.white.withValues(alpha: 0.1),
                     ],
         ),
       ),
@@ -311,7 +311,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
           Container(
             width: 2,
             height: 30,
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
           ),
           // Alternative path nodes
           Row(
@@ -436,7 +436,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
           isUndo 
               ? 'Revert lead status to ${node.label}?'
               : 'Update lead status to ${node.label}?',
-          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
@@ -507,7 +507,7 @@ class _GitHubStylePipelineState extends ConsumerState<GitHubStylePipeline> {
                 onTap: () async {
                   final time = await showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay(hour: 10, minute: 0),
+                    initialTime: const TimeOfDay(hour: 10, minute: 0),
                   );
                   if (time != null) {
                     setState(() => selectedTime = time);
@@ -788,7 +788,7 @@ class PipelineNode {
   final IconData icon;
   final String? subtitle;
   
-  const PipelineNode({
+  PipelineNode({
     this.status,
     required this.label,
     required this.icon,

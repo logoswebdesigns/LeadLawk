@@ -42,7 +42,7 @@ void main() {
         // Only fail for unexpected errors
         fail('API call failed: $e');
       }
-    }, timeout: Timeout(Duration(seconds: 45))); // Increase test timeout
+    }, timeout: const Timeout(Duration(seconds: 45))); // Increase test timeout
 
     test('should provide meaningful error when server is down', () async {
       // Test with invalid URL to simulate server down

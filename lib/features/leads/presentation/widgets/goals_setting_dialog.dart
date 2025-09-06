@@ -5,7 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/goals_provider.dart';
 
 class GoalsSettingDialog extends ConsumerStatefulWidget {
-  const GoalsSettingDialog({Key? key}) : super(key: key);
+  const GoalsSettingDialog({super.key});
 
   static void show(BuildContext context) {
     showModalBottomSheet(
@@ -61,7 +61,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -69,8 +69,7 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
+        child: Padding(padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,20 +179,20 @@ class _GoalsSettingDialogState extends ConsumerState<GoalsSettingDialog> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
             filled: true,
             fillColor: Colors.grey[900],
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
+              borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppTheme.primaryGold),
+              borderSide: const BorderSide(color: AppTheme.primaryGold),
             ),
           ),
         ),

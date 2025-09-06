@@ -7,9 +7,9 @@ class WebsiteScreenshotCard extends StatelessWidget {
   final Lead lead;
   
   const WebsiteScreenshotCard({
-    Key? key,
+    super.key,
     required this.lead,
-  }) : super(key: key);
+  });
   
   @override
   Widget build(BuildContext context) {
@@ -28,16 +28,16 @@ class WebsiteScreenshotCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             AppTheme.elevatedSurface,
-            AppTheme.elevatedSurface.withOpacity(0.8),
+            AppTheme.elevatedSurface.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -54,8 +54,8 @@ class WebsiteScreenshotCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.primaryGold.withOpacity(0.1),
-                  AppTheme.primaryGold.withOpacity(0.05),
+                  AppTheme.primaryGold.withValues(alpha: 0.1),
+                  AppTheme.primaryGold.withValues(alpha: 0.05),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -68,7 +68,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGold.withOpacity(0.2),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -95,7 +95,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                           lead.websiteUrl!.replaceAll(RegExp(r'https?://'), ''),
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -122,8 +122,8 @@ class WebsiteScreenshotCard extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppTheme.backgroundDark.withOpacity(0.6),
-                    AppTheme.backgroundDark.withOpacity(0.8),
+                    AppTheme.backgroundDark.withValues(alpha: 0.6),
+                    AppTheme.backgroundDark.withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -138,12 +138,12 @@ class WebsiteScreenshotCard extends StatelessWidget {
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -176,13 +176,13 @@ class WebsiteScreenshotCard extends StatelessWidget {
                                         Icon(
                                           Icons.wifi_off_rounded,
                                           size: 48,
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.3),
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
                                           'Failed to load',
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.3),
+                                            color: Colors.white.withValues(alpha: 0.3),
                                             fontSize: 12,
                                           ),
                                         ),
@@ -203,26 +203,26 @@ class WebsiteScreenshotCard extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.warningOrange.withOpacity(0.95),
+                                  color: AppTheme.warningOrange.withValues(alpha: 0.95),
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.warning_amber_rounded,
                                       size: 14,
                                       color: Colors.white,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Expanded(
+                                    SizedBox(width: 6),
+                                    Expanded(
                                       child: Text(
                                         'Possible placeholder page',
                                         style: TextStyle(
@@ -247,7 +247,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
+                                  color: Colors.black.withValues(alpha: 0.7),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -263,7 +263,7 @@ class WebsiteScreenshotCard extends StatelessWidget {
                                       'Tap to expand',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: AppTheme.primaryGold.withOpacity(0.9),
+                                        color: AppTheme.primaryGold.withValues(alpha: 0.9),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -298,13 +298,13 @@ class WebsiteScreenshotCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0.3),
-            color.withOpacity(0.2),
+            color.withValues(alpha: 0.3),
+            color.withValues(alpha: 0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(0.5),
+          color: color.withValues(alpha: 0.5),
           width: 1,
         ),
       ),

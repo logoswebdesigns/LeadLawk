@@ -9,9 +9,9 @@ class LeadNavigationBar extends ConsumerWidget {
   final LeadNavigationContext navigation;
 
   const LeadNavigationBar({
-    Key? key,
+    super.key,
     required this.navigation,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +91,7 @@ class _CurrentLeadInfo extends StatelessWidget {
         Text(
           '${navigation.currentIndex} of ${navigation.totalCount}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
           textAlign: TextAlign.center,
         ),
@@ -136,12 +136,12 @@ class _NavigationButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Theme.of(context).disabledColor.withOpacity(0.1),
+          color: Theme.of(context).disabledColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(22),
         ),
         child: Icon(
           isNext ? Icons.chevron_right : Icons.chevron_left,
-          color: Theme.of(context).disabledColor.withOpacity(0.3),
+          color: Theme.of(context).disabledColor.withValues(alpha: 0.3),
           size: 28,
         ),
       ),
@@ -159,10 +159,10 @@ class _NavigationButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGold.withOpacity(0.15),
+            color: AppTheme.primaryGold.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: AppTheme.primaryGold.withOpacity(0.3),
+              color: AppTheme.primaryGold.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -228,7 +228,7 @@ class _NavigationButton extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: AppTheme.accentPurple.withOpacity(0.1),
+        color: AppTheme.accentPurple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Icon(

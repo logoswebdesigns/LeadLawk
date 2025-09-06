@@ -22,7 +22,7 @@ class ServerState {
     this.message,
     this.lastCheck,
     List<String>? logs,
-  }) : logs = logs ?? const [];
+  }) : logs = logs ?? [];
 
   ServerState copyWith({
     ServerStatus? status,
@@ -233,7 +233,7 @@ final serverLogsProvider = FutureProvider.autoDispose<List<String>>((ref) async 
   } catch (_) {
     // ignore
   }
-  return const <String>[];
+  return <String>[];
 });
 
 /// Returns the list of current jobs from the API (sorted by updated_at).
@@ -252,7 +252,7 @@ final jobsListProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
       return data.cast<Map>().map((e) => e.cast<String, dynamic>()).toList();
     }
   } catch (_) {}
-  return const <Map<String, dynamic>>[];
+  return <Map<String, dynamic>>[];
 });
 
 /// Auto-refreshing jobs provider that updates every 3 seconds

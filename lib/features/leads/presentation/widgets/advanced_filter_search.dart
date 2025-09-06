@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/providers/filter_providers.dart';
 import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart';
 import 'advanced_filter_bar.dart';
 
 extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
@@ -18,7 +17,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
                 icon: const Icon(Icons.clear),
                 onPressed: () {
                   searchController.clear();
-                  ref.read(searchFilterProvider.notifier).state = '';
+                  ref.read(currentFilterStateProvider.notifier).updateSearchFilter('');
                 },
               )
             : null,
@@ -33,7 +32,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
         debounceTimer?.cancel();
         debounceTimer = Timer(const Duration(milliseconds: 300), () {
           if (mounted) {
-            ref.read(searchFilterProvider.notifier).state = value;
+            ref.read(currentFilterStateProvider.notifier).updateSearchFilter(value);
           }
         });
       },
@@ -49,7 +48,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
       children: [
         Row(
           children: [
-            Text(
+            const Text(
               'Status Filter:',
               style: TextStyle(
                 fontSize: 12,
@@ -61,7 +60,7 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
             FilterChip(
               label: const Text('Candidates Only'),
               selected: candidatesOnly,
-              onSelected: (value) => ref.read(candidatesOnlyProvider.notifier).state = value,
+              onSelected: (value) => ref.read(currentFilterStateProvider.notifier).updateCandidatesOnly(value),
               selectedColor: AppTheme.primaryGold.withValues(alpha: 0.2),
               checkmarkColor: AppTheme.primaryGold,
             ),
@@ -76,14 +75,13 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
               final label = _getStatusLabel(status);
               final isSelected = currentStatus == label.toLowerCase();
               
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
+              return Padding(padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
                   label: Text(label),
                   selected: isSelected,
                   onSelected: (selected) {
-                    ref.read(statusFilterProvider.notifier).state = 
-                      selected ? label.toLowerCase() : null;
+                    ref.read(currentFilterStateProvider.notifier).updateStatusFilter(
+                      selected ? status.name : null);
                   },
                   selectedColor: _getStatusColor(status).withValues(alpha: 0.2),
                   checkmarkColor: _getStatusColor(status),

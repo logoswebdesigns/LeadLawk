@@ -11,11 +11,11 @@ class LeadSalesPitchSection extends ConsumerStatefulWidget {
   final Function(String pitchId)? onPitchSelected;
 
   const LeadSalesPitchSection({
-    Key? key,
+    super.key,
     required this.lead,
     this.requireSelection = false,
     this.onPitchSelected,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LeadSalesPitchSection> createState() => _LeadSalesPitchSectionState();
@@ -58,8 +58,8 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: widget.requireSelection 
-              ? AppTheme.primaryGold.withOpacity(0.5)
-              : Colors.white.withOpacity(0.1),
+              ? AppTheme.primaryGold.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.1),
             width: widget.requireSelection ? 2 : 1,
           ),
         ),
@@ -67,7 +67,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
           child: Text(
             'No sales pitches available. Add them in account settings.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -120,23 +120,22 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: widget.requireSelection && _selectedPitchId == null
-                  ? AppTheme.primaryGold.withOpacity(0.5)
-                  : Colors.white.withOpacity(0.1),
+                  ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.1),
                 width: widget.requireSelection && _selectedPitchId == null ? 2 : 1,
               ),
             ),
             child: Column(
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
+                Padding(padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
                       Icon(
                         Icons.campaign,
                         color: widget.requireSelection && _selectedPitchId == null
                           ? AppTheme.primaryGold
-                          : Colors.white.withOpacity(0.7),
+                          : Colors.white.withValues(alpha: 0.7),
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -149,14 +148,14 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                             if (selectedPitch != null) ...[
                               const SizedBox(height: 4),
                               Text(
                                 selectedPitch.name,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppTheme.primaryGold,
                                   fontWeight: FontWeight.w600,
@@ -164,7 +163,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                               ),
                             ] else if (widget.requireSelection) ...[
                               const SizedBox(height: 4),
-                              Text(
+                              const Text(
                                 'Select a pitch before calling',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -177,7 +176,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                       ),
                       Icon(
                         _isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 24,
                       ),
                     ],
@@ -188,7 +187,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                 if (_isExpanded) ...[
                   Container(
                     height: 1,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                   Container(
                     constraints: const BoxConstraints(maxHeight: 400),
@@ -202,10 +201,10 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryGold.withOpacity(0.1),
+                                color: AppTheme.primaryGold.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: AppTheme.primaryGold.withOpacity(0.3),
+                                  color: AppTheme.primaryGold.withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Column(
@@ -227,7 +226,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                                         icon: Icon(
                                           Icons.copy,
                                           size: 16,
-                                          color: Colors.white.withOpacity(0.5),
+                                          color: Colors.white.withValues(alpha: 0.5),
                                         ),
                                         onPressed: () {
                                           Clipboard.setData(ClipboardData(text: selectedPitch!.content));
@@ -247,7 +246,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                                     selectedPitch.content,
                                     style: TextStyle(
                                       fontSize: 13,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       height: 1.5,
                                     ),
                                   ),
@@ -264,21 +263,19 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 8),
                             ...pitches.where((p) => p.id != _selectedPitchId).map((pitch) => 
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
+                              Padding(padding: const EdgeInsets.only(bottom: 8),
                                 child: _buildPitchOption(pitch),
                               ),
                             ),
                           ] else if (_selectedPitchId == null) ...[
                             // Show all pitches if none selected
                             ...pitches.map((pitch) => 
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
+                              Padding(padding: const EdgeInsets.only(bottom: 8),
                                 child: _buildPitchOption(pitch),
                               ),
                             ),
@@ -301,8 +298,8 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
     
     return Material(
       color: isSelected 
-        ? AppTheme.primaryGold.withOpacity(0.1)
-        : Colors.white.withOpacity(0.05),
+        ? AppTheme.primaryGold.withValues(alpha: 0.1)
+        : Colors.white.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: () => _selectPitch(pitch.id),
@@ -313,8 +310,8 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected 
-                ? AppTheme.primaryGold.withOpacity(0.5)
-                : Colors.white.withOpacity(0.1),
+                ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.1),
             ),
           ),
           child: Column(
@@ -336,7 +333,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGold.withOpacity(0.2),
+                        color: AppTheme.primaryGold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
@@ -357,7 +354,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                   pitch.description!,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -368,7 +365,7 @@ class _LeadSalesPitchSectionState extends ConsumerState<LeadSalesPitchSection> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   height: 1.4,
                 ),
               ),

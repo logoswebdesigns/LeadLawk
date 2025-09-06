@@ -95,8 +95,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                 // Header - Now clickable for collapse/expand
                 InkWell(
                   onTap: _toggleExpanded,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                  child: Padding(padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
                     child: Row(
                       children: [
                         Container(
@@ -156,8 +155,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Parent jobs (full width)
-                        ...parentJobs.map((job) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                        ...parentJobs.map((job) => Padding(padding: const EdgeInsets.only(bottom: 8),
                           child: _JobCard(
                             job: job,
                             isParentJob: true,
@@ -196,8 +194,7 @@ class _ActiveJobsMonitorState extends ConsumerState<ActiveJobsMonitor>
                             },
                           ),
                         if (allIndividualJobs.length > 10)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                          Padding(padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '+ ${(allIndividualJobs.length - 10).toString().replaceAllMapped(
                                 RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -376,7 +373,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.grid_view_rounded,
                           size: 20,
                           color: AppTheme.primaryGold,
@@ -412,7 +409,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                           ),
                           child: Text(
                             '$completed/$total',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.primaryGold,
@@ -472,8 +469,7 @@ class _JobCardState extends State<_JobCard> with SingleTickerProviderStateMixin 
                       ],
                     ),
                     if (job.message != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                      Padding(padding: const EdgeInsets.only(top: 8),
                         child: Text(
                           job.message!,
                           style: TextStyle(

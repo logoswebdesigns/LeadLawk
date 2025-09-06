@@ -6,7 +6,6 @@ import '../providers/email_templates_api_provider.dart';
 import '../widgets/email_template_dialog.dart';
 import '../widgets/email_settings_dialog.dart';
 import '../widgets/sales_pitch_modal.dart';
-import '../providers/sales_pitch_provider.dart';
 
 class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key});
@@ -40,19 +39,17 @@ class _AccountPageState extends ConsumerState<AccountPage> {
           ),
         ),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+          child: Padding(padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 // Profile Section
                 Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
+                  child: Padding(padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: AppTheme.primaryGold.withOpacity(0.2),
+                          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
                           child: const Icon(
                             Icons.person,
                             size: 40,
@@ -73,7 +70,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           'Lead Generation Pro',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -207,8 +204,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: Padding(padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Icon(
@@ -234,7 +230,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -256,7 +252,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     return Divider(
       height: 1,
       thickness: 1,
-      color: Colors.white.withOpacity(0.1),
+      color: Colors.white.withValues(alpha: 0.1),
       indent: 56,
     );
   }
@@ -282,9 +278,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppTheme.surfaceDark,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -294,16 +290,15 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
+              Padding(padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    Icon(Icons.email_outlined, color: Colors.teal, size: 28),
+                    const Icon(Icons.email_outlined, color: Colors.teal, size: 28),
                     const SizedBox(width: 12),
                     const Text(
                       'Email Templates',
@@ -315,7 +310,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: Icon(Icons.add_circle, color: AppTheme.primaryGold),
+                      icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold),
                       onPressed: () => _showAddTemplateDialog(context),
                     ),
                   ],
@@ -335,14 +330,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             Icon(
                               Icons.email_outlined,
                               size: 64,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No email templates yet',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -350,14 +345,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               'Add templates to quickly send emails to leads',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.5),
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton.icon(
                               onPressed: () => _showAddTemplateDialog(context),
-                              icon: Icon(Icons.add),
-                              label: Text('Add Template'),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Template'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryGold,
                                 foregroundColor: Colors.black,
@@ -380,7 +375,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           child: ExpansionTile(
                             title: Text(
                               template.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -390,7 +385,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                                     template.description!,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white.withOpacity(0.6),
+                                      color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -400,20 +395,19 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, size: 20),
+                                  icon: const Icon(Icons.edit, size: 20),
                                   color: Colors.teal,
                                   onPressed: () => _showEditTemplateDialog(context, template),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, size: 20),
+                                  icon: const Icon(Icons.delete, size: 20),
                                   color: Colors.red,
                                   onPressed: () => _confirmDeleteTemplate(context, ref, template),
                                 ),
                               ],
                             ),
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16),
+                              Padding(padding: const EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -421,14 +415,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                                       'Subject:',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       template.subject,
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -436,14 +430,14 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                                       'Body:',
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       template.body,
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.7),
+                                        color: Colors.white.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -452,7 +446,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontStyle: FontStyle.italic,
-                                        color: Colors.teal.withOpacity(0.7),
+                                        color: Colors.teal.withValues(alpha: 0.7),
                                       ),
                                     ),
                                   ],
@@ -483,7 +477,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: Text(
+        title: const Text(
           'Add Email Template',
           style: TextStyle(color: Colors.white),
         ),
@@ -495,101 +489,101 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: 'Template Name *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   hintText: 'e.g., Follow-up After Call',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
+                    borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   hintText: 'Brief description of when to use',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
+                    borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: subjectController,
                 decoration: InputDecoration(
                   labelText: 'Email Subject *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   hintText: 'e.g., Following up - {{businessName}}',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
+                    borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: bodyController,
                 decoration: InputDecoration(
                   labelText: 'Email Body *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                   hintText: 'Email content...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
+                    borderSide: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   ),
                   alignLabelWithHint: true,
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 maxLines: 8,
               ),
               const SizedBox(height: 8),
@@ -597,7 +591,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 'Variables: {{businessName}}, {{location}}, {{industry}}, {{phone}}, {{rating}}, {{reviewCount}}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.teal.withOpacity(0.7),
+                  color: Colors.teal.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -606,10 +600,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           Consumer(
-            builder: (context, ref, child) => ElevatedButton(
+            builder: (context, ref, _) => ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty &&
                     subjectController.text.isNotEmpty &&
@@ -626,20 +620,22 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     updatedAt: DateTime.now(),
                   );
                   await ref.read(emailTemplatesApiProvider.notifier).addTemplate(template);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Template added successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Template added successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: Colors.black,
               ),
-              child: Text('Add Template'),
+              child: const Text('Add Template'),
             ),
           ),
         ],
@@ -657,7 +653,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: Text(
+        title: const Text(
           'Edit Email Template',
           style: TextStyle(color: Colors.white),
         ),
@@ -669,97 +665,97 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: 'Template Name *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: subjectController,
                 decoration: InputDecoration(
                   labelText: 'Email Subject *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: bodyController,
                 decoration: InputDecoration(
                   labelText: 'Email Body *',
-                  labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppTheme.primaryGold, width: 2),
+                    borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2),
                   ),
                   alignLabelWithHint: true,
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 maxLines: 8,
               ),
               const SizedBox(height: 8),
@@ -767,7 +763,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                 'Variables: {{businessName}}, {{location}}, {{industry}}, {{phone}}, {{rating}}, {{reviewCount}}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.teal.withOpacity(0.7),
+                  color: Colors.teal.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -776,10 +772,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           Consumer(
-            builder: (context, ref, child) => ElevatedButton(
+            builder: (context, ref, _) => ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty &&
                     subjectController.text.isNotEmpty &&
@@ -796,20 +792,22 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     updatedAt: DateTime.now(),
                   );
                   await ref.read(emailTemplatesApiProvider.notifier).updateTemplate(updatedTemplate);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Template updated successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Template updated successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: Colors.black,
               ),
-              child: Text('Save Changes'),
+              child: const Text('Save Changes'),
             ),
           ),
         ],
@@ -822,25 +820,25 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.elevatedSurface,
-        title: Text(
+        title: const Text(
           'Delete Template?',
           style: TextStyle(color: Colors.white),
         ),
         content: Text(
           'Are you sure you want to delete "${template.name}"?',
-          style: TextStyle(color: Colors.white.withOpacity(0.9)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               await ref.read(emailTemplatesApiProvider.notifier).deleteTemplate(template.id);
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content: Text('Template deleted'),
                   backgroundColor: Colors.orange,
                 ),
@@ -850,7 +848,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('Delete'),
+            child: const Text('Delete'),
           ),
         ],
       ),

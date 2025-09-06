@@ -1,21 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../providers/automation_form_provider.dart';
 
 class PageSpeedFilter extends ConsumerWidget {
-  const PageSpeedFilter({Key? key}) : super(key: key);
+  const PageSpeedFilter({super.key});
 
   Color _getScoreColor(int score) {
     if (score >= 90) return const Color(0xFF0CCA4A);  // Google green
     if (score >= 50) return const Color(0xFFFFA400);  // Google orange
     return const Color(0xFFFF4E42);  // Google red
-  }
-
-  String _getScoreLabel(int score) {
-    if (score >= 90) return 'Good';
-    if (score >= 50) return 'Needs Improvement';
-    return 'Poor';
   }
 
   @override
@@ -28,11 +21,11 @@ class PageSpeedFilter extends ConsumerWidget {
       decoration: BoxDecoration(
         color: formState.enablePagespeed 
             ? const Color(0xFF1A1A1B)  // Dark background when enabled
-            : Colors.grey.shade900.withOpacity(0.5),
+            : Colors.grey.shade900.withValues(alpha: 0.5),
         border: Border.all(
           color: formState.enablePagespeed
               ? Colors.grey.shade800
-              : Colors.grey.shade800.withOpacity(0.5),
+              : Colors.grey.shade800.withValues(alpha: 0.5),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -46,12 +39,12 @@ class PageSpeedFilter extends ConsumerWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      const Color(0xFF4285F4),  // Google blue
-                      const Color(0xFF1A73E8),  // Darker Google blue
+                      Color(0xFF4285F4),  // Google blue
+                      Color(0xFF1A73E8),  // Darker Google blue
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -93,7 +86,7 @@ class PageSpeedFilter extends ConsumerWidget {
                   value: formState.enablePagespeed,
                   onChanged: (value) => formNotifier.setEnablePagespeed(value),
                   activeColor: const Color(0xFF4285F4),
-                  activeTrackColor: const Color(0xFF4285F4).withOpacity(0.5),
+                  activeTrackColor: const Color(0xFF4285F4).withValues(alpha: 0.5),
                   inactiveThumbColor: Colors.grey.shade600,
                   inactiveTrackColor: Colors.grey.shade800,
                 ),
@@ -136,7 +129,7 @@ class PageSpeedFilter extends ConsumerWidget {
                             'Filter out leads above this score',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -182,7 +175,7 @@ class PageSpeedFilter extends ConsumerWidget {
                           activeTrackColor: _getScoreColor(formState.maxPagespeedScore),
                           inactiveTrackColor: Colors.grey.shade800,
                           thumbColor: _getScoreColor(formState.maxPagespeedScore),
-                          overlayColor: _getScoreColor(formState.maxPagespeedScore).withOpacity(0.2),
+                          overlayColor: _getScoreColor(formState.maxPagespeedScore).withValues(alpha: 0.2),
                           thumbShape: const RoundSliderThumbShape(
                             enabledThumbRadius: 8,
                           ),
@@ -211,8 +204,8 @@ class PageSpeedFilter extends ConsumerWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF4E42),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFF4E42),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -220,7 +213,7 @@ class PageSpeedFilter extends ConsumerWidget {
                           Text(
                             '0-49',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
                           ),
@@ -231,8 +224,8 @@ class PageSpeedFilter extends ConsumerWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFA400),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFA400),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -240,7 +233,7 @@ class PageSpeedFilter extends ConsumerWidget {
                           Text(
                             '50-89',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
                           ),
@@ -251,8 +244,8 @@ class PageSpeedFilter extends ConsumerWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0CCA4A),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF0CCA4A),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -260,7 +253,7 @@ class PageSpeedFilter extends ConsumerWidget {
                           Text(
                             '90-100',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 11,
                             ),
                           ),
@@ -284,10 +277,10 @@ class PageSpeedFilter extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline,
                           size: 16,
-                          color: const Color(0xFF8AB4F8),  // Google blue
+                          color: Color(0xFF8AB4F8),  // Google blue
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -298,7 +291,7 @@ class PageSpeedFilter extends ConsumerWidget {
                                 'Leads with scores above ${formState.maxPagespeedScore} will be excluded',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -307,7 +300,7 @@ class PageSpeedFilter extends ConsumerWidget {
                                 'Lower scores indicate slower websites - prime candidates for optimization services',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.white.withOpacity(0.6),
+                                  color: Colors.white.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],

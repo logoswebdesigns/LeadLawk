@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/lead_timeline_entry.dart';
-import '../providers/lead_detail_provider.dart';
-import '../providers/job_provider.dart' show leadsRepositoryProvider;
 
 /// Dynamic pipeline widget that shows different paths based on lead journey
 /// Inspired by Pipedrive, HubSpot, and Salesforce pipeline visualization
@@ -15,11 +13,11 @@ class DynamicPipelineWidget extends ConsumerStatefulWidget {
   final VoidCallback? onStatusChanged;
   
   const DynamicPipelineWidget({
-    Key? key,
+    super.key,
     required this.lead,
     required this.timeline,
     this.onStatusChanged,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<DynamicPipelineWidget> createState() => _DynamicPipelineWidgetState();
@@ -64,12 +62,12 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
           end: Alignment.bottomRight,
           colors: [
             AppTheme.surfaceDark,
-            AppTheme.surfaceDark.withOpacity(0.8),
+            AppTheme.surfaceDark.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -94,11 +92,11 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface.withOpacity(0.5),
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -132,10 +130,10 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: route.color.withOpacity(0.1),
+        color: route.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: route.color.withOpacity(0.3),
+          color: route.color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -147,7 +145,7 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
             height: 4,
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation(route.color),
             ),
           ),
@@ -166,7 +164,7 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
   }
   
   Widget _buildPipelineVisualization(PipelineRoute route) {
-    return Container(
+    return SizedBox(
       height: 220,
       child: CustomPaint(
         painter: PipelinePainter(
@@ -269,8 +267,8 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
             gradient: isActive
               ? RadialGradient(
                   colors: [
-                    node.color.withOpacity(0.9),
-                    node.color.withOpacity(0.6),
+                    node.color.withValues(alpha: 0.9),
+                    node.color.withValues(alpha: 0.6),
                   ],
                 )
               : null,
@@ -280,13 +278,13 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
                 ? Colors.white
                 : isActive
                   ? node.color
-                  : Colors.white.withOpacity(0.2),
+                  : Colors.white.withValues(alpha: 0.2),
               width: isCurrent ? 3 : 2,
             ),
             boxShadow: isCurrent
               ? [
                   BoxShadow(
-                    color: node.color.withOpacity(0.5),
+                    color: node.color.withValues(alpha: 0.5),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -294,17 +292,16 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
               : isActive
                 ? [
                     BoxShadow(
-                      color: node.color.withOpacity(0.3),
+                      color: node.color.withValues(alpha: 0.3),
                       blurRadius: 6,
                     ),
                   ]
                 : [],
           ),
-          child: Center(
-            child: Icon(
+          child: Center(child: Icon(
               node.icon,
               size: 20,
-              color: isActive ? Colors.white : Colors.white.withOpacity(0.3),
+              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.3),
             ),
           ),
         ),
@@ -317,8 +314,8 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
                 node.label,
                 style: TextStyle(
                   color: isActive
-                    ? Colors.white.withOpacity(0.9)
-                    : Colors.white.withOpacity(0.4),
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : Colors.white.withValues(alpha: 0.4),
                   fontSize: 11,
                   fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -332,8 +329,8 @@ class _DynamicPipelineWidgetState extends ConsumerState<DynamicPipelineWidget>
                   node.description!,
                   style: TextStyle(
                     color: isActive
-                      ? Colors.white.withOpacity(0.6)
-                      : Colors.white.withOpacity(0.3),
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.3),
                     fontSize: 9,
                     fontStyle: FontStyle.italic,
                   ),
@@ -442,15 +439,15 @@ class PipelinePainter extends CustomPainter {
       
       final isActive = route.getCurrentIndex(currentStatus) > i;
       paint.color = isActive 
-        ? route.color.withOpacity(0.6)
-        : Colors.white.withOpacity(0.2);
+        ? route.color.withValues(alpha: 0.6)
+        : Colors.white.withValues(alpha: 0.2);
       
       if (isActive) {
         // Animated gradient for active connections
         paint.shader = LinearGradient(
           colors: [
-            route.color.withOpacity(0.8),
-            route.color.withOpacity(0.4),
+            route.color.withValues(alpha: 0.8),
+            route.color.withValues(alpha: 0.4),
           ],
         ).createShader(Rect.fromPoints(start, end));
       }
@@ -470,8 +467,8 @@ class PipelinePainter extends CustomPainter {
           final isOnThisPath = nodes.any((n) => n.status == currentStatus);
           paint.shader = null;
           paint.color = isOnThisPath
-            ? route.color.withOpacity(0.6)
-            : Colors.white.withOpacity(0.1);
+            ? route.color.withValues(alpha: 0.6)
+            : Colors.white.withValues(alpha: 0.1);
           
           // Draw branch connection
           final path = Path()
@@ -504,7 +501,7 @@ class PipelineNode {
   final Color color;
   final String? description;
   
-  const PipelineNode({
+  PipelineNode({
     required this.status,
     required this.label,
     required this.icon,
@@ -520,7 +517,7 @@ class PipelineRoute {
   final List<PipelineNode> mainPath;
   final Map<LeadStatus, List<PipelineNode>> alternativePaths;
   
-  const PipelineRoute({
+  PipelineRoute({
     required this.name,
     required this.color,
     required this.mainPath,
@@ -570,7 +567,7 @@ class PipelineRoute {
   Offset getAlternativeNodePosition(LeadStatus branchPoint, int index) {
     final branchIndex = getBranchPointIndex(branchPoint);
     final x = 50.0 + (branchIndex * 120.0) + ((index + 1) * 80.0);
-    final y = 150.0;
+    const y = 150.0;
     return Offset(x, y);
   }
 }

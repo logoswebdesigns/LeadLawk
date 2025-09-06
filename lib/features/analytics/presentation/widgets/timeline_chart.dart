@@ -10,9 +10,8 @@ class TimelineChart extends ConsumerWidget {
     final timelineAsync = ref.watch(conversionTimelineProvider);
 
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,16 +27,14 @@ class TimelineChart extends ConsumerWidget {
                 ),
               ],
             ),
-            Divider(color: Colors.white.withOpacity(0.2)),
+            Divider(color: Colors.white.withValues(alpha: 0.2)),
             timelineAsync.when(
               data: (timeline) {
                 if (timeline.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
+                  return Center(child: Padding(padding: const EdgeInsets.all(20),
                       child: Text(
                         'No timeline data available',
-                        style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                       ),
                     ),
                   );
@@ -103,7 +100,7 @@ class TimelineChart extends ConsumerWidget {
                                   dayLabel,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -114,14 +111,14 @@ class TimelineChart extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     // Legend
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _LegendItem(
                           color: Colors.blue,
                           label: 'New Leads',
                         ),
-                        const SizedBox(width: 24),
+                        SizedBox(width: 24),
                         _LegendItem(
                           color: Colors.green,
                           label: 'Conversions',
@@ -133,9 +130,9 @@ class TimelineChart extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -167,27 +164,23 @@ class TimelineChart extends ConsumerWidget {
                   ],
                 );
               },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(20),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
+              error: (err, _) => Center(child: Padding(padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
                       Icon(
                         Icons.timeline_outlined,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 32,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'No timeline data yet',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                         ),
                       ),
@@ -195,7 +188,7 @@ class TimelineChart extends ConsumerWidget {
                       Text(
                         'Timeline will appear as you work with leads',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -282,7 +275,7 @@ class _LegendItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
       ],

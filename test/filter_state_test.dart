@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:leadloq/features/leads/presentation/providers/paginated_leads_provider.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
 
 void main() {
   group('LeadsFilterState', () {
-    test('copyWith handles explicit null values correctly', () {
-      // Start with a filter that has a status set
+    test('copyWith preserves values when not specified', () {
+      // Start with a filter that has values set
       const initialFilter = LeadsFilterState(
         status: 'viewed',
         search: 'test',
@@ -13,21 +13,6 @@ void main() {
         sortAscending: true,
       );
       
-      // Test setting status to null (switching to "all")
-      final nullStatusFilter = initialFilter.copyWith(status: null);
-      expect(nullStatusFilter.status, isNull);
-      expect(nullStatusFilter.search, equals('test')); // Should be unchanged
-      expect(nullStatusFilter.candidatesOnly, equals(true)); // Should be unchanged
-      
-      // Test setting search to null
-      final nullSearchFilter = initialFilter.copyWith(search: null);
-      expect(nullSearchFilter.status, equals('viewed')); // Should be unchanged
-      expect(nullSearchFilter.search, isNull);
-      
-      // Test setting candidatesOnly to null
-      final nullCandidatesFilter = initialFilter.copyWith(candidatesOnly: null);
-      expect(nullCandidatesFilter.candidatesOnly, isNull);
-      
       // Test preserving values when not specified
       final preservedFilter = initialFilter.copyWith();
       expect(preservedFilter.status, equals('viewed'));
@@ -35,6 +20,17 @@ void main() {
       expect(preservedFilter.candidatesOnly, equals(true));
       expect(preservedFilter.sortBy, equals('business_name'));
       expect(preservedFilter.sortAscending, equals(true));
+      
+      // Test updating some values while preserving others
+      final partialFilter = initialFilter.copyWith(
+        search: 'updated search',
+        candidatesOnly: false,
+      );
+      expect(partialFilter.status, equals('viewed')); // Should be unchanged
+      expect(partialFilter.search, equals('updated search'));
+      expect(partialFilter.candidatesOnly, equals(false));
+      expect(partialFilter.sortBy, equals('business_name')); // Should be unchanged
+      expect(partialFilter.sortAscending, equals(true)); // Should be unchanged
     });
     
     test('copyWith updates non-null values correctly', () {

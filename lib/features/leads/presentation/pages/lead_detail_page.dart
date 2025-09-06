@@ -10,8 +10,6 @@ import '../providers/lead_navigation_provider.dart';
 import '../providers/job_provider.dart' show leadsRepositoryProvider;
 import '../providers/pagespeed_status_provider.dart';
 import '../widgets/lead_navigation_bar.dart';
-import '../widgets/lead_info_row.dart';
-import '../widgets/lead_flag_row.dart';
 import '../widgets/lead_notes_section.dart';
 import '../widgets/lead_sales_pitch_section.dart';
 import '../widgets/lead_timeline.dart';
@@ -20,16 +18,17 @@ import '../widgets/lead_status_actions.dart';
 import '../widgets/dynamic_pipeline_widget.dart';
 import '../widgets/call_tracking_dialog.dart';
 import '../widgets/quick_actions_bar.dart';
-import '../widgets/unified_screenshot_card.dart';
 import '../widgets/collapsible_screenshots.dart';
 import '../services/lead_actions_service.dart';
 import '../utils/lead_detail_utils.dart';
 import '../../data/datasources/pagespeed_datasource.dart';
+import '../../../../core/utils/debug_logger.dart';
+import '../providers/command_provider.dart';
 
 class LeadDetailPage extends ConsumerStatefulWidget {
   final String leadId;
 
-  const LeadDetailPage({Key? key, required this.leadId}) : super(key: key);
+  const LeadDetailPage({super.key, required this.leadId});
 
   @override
   ConsumerState<LeadDetailPage> createState() => _LeadDetailPageState();
@@ -38,7 +37,6 @@ class LeadDetailPage extends ConsumerStatefulWidget {
 class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   LeadActionsService? _actionsService;
   PageSpeedDataSource? _pageSpeedDataSource;
-  bool _isTestingPageSpeed = false;
   String? _lastUpdatedLeadId; // Track which lead we've already updated
   bool _isInitialized = false;
 
@@ -67,7 +65,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     super.didUpdateWidget(oldWidget);
     // When navigating to a different lead via prev/next buttons
     if (oldWidget.leadId != widget.leadId) {
-      print('📱 NAVIGATION: Lead changed from ${oldWidget.leadId} to ${widget.leadId}');
+      DebugLogger.navigation('📱 NAVIGATION: Lead changed from ${oldWidget.leadId} to ${widget.leadId}');
       // Update the new lead's status from NEW to VIEWED if needed
       _updateStatusToViewed();
     }
@@ -76,7 +74,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   Future<void> _updateStatusToViewed() async {
     // Prevent duplicate updates for the same lead
     if (_lastUpdatedLeadId == widget.leadId) {
-      print('📱 STATUS: Already updated lead ${widget.leadId} to VIEWED, skipping');
+      DebugLogger.log('📱 STATUS: Already updated lead ${widget.leadId} to VIEWED, skipping');
       return;
     }
     
@@ -88,9 +86,9 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         _lastUpdatedLeadId = widget.leadId; // Mark as updated
         final repository = ref.read(leadsRepositoryProvider);
         
-        // Update the lead status
-        final updatedLead = lead.copyWith(status: LeadStatus.viewed);
-        await repository.updateLead(updatedLead);
+        // Use command pattern for update
+        final updateCommand = ref.read(updateLeadCommandProvider);
+        await updateCommand(lead, {'status': LeadStatus.viewed});
         
         // Add timeline entry
         await repository.addTimelineEntry(lead.id, {
@@ -109,7 +107,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         ref.invalidate(leadDetailProvider(widget.leadId));
       }
     } catch (e) {
-      print('Failed to update status to VIEWED: $e');
+      DebugLogger.error('Failed to update status to VIEWED: $e');
     }
   }
 
@@ -122,7 +120,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     ref.listen(leadDetailProvider(widget.leadId), (previous, next) {
       next.whenData((lead) {
         if (lead.status == LeadStatus.new_) {
-          print('📱 STATUS: NEW lead loaded (${lead.businessName}), triggering VIEWED update');
+          DebugLogger.log('📱 STATUS: NEW lead loaded (${lead.businessName}), triggering VIEWED update');
           _updateStatusToViewed();
         }
       });
@@ -158,7 +156,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         PopupMenuButton<String>(
           onSelected: (value) => _handleMenuAction(value),
           itemBuilder: (context) => [
-            PopupMenuItem(value: 'delete', child: Text('Delete Lead')),
+            const PopupMenuItem(value: 'delete', child: Text('Delete Lead')),
           ],
         ),
       ],
@@ -224,7 +222,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                 Text(
                   '${navigation.currentIndex} / ${navigation.totalCount}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 11,
                   ),
                 ),
@@ -265,7 +263,6 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   }
 
   Widget _buildLeadContent(Lead lead) {
-    final isDesktop = MediaQuery.of(context).size.width > 768;
     final isMobile = MediaQuery.of(context).size.width < 600;
     
     return SingleChildScrollView(
@@ -300,10 +297,10 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.elevatedSurface.withOpacity(0.3),
+              color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -422,15 +419,13 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   }
 
   Widget _buildCompactHeaderSection(Lead lead) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface.withOpacity(0.5),
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -461,7 +456,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                           icon: Icon(
                             Icons.copy,
                             size: 18,
-                            color: AppTheme.primaryGold.withOpacity(0.7),
+                            color: AppTheme.primaryGold.withValues(alpha: 0.7),
                           ),
                           tooltip: 'Copy business name',
                           constraints: const BoxConstraints(
@@ -486,12 +481,12 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.star, color: AppTheme.warningOrange, size: 14),
+                          const Icon(Icons.star, color: AppTheme.warningOrange, size: 14),
                           const SizedBox(width: 4),
                           Text(
                             '${lead.rating!.toStringAsFixed(1)} (${lead.reviewCount ?? 0} reviews)',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 13,
                             ),
                           ),
@@ -538,7 +533,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           ),
           
           const SizedBox(height: 12),
-          Divider(color: Colors.white.withOpacity(0.1)),
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 12),
           
           // Contact info in a compact grid
@@ -593,16 +588,16 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.1),
+                color: Colors.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Colors.purple.withOpacity(0.3),
+                  color: Colors.purple.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.event,
                     size: 16,
                     color: Colors.purple,
@@ -610,7 +605,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                   const SizedBox(width: 8),
                   Text(
                     'Callback: ${_formatCallbackDate(lead.followUpDate!)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.purple,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -637,13 +632,13 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
         Icon(
           icon,
           size: 14,
-          color: isClickable ? AppTheme.primaryGold : Colors.white.withOpacity(0.5),
+          color: isClickable ? AppTheme.primaryGold : Colors.white.withValues(alpha: 0.5),
         ),
         const SizedBox(width: 6),
         Text(
           text,
           style: TextStyle(
-            color: isClickable ? AppTheme.primaryGold : Colors.white.withOpacity(0.7),
+            color: isClickable ? AppTheme.primaryGold : Colors.white.withValues(alpha: 0.7),
             fontSize: 13,
             decoration: isClickable ? TextDecoration.underline : null,
           ),
@@ -692,10 +687,6 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     }
   }
   
-  Widget _buildHeaderSection(Lead lead) {
-    // Keeping old method for compatibility, but redirecting to new one
-    return _buildCompactHeaderSection(lead);
-  }
   
   IconData _getStatusIcon(LeadStatus status) {
     switch (status) {
@@ -739,7 +730,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     await LeadDetailUtils.makePhoneCall(lead.phone);
     
     // Calculate call duration (simulated for now - in production would track actual call)
-    final callDuration = Duration(minutes: 4, seconds: 30); // Placeholder
+    const callDuration = Duration(minutes: 4, seconds: 30); // Placeholder
     
     // Show call tracking dialog after call
     if (mounted) {
@@ -794,7 +785,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
           );
         }
       } catch (e) {
-        print('Failed to update status after call: $e');
+        DebugLogger.error('Failed to update status after call: $e');
       }
     }
   }

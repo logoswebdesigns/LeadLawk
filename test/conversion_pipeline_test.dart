@@ -30,7 +30,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => statistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -56,7 +56,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => statistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -82,7 +82,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => statistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -104,11 +104,11 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async {
               // Delay to test loading state
-              await Future.delayed(Duration(milliseconds: 100));
+              await Future.delayed(const Duration(milliseconds: 100));
               return createMockStatistics();
             }),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -131,7 +131,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => statistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -157,7 +157,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => emptyStatistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),
@@ -181,7 +181,7 @@ void main() {
           overrides: [
             leadStatisticsProvider.overrideWith((ref) async => statistics),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ConversionPipeline(),
             ),

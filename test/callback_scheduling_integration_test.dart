@@ -9,10 +9,7 @@ import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.
 import 'package:leadloq/features/leads/data/repositories/leads_repository_impl.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';
 import 'package:leadloq/features/leads/presentation/providers/job_provider.dart';
-import 'package:leadloq/core/theme/app_theme.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:dartz/dartz.dart';
-import 'package:leadloq/core/error/failures.dart';
 
 class MockDio extends Mock implements Dio {}
 class MockLeadsRemoteDataSource extends Mock implements LeadsRemoteDataSource {}
@@ -40,7 +37,7 @@ class TestDataFactory {
       followUpDate: followUpDate,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
-      timeline: [],
+      timeline: const [],
     );
   }
 }

@@ -26,7 +26,7 @@ class QuickActionsBar extends ConsumerWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
         ),
       ),
       padding: const EdgeInsets.all(12),
@@ -120,8 +120,8 @@ class QuickActionsBar extends ConsumerWidget {
     
     return Material(
       color: isEnabled 
-          ? color.withOpacity(0.1)
-          : Theme.of(context).disabledColor.withOpacity(0.05),
+          ? color.withValues(alpha: 0.1)
+          : Theme.of(context).disabledColor.withValues(alpha: 0.05),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onPressed,
@@ -161,7 +161,7 @@ class QuickActionsBar extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.elevatedSurface,
-          title: Text(
+          title: const Text(
             'Mark as Did Not Convert',
             style: TextStyle(color: AppTheme.warningOrange),
           ),
@@ -172,16 +172,16 @@ class QuickActionsBar extends ConsumerWidget {
               children: [
                 Text(
                   'Select a reason why ${lead.businessName} did not convert:',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<ConversionFailureReason>(
                   value: selectedReason,
                   decoration: InputDecoration(
                     labelText: 'Reason Code *',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha: 0.05),
                   ),
                   dropdownColor: AppTheme.elevatedSurface,
                   items: ConversionFailureReason.values.map((reason) => DropdownMenuItem(
@@ -205,9 +205,9 @@ class QuickActionsBar extends ConsumerWidget {
                   },
                   decoration: InputDecoration(
                     labelText: 'Additional Notes (Optional)',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
+                    fillColor: Colors.white.withValues(alpha: 0.05),
                   ),
                   style: const TextStyle(color: Colors.white),
                   maxLines: 3,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/presentation/providers/filter_providers.dart';
 import 'package:leadloq/features/leads/presentation/widgets/sort_options_modal.dart';
-import 'package:leadloq/features/leads/presentation/pages/leads_list_page.dart';
 
 void main() {
   group('SortOptionsModal', () {
@@ -40,7 +41,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sortStateProvider.overrideWith((ref) => SortState(option: SortOption.rating)),
+            sortStateProvider.overrideWith((ref) => const SortState(option: SortOption.rating)),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -59,8 +60,8 @@ void main() {
 
     testWidgets('can toggle sort direction', (WidgetTester tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: const MaterialApp(
+        const ProviderScope(
+          child: MaterialApp(
             home: Scaffold(
               body: SortOptionsModal(),
             ),

@@ -5,7 +5,7 @@ import '../providers/goals_provider.dart';
 import 'goals_setting_dialog.dart';
 
 class GoalsTrackingCard extends ConsumerWidget {
-  const GoalsTrackingCard({Key? key}) : super(key: key);
+  const GoalsTrackingCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +25,7 @@ class GoalsTrackingCard extends ConsumerWidget {
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.primaryGold.withOpacity(0.3),
+          color: AppTheme.primaryGold.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -53,7 +53,7 @@ class GoalsTrackingCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.settings,
               color: AppTheme.primaryGold,
               size: 18,
@@ -66,59 +66,6 @@ class GoalsTrackingCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildGoalItem(
-    String label,
-    int current,
-    int goal,
-    double progress,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 16, color: color),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-            Text(
-              '$current / $goal',
-              style: TextStyle(
-                color: progress >= 1.0 ? AppTheme.successGreen : Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.grey[800],
-            valueColor: AlwaysStoppedAnimation<Color>(
-              progress >= 1.0 ? AppTheme.successGreen : color,
-            ),
-            minHeight: 6,
-          ),
-        ),
-      ],
     );
   }
 
@@ -142,7 +89,7 @@ class GoalsTrackingCard extends ConsumerWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 11,
                 ),
                 overflow: TextOverflow.ellipsis,

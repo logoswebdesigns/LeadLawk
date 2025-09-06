@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leadloq/features/leads/domain/entities/lead.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:dio/dio.dart';
@@ -67,7 +65,7 @@ void main() {
     
     test('should add timeline entry for callback scheduling', () async {
       // Arrange
-      final leadId = 'test-id';
+      const leadId = 'test-id';
       final callbackDateTime = DateTime.now().add(const Duration(days: 1));
       final entryData = {
         'type': 'FOLLOW_UP',

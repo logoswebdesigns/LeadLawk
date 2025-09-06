@@ -24,7 +24,6 @@ void main() {
       testLead = Lead(
         id: 'test-lead-123',
         businessName: 'Test Business',
-        status: LeadStatus.new_,
         phone: '123-456-7890',
         industry: 'Construction',
         location: 'Dallas, TX',
@@ -33,6 +32,7 @@ void main() {
         meetsRatingThreshold: true,
         hasRecentReviews: true,
         isCandidate: true,
+        status: LeadStatus.new_,
         rating: 4.5,
         reviewCount: 100,
         createdAt: DateTime.now(),

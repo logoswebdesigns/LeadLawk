@@ -30,7 +30,7 @@ class AppBottomNavigationBar extends StatelessWidget {
         color: AppTheme.backgroundDark,
         border: Border(
           top: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 0.5,
           ),
         ),
@@ -103,7 +103,7 @@ class AppBottomNavigationBar extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: isSelected && isCenter
-                  ? AppTheme.primaryGold.withOpacity(0.15)
+                  ? AppTheme.primaryGold.withValues(alpha: 0.15)
                   : Colors.transparent,
             ),
             child: Column(
@@ -118,7 +118,7 @@ class AppBottomNavigationBar extends StatelessWidget {
                     color: isSelected
                         ? (isCenter 
                             ? AppTheme.primaryGold 
-                            : AppTheme.primaryGold.withOpacity(0.1))
+                            : AppTheme.primaryGold.withValues(alpha: 0.1))
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(isCenter ? 14 : 6),
                   ),
@@ -127,7 +127,7 @@ class AppBottomNavigationBar extends StatelessWidget {
                     size: isCenter ? 26 : 22,
                     color: isSelected
                         ? (isCenter ? AppTheme.backgroundDark : AppTheme.primaryGold)
-                        : Colors.white.withOpacity(0.6),
+                        : Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -138,7 +138,7 @@ class AppBottomNavigationBar extends StatelessWidget {
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected
                         ? AppTheme.primaryGold
-                        : Colors.white.withOpacity(0.6),
+                        : Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
               ],

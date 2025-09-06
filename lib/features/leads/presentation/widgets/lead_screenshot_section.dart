@@ -6,10 +6,10 @@ class LeadScreenshotSection extends StatelessWidget {
   final VoidCallback? onScreenshotTap;
 
   const LeadScreenshotSection({
-    Key? key,
+    super.key,
     this.screenshotPath,
     this.onScreenshotTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class LeadScreenshotSection extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.camera_alt,
           size: 20,
           color: AppTheme.accentPurple,
@@ -35,7 +35,7 @@ class LeadScreenshotSection extends StatelessWidget {
         Text(
           'Business Screenshot',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -53,7 +53,7 @@ class LeadScreenshotSection extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -98,13 +98,13 @@ class LeadScreenshotSection extends StatelessWidget {
           Icon(
             Icons.camera_alt_outlined,
             size: 48,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 14,
             ),
             textAlign: TextAlign.center,
@@ -113,7 +113,7 @@ class LeadScreenshotSection extends StatelessWidget {
           Text(
             'Screenshots are captured for new leads during automation',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
             ),
             textAlign: TextAlign.center,

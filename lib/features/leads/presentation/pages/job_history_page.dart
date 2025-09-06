@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/server_status_provider.dart';
 
@@ -122,16 +121,16 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'Error loading jobs',
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         _error!,
-                        style: TextStyle(color: Colors.white60, fontSize: 14),
+                        style: const TextStyle(color: Colors.white60, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -147,14 +146,14 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.inbox, size: 64, color: Colors.white30),
+                          const Icon(Icons.inbox, size: 64, color: Colors.white30),
                           const SizedBox(height: 16),
-                          Text(
+                          const Text(
                             'No jobs found',
                             style: TextStyle(color: Colors.white60, fontSize: 18),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          const Text(
                             'Start a new job from the search page',
                             style: TextStyle(color: Colors.white30),
                           ),
@@ -191,7 +190,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(status).withOpacity(0.2),
+                                  color: _getStatusColor(status).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -215,7 +214,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(status).withOpacity(0.2),
+                                      color: _getStatusColor(status).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
@@ -236,7 +235,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                   if (job['query'] != null)
                                     Text(
                                       'Query: ${job['query']}',
-                                      style: TextStyle(color: Colors.white60, fontSize: 12),
+                                      style: const TextStyle(color: Colors.white60, fontSize: 12),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   const SizedBox(height: 4),
@@ -255,7 +254,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                       const SizedBox(width: 8),
                                       Text(
                                         '$processed/$total',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: Colors.white60,
                                           fontSize: 12,
                                         ),
@@ -268,7 +267,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                     children: [
                                       Text(
                                         _formatDate(job['created_at']),
-                                        style: TextStyle(color: Colors.white30, fontSize: 11),
+                                        style: const TextStyle(color: Colors.white30, fontSize: 11),
                                       ),
                                       if (job['message'] != null && status == 'error')
                                         Expanded(
@@ -283,7 +282,7 @@ class _JobHistoryPageState extends ConsumerState<JobHistoryPage> {
                                   ),
                                 ],
                               ),
-                              trailing: Icon(
+                              trailing: const Icon(
                                 Icons.arrow_forward_ios,
                                 color: Colors.white30,
                                 size: 16,

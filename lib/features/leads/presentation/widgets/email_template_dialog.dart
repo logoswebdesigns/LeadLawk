@@ -9,9 +9,9 @@ class EmailTemplateDialog extends ConsumerStatefulWidget {
   final Lead lead;
 
   const EmailTemplateDialog({
-    Key? key,
+    super.key,
     required this.lead,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<EmailTemplateDialog> createState() => _EmailTemplateDialogState();
@@ -49,7 +49,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
               // Header
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.email,
                     color: Colors.teal,
                     size: 24,
@@ -64,7 +64,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: Icon(Icons.close, color: Colors.white.withOpacity(0.7)),
+                    icon: Icon(Icons.close, color: Colors.white.withValues(alpha: 0.7)),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -75,18 +75,18 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.business, size: 16, color: Colors.white.withOpacity(0.5)),
+                    Icon(Icons.business, size: 16, color: Colors.white.withValues(alpha: 0.5)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         widget.lead.businessName,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -102,22 +102,22 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                 decoration: InputDecoration(
                   labelText: 'Recipient Email *',
                   hintText: 'Enter client email address',
-                  prefixIcon: Icon(Icons.email_outlined, color: Colors.teal),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.teal),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.teal),
+                    borderSide: const BorderSide(color: Colors.teal),
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
+                  fillColor: Colors.white.withValues(alpha: 0.05),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -138,13 +138,13 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
               const SizedBox(height: 12),
               
               Container(
-                constraints: BoxConstraints(maxHeight: 200),
+                constraints: const BoxConstraints(maxHeight: 200),
                 child: templates.isEmpty
                     ? _buildNoTemplatesMessage()
                     : ListView.builder(
@@ -154,8 +154,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                           final template = templates[index];
                           final isSelected = _selectedTemplate?.id == template.id;
                           
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                          return Padding(padding: const EdgeInsets.only(bottom: 8),
                             child: InkWell(
                               onTap: () {
                                 setState(() {
@@ -167,13 +166,13 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: isSelected 
-                                      ? Colors.teal.withOpacity(0.2)
-                                      : Colors.white.withOpacity(0.05),
+                                      ? Colors.teal.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: isSelected 
                                         ? Colors.teal 
-                                        : Colors.white.withOpacity(0.1),
+                                        : Colors.white.withValues(alpha: 0.1),
                                     width: isSelected ? 2 : 1,
                                   ),
                                 ),
@@ -186,7 +185,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                                       size: 20,
                                       color: isSelected 
                                           ? Colors.teal
-                                          : Colors.white.withOpacity(0.5),
+                                          : Colors.white.withValues(alpha: 0.5),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -195,7 +194,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                                         children: [
                                           Text(
                                             template.name,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
                                             ),
@@ -206,7 +205,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                                               template.description!,
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.white.withOpacity(0.6),
+                                                color: Colors.white.withValues(alpha: 0.6),
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
@@ -234,7 +233,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
                       'Cancel',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -248,11 +247,11 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.send, size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text('Send Email'),
                       ],
                     ),
@@ -270,22 +269,22 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.orange.withOpacity(0.3),
+          color: Colors.orange.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: Colors.orange,
             size: 32,
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'No Email Templates',
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -297,7 +296,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
             'Create email templates in the Account page to use this feature',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -335,7 +334,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Opening email client...'),
               backgroundColor: Colors.teal,
             ),
@@ -500,7 +499,7 @@ Additional Metrics:
       return 'Your website is performing well with no major issues detected.';
     }
     
-    return 'Key issues identified:\n' + issues.join('\n');
+    return 'Key issues identified:\n${issues.join('\n')}';
   }
   
   String _generateImprovementAreas(Lead lead) {
@@ -535,7 +534,7 @@ Additional Metrics:
       return 'Your website is well-optimized!';
     }
     
-    return 'Recommended improvements:\n' + improvements.join('\n');
+    return 'Recommended improvements:\n${improvements.join('\n')}';
   }
 
   String? _encodeQueryParameters(Map<String, String> params) {

@@ -83,7 +83,7 @@ class _LoadingStateState extends State<LoadingState>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryIndigo.withOpacity(0.3),
+                        color: AppTheme.primaryIndigo.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -155,8 +155,7 @@ class _LoadingStateState extends State<LoadingState>
                       reverse: true,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: widget.logs!.map((log) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
+                        children: widget.logs!.map((log) => Padding(padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
                             '• $log',
                             style: const TextStyle(

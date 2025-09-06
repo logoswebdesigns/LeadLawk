@@ -1,9 +1,10 @@
 import 'dart:async';
+import '../../domain/providers/filter_providers.dart' as domain_filters;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
+import '../providers/filter_providers.dart' as ui_filters;
 import 'primary_filter_row.dart';
 import 'advanced_filter_section.dart';
 
@@ -28,7 +29,7 @@ class FilterBarState extends ConsumerState<FilterBar> {
     
     // Set initial value from provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentSearch = ref.read(searchFilterProvider);
+      final currentSearch = ref.read(ui_filters.searchFilterProvider);
       if (currentSearch.isNotEmpty) {
         searchController.text = currentSearch;
       }
@@ -45,7 +46,7 @@ class FilterBarState extends ConsumerState<FilterBar> {
   @override
   Widget build(BuildContext context) {
     // Listen for search filter changes to sync the text field
-    ref.listen(searchFilterProvider, (previous, next) {
+    ref.listen(ui_filters.searchFilterProvider, (previous, next) {
       if (next != searchController.text) {
         searchController.text = next;
       }
@@ -94,10 +95,10 @@ class FilterBarState extends ConsumerState<FilterBar> {
         hintText: 'Search leads...',
         hintStyle: TextStyle(
           fontSize: 16,
-          color: Colors.white.withOpacity(0.4),
+          color: Colors.white.withValues(alpha: 0.4),
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: Icon(
+        prefixIcon: const Icon(
           CupertinoIcons.search,
           color: AppTheme.primaryGold,
           size: 20,
@@ -106,12 +107,12 @@ class FilterBarState extends ConsumerState<FilterBar> {
             ? IconButton(
                 icon: Icon(
                   CupertinoIcons.xmark_circle_fill,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   size: 18,
                 ),
                 onPressed: () {
                   searchController.clear();
-                  ref.read(searchFilterProvider.notifier).state = '';
+                  ref.read(domain_filters.currentFilterStateProvider.notifier).updateSearchFilter('');
                 },
               )
             : null,
@@ -120,21 +121,21 @@ class FilterBarState extends ConsumerState<FilterBar> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppTheme.primaryGold),
+          borderSide: const BorderSide(color: AppTheme.primaryGold),
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.white.withValues(alpha: 0.05),
         contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       ),
       onChanged: (value) {
         debounceTimer?.cancel();
         debounceTimer = Timer(const Duration(milliseconds: 300), () {
           if (mounted) {
-            ref.read(searchFilterProvider.notifier).state = value;
+            ref.read(domain_filters.currentFilterStateProvider.notifier).updateSearchFilter(value);
           }
         });
       },

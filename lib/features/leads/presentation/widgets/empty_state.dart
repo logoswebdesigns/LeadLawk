@@ -85,7 +85,7 @@ class _EmptyStateState extends State<EmptyState>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.mediumGray.withOpacity(0.2),
+                          color: AppTheme.mediumGray.withValues(alpha: 0.2),
                           blurRadius: 30,
                           offset: const Offset(0, 15),
                         ),
@@ -113,7 +113,7 @@ class _EmptyStateState extends State<EmptyState>
             Text(
               widget.description,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 height: 1.5,
               ),
               textAlign: TextAlign.center,

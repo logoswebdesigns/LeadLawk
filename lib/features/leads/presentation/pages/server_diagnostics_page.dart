@@ -177,7 +177,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                           const SizedBox(height: 12),
                           const Text('Messages:', style: TextStyle(fontWeight: FontWeight.w600)),
                           const SizedBox(height: 4),
-                          ...((data['messages'] as List<dynamic>? ?? const [])
+                          ...((data['messages'] as List<dynamic>? ?? [])
                               .map((m) => Text('- ${m.toString()}')))
                         ],
                       ),
@@ -201,8 +201,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Padding(padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Container(
@@ -236,8 +235,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           ),
           if (server.message != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 server.message!,
                 style: const TextStyle(fontSize: 14, color: Colors.white),
@@ -245,11 +243,9 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           const SizedBox(height: 8),
           // Setup Instructions
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Padding(padding: const EdgeInsets.all(16),
             child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              child: Padding(padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -285,7 +281,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       'This starts both the API server and browser automation containers.\nFor production deployment, use container orchestration or Docker Compose.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -294,8 +290,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           ),
           const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.all(16),
+          const Padding(padding: EdgeInsets.all(16),
             child: Text(
               'Server Logs',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
@@ -317,8 +312,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       itemBuilder: (context, index) {
                         final line = merged[merged.length - 1 - index];
                         final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        return Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           child: Text(
                             line,
                             style: TextStyle(
@@ -342,8 +336,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                       itemBuilder: (context, index) {
                         final line = fallback[fallback.length - 1 - index];
                         final isErr = line.startsWith('[ERR]') || line.contains('ERROR');
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        return Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           child: Text(
                             line,
                             style: TextStyle(
@@ -361,8 +354,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
             ),
           ),
           const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.all(16),
+          const Padding(padding: EdgeInsets.all(16),
             child: Text(
               'Browser Automation Jobs',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
@@ -398,7 +390,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: color.withOpacity(0.3)),
+                              border: Border.all(color: color.withValues(alpha: 0.3)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,7 +415,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                                 LinearProgressIndicator(
                                   value: total == 0 ? 0 : (processed / (total as num)).toDouble(),
                                   minHeight: 6,
-                                  backgroundColor: color.withOpacity(0.15),
+                                  backgroundColor: color.withValues(alpha: 0.15),
                                   valueColor: AlwaysStoppedAnimation<Color>(color),
                                 ),
                                 const SizedBox(height: 8),
@@ -487,8 +479,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
           length: 2,
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.8,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
+            child: Padding(padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -577,8 +568,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     final line = lines[index];
                     final isErr = line.contains('ERROR') || line.contains('Traceback');
                     final isScreenshot = line.contains('📸 Screenshot captured');
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    return Padding(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       child: Text(
                         line,
                         style: TextStyle(
@@ -777,8 +767,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
+            Padding(padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   const Icon(Icons.camera_alt),
@@ -857,8 +846,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
               ),
             ),
             if (widget.screenshots.length > 1)
-              Padding(
-                padding: const EdgeInsets.all(16),
+              Padding(padding: const EdgeInsets.all(16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: widget.screenshots.asMap().entries.map((entry) {
@@ -895,8 +883,7 @@ class _ScreenshotGalleryDialogState extends State<_ScreenshotGalleryDialog> {
 }
 
 Widget _diagRow(String label, bool ok) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
+  return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
     child: Row(
       children: [
         Icon(ok ? Icons.check_circle : Icons.error, color: ok ? Colors.green : Colors.red, size: 16),

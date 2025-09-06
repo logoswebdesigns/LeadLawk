@@ -17,7 +17,7 @@ class LeadDetailUtils {
                   'http://localhost:8000/screenshots/$screenshotPath',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return Center(
+                    return const Center(
                       child: Text(
                         'Failed to load screenshot',
                         style: TextStyle(color: Colors.white),
@@ -27,11 +27,10 @@ class LeadDetailUtils {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
+            Padding(padding: const EdgeInsets.all(16),
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('Close'),
+                child: const Text('Close'),
               ),
             ),
           ],

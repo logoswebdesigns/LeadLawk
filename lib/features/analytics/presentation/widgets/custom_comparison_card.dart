@@ -40,7 +40,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.primaryBlue.withOpacity(0.1),
+          color: AppTheme.primaryBlue.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -89,8 +89,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Icon(
                   Icons.trending_flat,
                   color: AppTheme.primaryBlue,
@@ -125,7 +124,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                 child: Text(
                   'Not enough data for comparison',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                     fontSize: 14,
                   ),
                 ),
@@ -148,7 +147,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
           ),
         ),
@@ -159,7 +158,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
             color: AppTheme.elevatedSurface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: AppTheme.primaryBlue.withOpacity(0.2),
+              color: AppTheme.primaryBlue.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -219,7 +218,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                 Icons.trending_flat,
                 color: correlation > 0.5 ? AppTheme.successGreen :
                        correlation < -0.5 ? AppTheme.warningOrange :
-                       Colors.white.withOpacity(0.5),
+                       Colors.white.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -229,7 +228,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                     Text(
                       'Correlation Strength',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -247,7 +246,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
               ),
               Text(
                 '${(correlation * 100).abs().toStringAsFixed(0)}%',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppTheme.primaryBlue,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -269,8 +268,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
             ),
           ),
           const SizedBox(height: 8),
-          ...insights.map((insight) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+          ...insights.map((insight) => Padding(padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -284,7 +282,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                   child: Text(
                     insight,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 13,
                     ),
                   ),
@@ -300,7 +298,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
           Text(
             'Based on ${dataPoints.length} data points',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               fontSize: 12,
             ),
           ),
@@ -318,13 +316,13 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primaryBlue.withOpacity(0.1),
-                AppTheme.successGreen.withOpacity(0.1),
+                AppTheme.primaryBlue.withValues(alpha: 0.1),
+                AppTheme.successGreen.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.primaryBlue.withOpacity(0.3),
+              color: AppTheme.primaryBlue.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -377,12 +375,12 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.successGreen.withOpacity(0.1),
+                  color: AppTheme.successGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.lightbulb,
                       color: AppTheme.successGreen,
                       size: 20,
@@ -392,7 +390,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
                       child: Text(
                         'Companies with poor websites convert 2.25x better than those without websites',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -405,7 +403,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
+        const Text(
           'Recommendation: Focus on businesses with outdated or poor-quality websites for highest conversion potential',
           style: TextStyle(
             color: AppTheme.primaryBlue,
@@ -424,7 +422,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 14,
           ),
         ),
@@ -442,7 +440,7 @@ class _CustomComparisonCardState extends ConsumerState<CustomComparisonCard> {
             Text(
               suffix,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 12,
               ),
             ),

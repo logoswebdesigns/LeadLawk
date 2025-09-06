@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
+import '../../domain/providers/filter_providers.dart';
 
 class ExportButton extends ConsumerWidget {
   const ExportButton({super.key});
@@ -214,14 +214,14 @@ class ExportButton extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.successGreen.withOpacity(0.8),
+            AppTheme.successGreen.withValues(alpha: 0.8),
             AppTheme.successGreen,
           ],
         ),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.successGreen.withOpacity(0.3),
+            color: AppTheme.successGreen.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -234,16 +234,16 @@ class ExportButton extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.file_download,
                   color: Colors.white,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Export to Excel',
                   style: TextStyle(
                     color: Colors.white,

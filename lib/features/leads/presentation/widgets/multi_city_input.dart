@@ -6,7 +6,7 @@ import '../providers/automation_form_provider.dart';
 import '../providers/cities_provider.dart';
 
 class MultiCityInput extends ConsumerStatefulWidget {
-  const MultiCityInput({Key? key}) : super(key: key);
+  const MultiCityInput({super.key});
 
   @override
   ConsumerState<MultiCityInput> createState() => _MultiCityInputState();
@@ -124,7 +124,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             'Select State',
             style: TextStyle(color: Colors.white),
           ),
-          content: Container(
+          content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
@@ -162,7 +162,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withOpacity(0.15),
+                color: AppTheme.primaryGold.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -184,9 +184,9 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.2),
+                color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.4)),
+                border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.4)),
               ),
               child: Text(
                 '${formState.selectedLocations.length} selected',
@@ -256,18 +256,17 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                       return Container(
                         height: 28,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryBlue.withOpacity(0.2),
+                          color: AppTheme.primaryBlue.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: AppTheme.primaryBlue.withOpacity(0.4),
+                            color: AppTheme.primaryBlue.withValues(alpha: 0.4),
                             width: 1,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
+                            Padding(padding: const EdgeInsets.only(left: 10),
                               child: Text(
                                 city,
                                 style: const TextStyle(
@@ -288,7 +287,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                                   child: Icon(
                                     Icons.close,
                                     size: 14,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ),
@@ -303,8 +302,8 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
               
               // Input field
               Focus(
-                onKey: (FocusNode node, RawKeyEvent event) {
-                  if (event is RawKeyDownEvent && 
+                onKeyEvent: (FocusNode node, KeyEvent event) {
+                  if (event is KeyDownEvent && 
                       event.logicalKey == LogicalKeyboardKey.tab) {
                     // Add city and prevent tab navigation
                     _addCity();
@@ -324,14 +323,14 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                     hintText: formState.selectedLocations.isEmpty 
                       ? 'Type city name and press Tab or Enter...'
                       : 'Add another city...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                     prefixIcon: Icon(
                       Icons.search,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                     suffixIcon: _cityController.text.isNotEmpty
                       ? IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.add_circle,
                             color: AppTheme.primaryGold,
                           ),
@@ -357,12 +356,11 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
         ),
         
         if (formState.selectedLocations.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
+          Padding(padding: const EdgeInsets.only(top: 8),
             child: Text(
               'Add at least one city to search',
               style: TextStyle(
-                color: Colors.orange.withOpacity(0.8),
+                color: Colors.orange.withValues(alpha: 0.8),
                 fontSize: 12,
               ),
             ),
@@ -373,23 +371,23 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppTheme.primaryBlue.withOpacity(0.1),
+            color: AppTheme.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.3)),
+            border: Border.all(color: AppTheme.primaryBlue.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: AppTheme.primaryBlue.withOpacity(0.8)),
+                  Icon(Icons.info_outline, size: 16, color: AppTheme.primaryBlue.withValues(alpha: 0.8)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Pro tip: Use "Add State" to search all cities in an entire state!',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -401,7 +399,7 @@ class _MultiCityInputState extends ConsumerState<MultiCityInput> {
                 'Multiple cities × multiple industries = maximum lead generation!',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
             ],

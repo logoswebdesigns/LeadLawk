@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
 import 'advanced_filter_bar.dart';
+import '../../domain/providers/filter_providers.dart';
+import '../../domain/entities/filter_state.dart';
 
 extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
   Widget buildFollowUpFilter() {
@@ -15,7 +15,7 @@ extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
         DropdownMenuItem(value: 'upcoming', child: Text('Upcoming')),
         DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
       ],
-      onChanged: (value) => ref.read(followUpFilterProvider.notifier).state = value,
+      onChanged: (value) => ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(value),
     );
   }
 
@@ -25,7 +25,7 @@ extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
       initialValue: value,
       decoration: _getInputDecoration('Location'),
       onChanged: (value) {
-        ref.read(locationFilterProvider.notifier).state = value.isEmpty ? null : value;
+        ref.read(currentFilterStateProvider.notifier).updateLocationFilter(value.isEmpty ? null : value);
       },
     );
   }
@@ -36,7 +36,7 @@ extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
       initialValue: value,
       decoration: _getInputDecoration('Industry'),
       onChanged: (value) {
-        ref.read(industryFilterProvider.notifier).state = value.isEmpty ? null : value;
+        ref.read(currentFilterStateProvider.notifier).updateIndustryFilter(value.isEmpty ? null : value);
       },
     );
   }
@@ -57,8 +57,8 @@ extension AdvancedFilterExtrasExtension on AdvancedFilterBarState {
                 selected: groupBy == option,
                 onSelected: (selected) {
                   if (selected) {
-                    ref.read(groupByOptionProvider.notifier).state = option;
-                    ref.read(expandedGroupsProvider.notifier).state = {};
+                    ref.read(currentUIStateProvider.notifier).updateGroupByOption(option);
+                    // Groups are cleared automatically when groupByOption changes
                   }
                 },
                 selectedColor: AppTheme.primaryGold.withValues(alpha: 0.2),

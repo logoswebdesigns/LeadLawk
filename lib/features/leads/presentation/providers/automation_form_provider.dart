@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/usecases/browser_automation_usecase.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class AutomationFormState {
   final String industry;
@@ -94,7 +95,7 @@ class AutomationFormState {
   }
 
   BrowserAutomationParams toParams() {
-    print('🔍 Creating BrowserAutomationParams with enablePagespeed: $enablePagespeed, maxScore: $maxPagespeedScore');
+    DebugLogger.websocket('🔍 Creating BrowserAutomationParams with enablePagespeed: $enablePagespeed, maxScore: $maxPagespeedScore');
     
     // Use custom industry if set, otherwise use first selected industry as fallback
     final primaryIndustry = isCustomIndustry 
@@ -250,9 +251,9 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
   }
 
   void setEnablePagespeed(bool value) {
-    print('🔍 Setting enablePagespeed to: $value');
+    DebugLogger.log('🔍 Setting enablePagespeed to: $value');
     state = state.copyWith(enablePagespeed: value);
-    print('🔍 State enablePagespeed is now: ${state.enablePagespeed}');
+    DebugLogger.state('🔍 State enablePagespeed is now: ${state.enablePagespeed}');
   }
 
   void addIndustry(String industry) {

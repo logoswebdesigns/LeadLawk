@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class LeadNotesSection extends StatefulWidget {
-  const LeadNotesSection({Key? key}) : super(key: key);
+  const LeadNotesSection({super.key});
 
   @override
   State<LeadNotesSection> createState() => _LeadNotesSectionState();
@@ -13,6 +13,8 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
   final _notesController = TextEditingController();
   final _notesFocusNode = FocusNode();
   bool _isEditingNotes = false;
+  // Sales pitch field for future use
+  // ignore: unused_field
   String _salesPitch = '';
 
   @override
@@ -56,7 +58,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
       children: [
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.notes,
               size: 20,
               color: AppTheme.accentCyan,
@@ -65,7 +67,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             Text(
               'Notes',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -91,10 +93,10 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface.withOpacity(0.3),
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppTheme.accentCyan.withOpacity(0.5),
+          color: AppTheme.accentCyan.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -108,7 +110,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'Add your notes here...',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -123,7 +125,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
               TextButton(
                 onPressed: () => setState(() => _isEditingNotes = false),
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white.withOpacity(0.6),
+                  foregroundColor: Colors.white.withValues(alpha: 0.6),
                 ),
                 child: const Text('Cancel'),
               ),
@@ -151,10 +153,10 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.elevatedSurface.withOpacity(0.3),
+          color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -164,8 +166,8 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
               : 'Tap to add notes...',
           style: TextStyle(
             color: _notesController.text.isNotEmpty 
-                ? Colors.white.withOpacity(0.9)
-                : Colors.white.withOpacity(0.3),
+                ? Colors.white.withValues(alpha: 0.9)
+                : Colors.white.withValues(alpha: 0.3),
             fontSize: 14,
           ),
         ),

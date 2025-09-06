@@ -165,9 +165,9 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                               size: 48,
                             ),
                             const SizedBox(height: 16),
-                            Text(
+                            const Text(
                               'Error loading data',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
                               ),
@@ -268,7 +268,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
       icon: Icon(icon, size: 16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? const Color(0xFF00E5FF).withOpacity(0.2) : null,
+        backgroundColor: isSelected ? const Color(0xFF00E5FF).withValues(alpha: 0.2) : null,
         foregroundColor: isSelected ? const Color(0xFF00E5FF) : Colors.white70,
         side: BorderSide(
           color: isSelected ? const Color(0xFF00E5FF) : Colors.white24,
@@ -381,8 +381,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                 final trend = _calculateTrend(metric.dataPoints);
                 final average = _calculateAverage(metric.dataPoints);
                 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                return Padding(padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
                       Container(
@@ -427,7 +426,7 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -437,25 +436,25 @@ class _AnalyticsDashboardPageState extends ConsumerState<AnalyticsDashboardPage>
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.analytics_outlined,
             color: Colors.white24,
             size: 64,
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'No metrics selected',
             style: TextStyle(
               color: Colors.white54,
               fontSize: 18,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Select metrics from the control panel to view data',
             style: TextStyle(
               color: Colors.white38,

@@ -7,9 +7,9 @@ class CallbackReminderBadge extends StatefulWidget {
   final Lead lead;
   
   const CallbackReminderBadge({
-    Key? key,
+    super.key,
     required this.lead,
-  }) : super(key: key);
+  });
   
   @override
   State<CallbackReminderBadge> createState() => _CallbackReminderBadgeState();
@@ -126,13 +126,13 @@ class _CallbackReminderBadgeState extends State<CallbackReminderBadge>
             gradient: LinearGradient(
               colors: [
                 color,
-                color.withOpacity(0.8),
+                color.withValues(alpha: 0.8),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.4),
+                color: color.withValues(alpha: 0.4),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

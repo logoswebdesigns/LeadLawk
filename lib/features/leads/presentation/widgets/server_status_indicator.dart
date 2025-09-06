@@ -12,10 +12,10 @@ class ServerStatusIndicator extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: _getBackgroundColor(serverState.status).withOpacity(0.1),
+        color: _getBackgroundColor(serverState.status).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _getBackgroundColor(serverState.status).withOpacity(0.3),
+          color: _getBackgroundColor(serverState.status).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -37,8 +37,7 @@ class ServerStatusIndicator extends ConsumerWidget {
           ),
           if (serverState.status == ServerStatus.checking ||
               serverState.status == ServerStatus.starting)
-            const Padding(
-              padding: EdgeInsets.only(left: 8),
+            const Padding(padding: EdgeInsets.only(left: 8),
               child: SizedBox(
                 width: 12,
                 height: 12,
@@ -215,7 +214,7 @@ class ServerStatusBadge extends ConsumerWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.5),
+            color: color.withValues(alpha: 0.5),
             blurRadius: 4,
             spreadRadius: 1,
           ),
@@ -225,8 +224,7 @@ class ServerStatusBadge extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

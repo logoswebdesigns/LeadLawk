@@ -7,6 +7,7 @@ import 'package:mailer/smtp_server.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/lead.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class CalendarService {
   static const String _senderEmail = 'logoswebdesigninfo@gmail.com';
@@ -57,11 +58,11 @@ class CalendarService {
           }
         }
         
-        print('Platform does not support direct calendar integration');
+        DebugLogger.log('Platform does not support direct calendar integration');
         return false;
       }
     } catch (e) {
-      print('Error adding to native calendar: $e');
+      DebugLogger.error('Error adding to native calendar: $e');
       return false;
     }
   }
@@ -134,7 +135,7 @@ class CalendarService {
       
       // Create email message
       final message = Message()
-        ..from = Address(_senderEmail, _senderName)
+        ..from = const Address(_senderEmail, _senderName)
         ..recipients.add(recipientEmail)
         ..subject = 'Callback Scheduled: ${lead.businessName}'
         ..text = _buildEmailText(lead, callbackDateTime, notes)
@@ -145,14 +146,14 @@ class CalendarService {
       
       // Send email
       final sendReport = await send(message, smtpServer);
-      print('Calendar invite sent: ${sendReport.toString()}');
+      DebugLogger.log('Calendar invite sent: ${sendReport.toString()}');
       
       // Clean up temp file
       await icsFile.delete();
       
       return true;
     } catch (e) {
-      print('Error sending calendar invite: $e');
+      DebugLogger.error('Error sending calendar invite: $e');
       return false;
     }
   }

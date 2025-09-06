@@ -210,7 +210,7 @@ void main() {
             type: TimelineEntryType.statusChange,
             title: 'Status Change',
             description: 'Status changed to CALLED',
-            metadata: {'new_status': 'called'},
+            metadata: const {'new_status': 'called'},
             createdAt: DateTime.now(),
           ),
         ];
@@ -232,7 +232,7 @@ void main() {
             title: 'Follow Up',
             description: 'Callback scheduled',
             metadata: {
-              'callback_date': DateTime.now().add(Duration(days: 1)).toIso8601String(),
+              'callback_date': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
             },
             createdAt: DateTime.now(),
           ),
@@ -253,7 +253,7 @@ void main() {
             type: TimelineEntryType.statusChange,
             title: 'Status Change',
             description: 'Lead did not convert',
-            metadata: {
+            metadata: const {
               'new_status': 'didNotConvert',
               'reason': 'Not Interested',
             },

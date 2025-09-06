@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../domain/entities/lead.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class LeadStatistics {
   final int total;
@@ -52,11 +53,11 @@ class LeadStatistics {
             status = LeadStatus.didNotConvert;
             break;
           default:
-            print('⚠️ Unknown status key: $key with value: $value');
+            DebugLogger.log('⚠️ Unknown status key: $key with value: $value');
             return; // Skip this iteration
         }
         byStatusMap[status] = value as int;
-        print('📊 Mapped $key -> $status = $value');
+        DebugLogger.log('📊 Mapped $key -> $status = $value');
       });
     }
 
@@ -70,9 +71,9 @@ class LeadStatistics {
     int sum = 0;
     stats.byStatus.forEach((status, count) {
       sum += count;
-      print('📊 Final: $status = $count');
+      DebugLogger.log('📊 Final: $status = $count');
     });
-    print('📊 Total from API: ${stats.total}, Sum of stages: $sum');
+    DebugLogger.network('📊 Total from API: ${stats.total}, Sum of stages: $sum');
     
     return stats;
   }
@@ -93,7 +94,7 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
   dio.options.receiveTimeout = const Duration(seconds: 10);
   
   try {
-    print('📊 Fetching lead statistics from $baseUrl/leads/statistics/all');
+    DebugLogger.log('📊 Fetching lead statistics from $baseUrl/leads/statistics/all');
     
     // Add explicit timeout to the request
     final response = await dio.get(
@@ -101,7 +102,7 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
     ).timeout(
       const Duration(seconds: 10),
       onTimeout: () {
-        print('📊 Statistics request timed out after 10 seconds');
+        DebugLogger.network('📊 Statistics request timed out after 10 seconds');
         // Return empty statistics on timeout rather than throwing
         return Response(
           requestOptions: RequestOptions(path: ''),
@@ -119,13 +120,13 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
       // Safely cast response.data to Map<String, dynamic>
       final data = Map<String, dynamic>.from(response.data as Map);
       final stats = LeadStatistics.fromJson(data);
-      print('📊 Statistics loaded: ${stats.total} total leads');
+      DebugLogger.log('📊 Statistics loaded: ${stats.total} total leads');
       return stats;
     } else {
       throw Exception('Failed to load lead statistics');
     }
   } on DioException catch (e) {
-    print('📊 Network error loading statistics: ${e.message}');
+    DebugLogger.network('📊 Network error loading statistics: ${e.message}');
     // Return empty statistics on error rather than crashing
     return LeadStatistics(
       total: 0,
@@ -133,7 +134,7 @@ final leadStatisticsProvider = FutureProvider.autoDispose<LeadStatistics>((ref) 
       conversionRate: 0.0,
     );
   } catch (e) {
-    print('📊 Error loading statistics: $e');
+    DebugLogger.error('📊 Error loading statistics: $e');
     // Return empty statistics on error rather than crashing
     return LeadStatistics(
       total: 0,

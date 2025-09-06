@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:leadloq/features/leads/presentation/pages/leads_list_page.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/presentation/providers/filter_providers.dart';
 
 void main() {
   test('Sort provider changes should be detected', () {
@@ -12,7 +13,7 @@ void main() {
     expect(initialState.ascending, false);
     
     // Change sort option
-    container.read(sortStateProvider.notifier).state = SortState(
+    container.read(sortStateProvider.notifier).state = const SortState(
       option: SortOption.rating,
       ascending: false,
     );

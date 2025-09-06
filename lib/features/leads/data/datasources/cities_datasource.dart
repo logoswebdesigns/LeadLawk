@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 abstract class CitiesDataSource {
   Future<List<String>> getCitiesForState(String state);
@@ -16,23 +17,23 @@ class CitiesDataSourceImpl implements CitiesDataSource {
     final stateAbbr = _getStateAbbreviation(state);
     final stateFips = _getStateFipsCode(state);
     
-    print('🔍 Loading cities for state: $state ($stateAbbr, FIPS: $stateFips)');
+    DebugLogger.state('🔍 Loading cities for state: $state ($stateAbbr, FIPS: $stateFips)');
     
     // Try Census.gov API first (most comprehensive)
     try {
       cities.addAll(await _fetchFromCensusAPI(state, stateAbbr, stateFips));
     } catch (e) {
-      print('⚠️ Census API failed: $e, trying fallback');
+      DebugLogger.network('⚠️ Census API failed: $e, trying fallback');
       
       // Fallback to OpenDataSoft if Census fails
       try {
         cities.addAll(await _fetchFromOpenDataSoft(state, stateAbbr));
       } catch (e2) {
-        print('⚠️ OpenDataSoft API also failed: $e2');
+        DebugLogger.network('⚠️ OpenDataSoft API also failed: $e2');
       }
     }
     
-    print('📊 Total unique cities found: ${cities.length}');
+    DebugLogger.log('📊 Total unique cities found: ${cities.length}');
     return cities.toList()..sort();
   }
   
@@ -42,7 +43,7 @@ class CitiesDataSourceImpl implements CitiesDataSource {
     try {
       // Census API endpoint for all places (cities, towns, etc.) in a state
       // Using the 2020 ACS 5-year estimates
-      final url = 'https://api.census.gov/data/2020/acs/acs5';
+      const url = 'https://api.census.gov/data/2020/acs/acs5';
       
       final response = await dio.get(
         url,
@@ -80,11 +81,11 @@ class CitiesDataSourceImpl implements CitiesDataSource {
           }
         }
         
-        print('✅ Census API returned ${cities.length} cities');
+        DebugLogger.network('✅ Census API returned ${cities.length} cities');
       }
     } catch (e) {
-      print('Error fetching from Census API: $e');
-      throw e;
+      DebugLogger.network('Error fetching from Census API: $e');
+      rethrow;
     }
     
     return cities;
@@ -130,7 +131,7 @@ class CitiesDataSourceImpl implements CitiesDataSource {
           hasMore = false;
         }
       } catch (e) {
-        print('Error in OpenDataSoft batch at offset $offset: $e');
+        DebugLogger.error('Error in OpenDataSoft batch at offset $offset: $e');
         hasMore = false;
       }
     }

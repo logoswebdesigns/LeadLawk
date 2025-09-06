@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/sales_pitch_provider.dart';
 
 class SalesPitchModal extends ConsumerStatefulWidget {
-  const SalesPitchModal({Key? key}) : super(key: key);
+  const SalesPitchModal({super.key});
 
   static void show(BuildContext context) {
     showModalBottomSheet(
@@ -140,9 +139,9 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
     final pitches = ref.watch(salesPitchesProvider);
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.elevatedSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Container(
@@ -158,14 +157,13 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                 height: 4,
                 margin: const EdgeInsets.only(top: 12, bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               
               // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
                   children: [
                     if (_isEditing) ...[
@@ -228,23 +226,21 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
 
   Widget _buildPitchesList(List<SalesPitch> pitches) {
     if (pitches.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
+      return Center(child: Padding(padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.campaign_outlined,
                 size: 64,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
                 'No sales pitches yet',
                 style: TextStyle(
                   fontSize: 18,
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 8),
@@ -252,7 +248,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                 'Tap the + button to create your first pitch',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                 ),
               ),
             ],
@@ -278,7 +274,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: pitch.isDefault
               ? Border.all(color: AppTheme.primaryGold, width: 2)
@@ -314,7 +310,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryGold.withOpacity(0.2),
+                                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
@@ -335,7 +331,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                             pitch.description!,
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -343,7 +339,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.5)),
+                    icon: Icon(Icons.more_vert, color: Colors.white.withValues(alpha: 0.5)),
                     color: AppTheme.elevatedSurface,
                     onSelected: (value) async {
                       switch (value) {
@@ -399,14 +395,14 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     pitch.content,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                   ),
@@ -419,7 +415,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                       'Updated ${_formatDate(pitch.updatedAt)}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                       ),
                     ),
                     TextButton.icon(
@@ -454,21 +450,21 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               decoration: InputDecoration(
                 labelText: 'Pitch Name *',
                 hintText: 'e.g., Professional Web Services',
-                labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: AppTheme.primaryGold),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -484,21 +480,21 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
               decoration: InputDecoration(
                 labelText: 'Description (Optional)',
                 hintText: 'Brief description of when to use this pitch',
-                labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: AppTheme.primaryGold),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
               ),
             ),
             const SizedBox(height: 16),
@@ -510,21 +506,21 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                 labelText: 'Sales Pitch Content *',
                 hintText: 'Enter your sales pitch here...',
                 alignLabelWithHint: true,
-                labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: AppTheme.primaryGold),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -536,7 +532,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SwitchListTile(
@@ -546,7 +542,7 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
                 ),
                 subtitle: Text(
                   'This pitch will be selected by default when making calls',
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 ),
                 value: _isDefault,
                 onChanged: (value) {
@@ -561,19 +557,19 @@ class _SalesPitchModalState extends ConsumerState<SalesPitchModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Tip: Keep your pitch concise and personalized. Mention specific benefits and include a clear call to action.',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 13,
                       ),
                     ),

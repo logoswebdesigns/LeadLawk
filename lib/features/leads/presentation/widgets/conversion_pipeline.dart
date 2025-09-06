@@ -51,7 +51,7 @@ class ConversionPipeline extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(
+                const Icon(
                   CupertinoIcons.chart_bar_alt_fill,
                   color: AppTheme.primaryGold,
                   size: 24,
@@ -65,7 +65,7 @@ class ConversionPipeline extends ConsumerWidget {
                   ),
                   child: Text(
                     statistics?.total.toString() ?? (isLoading ? '...' : '0'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.primaryGold,
@@ -91,14 +91,12 @@ class ConversionPipeline extends ConsumerWidget {
           ),
           // Pipeline Stages
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   for (int i = 0; i < stages.length; i++)
                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
+                      child: Padding(padding: EdgeInsets.only(
                           right: i < stages.length - 1 ? 8 : 0,
                         ),
                         child: _buildPipelineStage(
@@ -286,7 +284,7 @@ class StageData {
   final Color color;
   final IconData icon;
 
-  const StageData({
+  StageData({
     required this.label,
     required this.status,
     required this.color,

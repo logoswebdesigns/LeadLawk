@@ -2,10 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart';
-import 'advanced_filter_section.dart';
-import 'advanced_filter_extras.dart';
+import '../../domain/providers/filter_providers.dart';
+import '../../domain/entities/filter_state.dart';
 import 'advanced_filter_search.dart';
 
 class AdvancedFilterBar extends ConsumerStatefulWidget {
@@ -91,10 +89,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
               if (value != null) {
                 // For PageSpeed, start with ascending (lowest scores first)
                 final newAscending = value == SortOption.pageSpeed ? true : sortAscending;
-                ref.read(sortStateProvider.notifier).state = SortState(
-                  option: value,
-                  ascending: newAscending,
-                );
+                ref.read(currentSortStateProvider.notifier).updateSort(value, newAscending);
               }
             },
           ),
@@ -106,9 +101,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
             color: AppTheme.primaryGold,
           ),
           onPressed: () {
-            ref.read(sortStateProvider.notifier).state = sortState.copyWith(
-              ascending: !sortAscending,
-            );
+            ref.read(currentSortStateProvider.notifier).updateSort(sortState.option, !sortAscending);
           },
           tooltip: sortAscending ? 'Ascending' : 'Descending',
         ),
@@ -122,13 +115,13 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
       runSpacing: 8,
       children: [
         _buildFilterChip('Has Website', ref.watch(hasWebsiteFilterProvider) == true,
-            (selected) => ref.read(hasWebsiteFilterProvider.notifier).state = selected ? true : null),
+            (selected) => ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(selected ? true : null)),
         _buildFilterChip('No Website', ref.watch(hasWebsiteFilterProvider) == false,
-            (selected) => ref.read(hasWebsiteFilterProvider.notifier).state = selected ? false : null),
+            (selected) => ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(selected ? false : null)),
         _buildFilterChip('High Rating', ref.watch(meetsRatingFilterProvider) == true,
-            (selected) => ref.read(meetsRatingFilterProvider.notifier).state = selected ? true : null),
+            (selected) => ref.read(currentFilterStateProvider.notifier).updateMeetsRatingFilter(selected ? true : null)),
         _buildFilterChip('Recent Reviews', ref.watch(hasRecentReviewsFilterProvider) == true,
-            (selected) => ref.read(hasRecentReviewsFilterProvider.notifier).state = selected ? true : null),
+            (selected) => ref.read(currentFilterStateProvider.notifier).updateHasRecentReviewsFilter(selected ? true : null)),
       ],
     );
   }
@@ -170,7 +163,7 @@ class AdvancedFilterBarState extends ConsumerState<AdvancedFilterBar> {
             runSpacing: 8,
             children: [
               _buildFilterChip('Candidates Only', ref.watch(candidatesOnlyProvider),
-                  (selected) => ref.read(candidatesOnlyProvider.notifier).state = selected),
+                  (selected) => ref.read(currentFilterStateProvider.notifier).updateCandidatesOnly(selected)),
             ],
           ),
         ],

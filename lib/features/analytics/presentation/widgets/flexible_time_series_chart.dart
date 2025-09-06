@@ -130,8 +130,7 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: widget.metrics.map((metric) {
           final color = metric.color ?? _getDefaultColor(widget.metrics.indexOf(metric));
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+          return Padding(padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 Container(
@@ -178,13 +177,13 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
         show: widget.showGrid,
         drawVerticalLine: true,
         getDrawingHorizontalLine: (value) {
-          return FlLine(
+          return const FlLine(
             color: Colors.white10,
             strokeWidth: 1,
           );
         },
         getDrawingVerticalLine: (value) {
-          return FlLine(
+          return const FlLine(
             color: Colors.white10,
             strokeWidth: 1,
           );
@@ -272,7 +271,7 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
               ),
               handleBuiltInTouches: true,
             )
-          : LineTouchData(enabled: false),
+          : const LineTouchData(enabled: false),
     );
   }
 
@@ -316,7 +315,7 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
         belowBarData: isArea
             ? BarAreaData(
                 show: true,
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
               )
             : BarAreaData(show: false),
         showingIndicators: metric.showTrendLine ? _calculateTrendLine(spots) : [],
@@ -328,19 +327,8 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
     // Simple linear regression for trend line
     if (spots.length < 2) return [];
 
-    double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    for (final spot in spots) {
-      sumX += spot.x;
-      sumY += spot.y;
-      sumXY += spot.x * spot.y;
-      sumX2 += spot.x * spot.x;
-    }
-
-    final n = spots.length;
-    final slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    final intercept = (sumY - slope * sumX) / n;
-
     // Return indices for first and last points of trend line
+    // Note: Trend line calculation removed as slope/intercept values were unused
     return [0, spots.length - 1];
   }
 
@@ -365,7 +353,7 @@ class _FlexibleTimeSeriesChartState extends State<FlexibleTimeSeriesChart> {
       case TimeGranularity.weekly:
         return '${date.month}/${date.day}';
       case TimeGranularity.monthly:
-        return '${_getMonthAbbr(date.month)}';
+        return _getMonthAbbr(date.month);
       case TimeGranularity.quarterly:
         return 'Q${((date.month - 1) ~/ 3) + 1}';
     }

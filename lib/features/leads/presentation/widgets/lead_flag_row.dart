@@ -7,18 +7,17 @@ class LeadFlagRow extends StatelessWidget {
   final String? description;
 
   const LeadFlagRow({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     this.description,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: '$label: ${value ? "Yes" : "No"}${description != null ? " - $description" : ""}',
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Row(
           children: [
             Icon(
@@ -35,17 +34,16 @@ class LeadFlagRow extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 15,
                     ),
                   ),
                   if (description != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                    Padding(padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         description!,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),

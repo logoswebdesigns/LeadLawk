@@ -1,10 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../domain/entities/lead.dart';
-import '../../data/datasources/leads_remote_datasource.dart';
 import 'paginated_leads_provider.dart';
-import '../pages/leads_list_page.dart' show hiddenStatusesProvider, statusFilterProvider, searchFilterProvider, 
-    candidatesOnlyProvider, sortOptionProvider, sortAscendingProvider, SortOption;
+import '../../../../core/utils/debug_logger.dart';
 
 class LeadNavigationContext {
   final Lead currentLead;
@@ -13,7 +10,7 @@ class LeadNavigationContext {
   final int currentIndex;
   final int totalCount;
 
-  const LeadNavigationContext({
+  LeadNavigationContext({
     required this.currentLead,
     this.previousLead,
     this.nextLead,
@@ -34,7 +31,7 @@ final leadNavigationProvider = Provider.family<LeadNavigationContext?, String>(
     if (filteredState.isLoading && allFilteredLeads.isEmpty) {
       // Unless we're navigating directly to a lead, then trigger initial load
       if (!paginatedState.isLoading && paginatedState.leads.isEmpty) {
-        print('🧭 NAVIGATION: No leads loaded, triggering initial load');
+        DebugLogger.navigation('🧭 NAVIGATION: No leads loaded, triggering initial load');
         Future.microtask(() {
           ref.read(paginatedLeadsProvider.notifier).loadInitialLeads();
         });
@@ -74,7 +71,7 @@ final leadNavigationProvider = Provider.family<LeadNavigationContext?, String>(
       totalCount: paginatedState.total, // Use unfiltered total to show true count
     );
     
-    print('🧭 NAVIGATION: Lead ${currentIndex + 1}/${paginatedState.total} (filtered: ${filteredState.total}) | '
+    DebugLogger.navigation('🧭 NAVIGATION: Lead ${currentIndex + 1}/${paginatedState.total} (filtered: ${filteredState.total}) | '
           'hasNextInMemory: $hasNextInMemory | hasMoreToLoad: $hasMoreToLoad | '
           'hasReachedEnd: ${paginatedState.hasReachedEnd} | loadedCount: ${paginatedState.leads.length}');
     
@@ -93,15 +90,15 @@ class LeadNavigationActions {
   Future<String?> navigateToNext(String currentLeadId) async {
     final navigation = _ref.read(leadNavigationProvider(currentLeadId));
     if (navigation == null) {
-      print('📊 NAVIGATION: No navigation context available');
+      DebugLogger.navigation('📊 NAVIGATION: No navigation context available');
       return null;
     }
     
-    print('📊 NAVIGATION ACTION: Current ${navigation.currentIndex}/${navigation.totalCount}, nextLead: ${navigation.nextLead?.businessName ?? "null"}');
+    DebugLogger.navigation('📊 NAVIGATION ACTION: Current ${navigation.currentIndex}/${navigation.totalCount}, nextLead: ${navigation.nextLead?.businessName ?? "null"}');
     
     // If we have a next lead in memory, use it
     if (navigation.nextLead != null && navigation.nextLead!.id != currentLeadId) {
-      print('📊 NAVIGATION: Using next lead from memory: ${navigation.nextLead!.businessName}');
+      DebugLogger.navigation('📊 NAVIGATION: Using next lead from memory: ${navigation.nextLead!.businessName}');
       return navigation.nextLead!.id;
     }
     
@@ -111,13 +108,13 @@ class LeadNavigationActions {
     final currentIndex = filteredState.leads.indexWhere((lead) => lead.id == currentLeadId);
     final isAtEndOfLoaded = currentIndex == filteredState.leads.length - 1;
     
-    print('📊 NAVIGATION: At index $currentIndex of ${filteredState.leads.length} loaded (total: ${paginatedState.total})');
-    print('📊 NAVIGATION: hasReachedEnd: ${paginatedState.hasReachedEnd}, isLoadingMore: ${paginatedState.isLoadingMore}');
-    print('📊 NAVIGATION: Current page: ${paginatedState.currentPage}/${paginatedState.totalPages}');
+    DebugLogger.navigation('📊 NAVIGATION: At index $currentIndex of ${filteredState.leads.length} loaded (total: ${paginatedState.total})');
+    DebugLogger.navigation('📊 NAVIGATION: hasReachedEnd: ${paginatedState.hasReachedEnd}, isLoadingMore: ${paginatedState.isLoadingMore}');
+    DebugLogger.navigation('📊 NAVIGATION: Current page: ${paginatedState.currentPage}/${paginatedState.totalPages}');
     
     // If we're at the end of loaded leads but there are more to load
     if (isAtEndOfLoaded && !paginatedState.hasReachedEnd && !paginatedState.isLoadingMore) {
-      print('📊 NAVIGATION: At end of loaded batch, loading more...');
+      DebugLogger.navigation('📊 NAVIGATION: At end of loaded batch, loading more...');
       
       try {
         // Load the next page
@@ -130,27 +127,27 @@ class LeadNavigationActions {
         final updatedFiltered = _ref.read(filteredPaginatedLeadsProvider);
         final updatedPaginated = _ref.read(paginatedLeadsProvider);
         
-        print('📊 NAVIGATION: After loading - now have ${updatedFiltered.leads.length} leads (was ${filteredState.leads.length})');
+        DebugLogger.navigation('📊 NAVIGATION: After loading - now have ${updatedFiltered.leads.length} leads (was ${filteredState.leads.length})');
         
         // Find the current lead again in case indices changed
         final newCurrentIndex = updatedFiltered.leads.indexWhere((lead) => lead.id == currentLeadId);
         
         if (newCurrentIndex != -1 && newCurrentIndex < updatedFiltered.leads.length - 1) {
           final nextLead = updatedFiltered.leads[newCurrentIndex + 1];
-          print('📊 NAVIGATION: Found next lead after loading: ${nextLead.businessName}');
+          DebugLogger.navigation('📊 NAVIGATION: Found next lead after loading: ${nextLead.businessName}');
           return nextLead.id;
         } else if (updatedPaginated.hasReachedEnd) {
-          print('📊 NAVIGATION: Loaded more but now at end of all leads');
+          DebugLogger.navigation('📊 NAVIGATION: Loaded more but now at end of all leads');
         } else {
-          print('📊 NAVIGATION: Loaded more but still no next lead found');
+          DebugLogger.navigation('📊 NAVIGATION: Loaded more but still no next lead found');
         }
       } catch (e) {
-        print('📊 NAVIGATION ERROR: Failed to load more leads: $e');
+        DebugLogger.navigation('📊 NAVIGATION ERROR: Failed to load more leads: $e');
       }
     } else if (paginatedState.hasReachedEnd) {
-      print('📊 NAVIGATION: Already at end of all leads');
+      DebugLogger.navigation('📊 NAVIGATION: Already at end of all leads');
     } else if (paginatedState.isLoadingMore) {
-      print('📊 NAVIGATION: Already loading more leads, please wait');
+      DebugLogger.navigation('📊 NAVIGATION: Already loading more leads, please wait');
     }
     
     return null;
@@ -170,11 +167,11 @@ final leadNavigationLoaderProvider = FutureProvider<void>((ref) async {
   
   // If we've already loaded all leads, nothing to do
   if (currentState.hasReachedEnd) {
-    print('📊 NAVIGATION: All leads already loaded (${currentState.leads.length} total)');
+    DebugLogger.navigation('📊 NAVIGATION: All leads already loaded (${currentState.leads.length} total)');
     return;
   }
   
-  print('📊 NAVIGATION: Starting background load of remaining leads...');
+  DebugLogger.navigation('📊 NAVIGATION: Starting background load of remaining leads...');
   int pagesLoaded = 0;
   
   // Load remaining pages in the background
@@ -184,12 +181,12 @@ final leadNavigationLoaderProvider = FutureProvider<void>((ref) async {
     currentState = ref.read(paginatedLeadsProvider);
     
     if (currentState.hasReachedEnd) {
-      print('📊 NAVIGATION: Finished loading all leads. Loaded $pagesLoaded additional pages (${currentState.leads.length} total leads)');
+      DebugLogger.navigation('📊 NAVIGATION: Finished loading all leads. Loaded $pagesLoaded additional pages (${currentState.leads.length} total leads)');
       break;
     }
     
     if (currentState.error != null) {
-      print('📊 NAVIGATION ERROR: Failed to load all leads: ${currentState.error}');
+      DebugLogger.navigation('📊 NAVIGATION ERROR: Failed to load all leads: ${currentState.error}');
       break;
     }
     

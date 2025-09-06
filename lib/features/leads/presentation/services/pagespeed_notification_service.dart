@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../domain/entities/lead.dart';
-import '../providers/pagespeed_status_provider.dart';
 
 /// Service to handle PageSpeed test completion notifications
 /// Implements rate limiting and global notification display
@@ -294,7 +292,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -328,7 +326,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                             Text(
                               'Tap to view details',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 11,
                                 fontStyle: FontStyle.italic,
                               ),
@@ -339,7 +337,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                     ),
                     Icon(
                       Icons.close,
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       size: 20,
                     ),
                   ],

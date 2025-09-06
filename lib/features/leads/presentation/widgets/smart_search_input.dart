@@ -242,9 +242,8 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.white.withOpacity(0.05),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      color: Colors.white.withValues(alpha: 0.05),
+      child: Padding(padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -260,7 +259,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
             Text(
               'Type searches like: "painter in Omaha" or "plumbing Nebraska"',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
@@ -275,9 +274,9 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'e.g., "painter in Omaha" or "plumbing NE"',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                      fillColor: Colors.white.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -330,24 +329,24 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                         Text(
                           '${searches.length} locations',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 10,
                           ),
                         ),
                       ],
                     ),
                     deleteIcon: const Icon(Icons.close, size: 18),
-                    deleteIconColor: Colors.white.withOpacity(0.7),
+                    deleteIconColor: Colors.white.withValues(alpha: 0.7),
                     onDeleted: () => _removeQuery(query),
-                    backgroundColor: AppTheme.primaryGold.withOpacity(0.2),
-                    side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
+                    backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
+                    side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   );
                 }).toList(),
               ),
               const SizedBox(height: 12),
               Text(
                 'Total searches to execute: ${_searchQueries.fold<int>(0, (sum, q) => sum + _parseSearchQuery(q).length)}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppTheme.primaryGold,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -361,9 +360,9 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

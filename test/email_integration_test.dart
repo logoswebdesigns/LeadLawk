@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,9 +7,20 @@ import 'package:leadloq/features/leads/presentation/providers/email_templates_pr
 import 'package:leadloq/features/leads/presentation/widgets/email_template_dialog.dart';
 import 'package:leadloq/features/leads/presentation/widgets/quick_actions_bar.dart';
 import 'package:leadloq/features/leads/presentation/pages/account_page.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/domain/repositories/filter_repository.dart';
+import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:dartz/dartz.dart';
+
+@GenerateMocks([FilterRepository])
+import 'email_integration_test.mocks.dart';
 
 void main() {
   group('Email Integration Tests', () {
+    late MockFilterRepository mockFilterRepository;
+    
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
     });
@@ -18,6 +28,16 @@ void main() {
     setUp(() async {
       // Reset SharedPreferences for each test
       SharedPreferences.setMockInitialValues({});
+      
+      mockFilterRepository = MockFilterRepository();
+      
+      // Setup mock filter repository responses
+      when(mockFilterRepository.getFilterState()).thenAnswer((_) async => const Right(LeadsFilterState()));
+      when(mockFilterRepository.getSortState()).thenAnswer((_) async => const Right(SortState()));
+      when(mockFilterRepository.getUIState()).thenAnswer((_) async => const Right(LeadsUIState()));
+      when(mockFilterRepository.saveFilterState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveSortState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveUIState(any)).thenAnswer((_) async => const Right(null));
     });
 
     testWidgets('QuickActionsBar contains email button', 
@@ -36,12 +56,16 @@ void main() {
         source: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        timeline: [],
+        timeline: const [],
       );
       
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
+            overrides: [
+              sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+              filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
+            ],
             child: Scaffold(
               body: QuickActionsBar(
                 lead: lead,
@@ -64,8 +88,12 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            child: Scaffold(
-              body: const AccountPage(),
+            overrides: [
+              sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+              filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
+            ],
+            child: const Scaffold(
+              body: AccountPage(),
             ),
           ),
         ),
@@ -85,10 +113,15 @@ void main() {
         'email_templates': '[]',
       });
       
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+          filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
+        ],
+      );
       addTearDown(container.dispose);
       
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
@@ -157,14 +190,19 @@ void main() {
         'email_templates_initialized': false,
       });
       
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+          filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
+        ],
+      );
       addTearDown(container.dispose);
       
       // Force initialization by reading the provider
-      final notifier = container.read(emailTemplatesLocalProvider.notifier);
+      // final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
       // Wait longer for async initialization to complete
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
       
       final templates = container.read(emailTemplatesLocalProvider);
       
@@ -196,10 +234,10 @@ void main() {
         source: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        timeline: [],
+        timeline: const [],
       );
       
-      final template = '''
+      const template = '''
 Hello {{businessName}},
 Location: {{location}}
 Industry: {{industry}}

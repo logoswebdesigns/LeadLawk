@@ -3,11 +3,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
 import '../providers/paginated_leads_provider.dart';
 import '../providers/auto_refresh_provider.dart';
 import 'sort_options_modal.dart';
 import 'unified_filter_modal.dart';
+import '../providers/filter_providers.dart' as presentation_providers;
+import '../../domain/providers/filter_providers.dart' as domain_providers;
+import '../../domain/entities/filter_state.dart';
 
 class SortBar extends ConsumerStatefulWidget {
   const SortBar({super.key});
@@ -75,18 +77,18 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final sortState = ref.watch(sortStateProvider);
+    final sortState = ref.watch(presentation_providers.sortStateProvider);
     final sortOption = sortState.option;
     final sortAscending = sortState.ascending;
     final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
-    final isSelectionMode = ref.watch(isSelectionModeProvider);
+    final isSelectionMode = ref.watch(presentation_providers.isSelectionModeProvider);
     final autoRefresh = ref.watch(autoRefreshLeadsProvider);
     final pendingUpdates = ref.watch(pendingLeadsUpdateProvider);
     
     // Calculate active filter count
-    final searchFilter = ref.watch(searchFilterProvider);
-    final hiddenStatuses = ref.watch(hiddenStatusesProvider);
-    final candidatesOnly = ref.watch(candidatesOnlyProvider);
+    final searchFilter = ref.watch(presentation_providers.searchFilterProvider);
+    final hiddenStatuses = ref.watch(domain_providers.hiddenStatusesProvider);
+    final candidatesOnly = ref.watch(presentation_providers.candidatesOnlyProvider);
     int activeFilterCount = 0;
     if (searchFilter.isNotEmpty) activeFilterCount++;
     if (hiddenStatuses.isNotEmpty) activeFilterCount++;
@@ -107,8 +109,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
           ),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Padding(padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
             // Lead count
@@ -263,7 +264,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
                             top: -4,
                             child: Container(
                               padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: AppTheme.primaryGold,
                                 shape: BoxShape.circle,
                               ),
@@ -297,7 +298,7 @@ class _SortBarState extends ConsumerState<SortBar> with SingleTickerProviderStat
             const SizedBox(width: 8),
             // Select button
             GestureDetector(
-              onTap: () => ref.read(isSelectionModeProvider.notifier).state = true,
+              onTap: () => ref.read(presentation_providers.isSelectionModeProvider.notifier).state = true,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

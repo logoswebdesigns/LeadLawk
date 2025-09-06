@@ -4,9 +4,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:leadloq/features/leads/presentation/widgets/lead_sales_pitch_section.dart';
 import 'package:leadloq/features/leads/domain/entities/lead.dart';
 import 'package:leadloq/features/leads/presentation/providers/sales_pitch_provider.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/domain/repositories/filter_repository.dart';
+import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:dartz/dartz.dart';
+
+@GenerateMocks([FilterRepository])
+import 'lead_detail_page_test.mocks.dart';
 
 void main() {
   group('LeadSalesPitchSection Tests', () {
+    late MockFilterRepository mockFilterRepository;
+    
+    setUp(() async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({});
+      
+      mockFilterRepository = MockFilterRepository();
+      
+      // Setup mock filter repository responses
+      when(mockFilterRepository.getFilterState()).thenAnswer((_) async => const Right(LeadsFilterState()));
+      when(mockFilterRepository.getSortState()).thenAnswer((_) async => const Right(SortState()));
+      when(mockFilterRepository.getUIState()).thenAnswer((_) async => const Right(LeadsUIState()));
+      when(mockFilterRepository.saveFilterState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveSortState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveUIState(any)).thenAnswer((_) async => const Right(null));
+    });
+    
     testWidgets('Sales pitch section shows correct UI', (WidgetTester tester) async {
       // Create a mock lead
       final mockLead = Lead(
@@ -23,34 +50,18 @@ void main() {
         source: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        timeline: [],
+        timeline: const [],
       );
 
-      // Create mock sales pitches
-      final mockPitches = [
-        SalesPitch(
-          id: 'pitch-1',
-          name: 'Test Pitch 1',
-          content: 'This is a test pitch for [Business Name] in [Location]',
-          isDefault: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        SalesPitch(
-          id: 'pitch-2',
-          name: 'Test Pitch 2',
-          content: 'Another test pitch for [Business Name]',
-          isDefault: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
+      // Sales pitches will be automatically initialized by the provider
 
       // Build just the sales pitch section widget with ProviderScope
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             salesPitchesProvider.overrideWith((ref) => SalesPitchesNotifier()),
+            sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+            filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
           ],
           child: MaterialApp(
             theme: ThemeData.dark(),

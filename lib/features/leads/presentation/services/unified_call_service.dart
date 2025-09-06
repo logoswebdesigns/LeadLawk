@@ -109,8 +109,8 @@ class UnifiedCallService {
     if (pitches.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please add sales pitches in account settings'),
+          const SnackBar(
+            content: Text('Please add sales pitches in account settings'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -140,8 +140,8 @@ class UnifiedCallService {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppTheme.primaryGold.withOpacity(0.1),
-                      AppTheme.primaryBlue.withOpacity(0.05),
+                      AppTheme.primaryGold.withValues(alpha: 0.1),
+                      AppTheme.primaryBlue.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
@@ -154,7 +154,7 @@ class UnifiedCallService {
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.campaign,
                           color: AppTheme.primaryGold,
                           size: 28,
@@ -164,7 +164,7 @@ class UnifiedCallService {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Select Sales Pitch',
                                 style: TextStyle(
                                   color: AppTheme.primaryGold,
@@ -176,7 +176,7 @@ class UnifiedCallService {
                               Text(
                                 'Choose your approach for ${lead.businessName}',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontSize: 14,
                                 ),
                               ),
@@ -189,20 +189,20 @@ class UnifiedCallService {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.warningOrange.withOpacity(0.1),
+                        color: AppTheme.warningOrange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: AppTheme.warningOrange.withOpacity(0.3),
+                          color: AppTheme.warningOrange.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
                           Icon(
                             Icons.info_outline,
                             size: 16,
                             color: AppTheme.warningOrange,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Pitch selection is required before making the call',
@@ -227,8 +227,7 @@ class UnifiedCallService {
                   itemCount: pitches.length,
                   itemBuilder: (context, index) {
                     final pitch = pitches[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                    return Padding(padding: const EdgeInsets.only(bottom: 12),
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -240,7 +239,7 @@ class UnifiedCallService {
                               color: AppTheme.surfaceDark,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppTheme.primaryGold.withOpacity(0.3),
+                                color: AppTheme.primaryGold.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -270,7 +269,7 @@ class UnifiedCallService {
                                     ? '${pitch.content.substring(0, 200)}...'
                                     : pitch.content,
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 14,
                                     height: 1.5,
                                   ),
@@ -284,7 +283,7 @@ class UnifiedCallService {
                                     Text(
                                       'Tap to select',
                                       style: TextStyle(
-                                        color: AppTheme.primaryGold.withOpacity(0.7),
+                                        color: AppTheme.primaryGold.withValues(alpha: 0.7),
                                         fontSize: 12,
                                       ),
                                     ),
@@ -292,7 +291,7 @@ class UnifiedCallService {
                                     Icon(
                                       Icons.arrow_forward,
                                       size: 16,
-                                      color: AppTheme.primaryGold.withOpacity(0.7),
+                                      color: AppTheme.primaryGold.withValues(alpha: 0.7),
                                     ),
                                   ],
                                 ),
@@ -309,9 +308,9 @@ class UnifiedCallService {
               // Footer with cancel button
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppTheme.surfaceDark,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(16),
                     bottomRight: Radius.circular(16),
                   ),
@@ -323,7 +322,7 @@ class UnifiedCallService {
                       onPressed: () => Navigator.pop(context),
                       child: Text(
                         'Cancel',
-                        style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                       ),
                     ),
                   ],

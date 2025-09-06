@@ -1,23 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/providers/filter_providers.dart';
+import '../../domain/entities/filter_state.dart';
 import '../../domain/entities/lead.dart';
 import 'export_button.dart';
-// Import the providers from the main page
-import '../pages/leads_list_page.dart' show 
-  searchFilterProvider,
-  candidatesOnlyProvider,
-  statusFilterProvider,
-  followUpFilterProvider,
-  hasWebsiteFilterProvider,
-  meetsRatingFilterProvider,
-  hasRecentReviewsFilterProvider,
-  ratingRangeFilterProvider,
-  reviewCountRangeFilterProvider,
-  pageSpeedFilterProvider,
-  groupByOptionProvider,
-  expandedGroupsProvider,
-  GroupByOption;
 
 class LeadsFilterBar extends ConsumerStatefulWidget {
   const LeadsFilterBar({super.key});
@@ -75,7 +62,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         color: AppTheme.elevatedSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.borderColor.withOpacity(0.3),
+          color: AppTheme.borderColor.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
@@ -85,7 +72,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         underline: const SizedBox(),
         icon: Icon(
           Icons.arrow_drop_down,
-          color: Colors.white.withOpacity(0.6),
+          color: Colors.white.withValues(alpha: 0.6),
           size: 20,
         ),
         dropdownColor: AppTheme.elevatedSurface,
@@ -98,7 +85,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.none,
             child: Row(
               children: [
-                Icon(Icons.list, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.list, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('No Grouping'),
               ],
@@ -108,7 +95,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.location,
             child: Row(
               children: [
-                Icon(Icons.location_on, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.location_on, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By Location'),
               ],
@@ -118,7 +105,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.status,
             child: Row(
               children: [
-                Icon(Icons.flag, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.flag, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By Status'),
               ],
@@ -128,7 +115,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.industry,
             child: Row(
               children: [
-                Icon(Icons.business, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.business, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By Industry'),
               ],
@@ -138,7 +125,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.hasWebsite,
             child: Row(
               children: [
-                Icon(Icons.language, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.language, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By Website'),
               ],
@@ -148,7 +135,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.pageSpeed,
             child: Row(
               children: [
-                Icon(Icons.speed, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.speed, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By PageSpeed'),
               ],
@@ -158,7 +145,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             value: GroupByOption.rating,
             child: Row(
               children: [
-                Icon(Icons.star, size: 16, color: Colors.white.withOpacity(0.8)),
+                Icon(Icons.star, size: 16, color: Colors.white.withValues(alpha: 0.8)),
                 const SizedBox(width: 8),
                 const Text('By Rating'),
               ],
@@ -167,9 +154,9 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         ],
         onChanged: (value) {
           if (value != null) {
-            ref.read(groupByOptionProvider.notifier).state = value;
+            ref.read(currentUIStateProvider.notifier).updateGroupByOption(value);
             // Clear expanded groups when changing group by
-            ref.read(expandedGroupsProvider.notifier).state = <String>{};
+            // Clear expanded groups automatically handled by state notifier
           }
         },
       ),
@@ -196,26 +183,26 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
-                ref.read(searchFilterProvider.notifier).state = value;
+                ref.read(currentFilterStateProvider.notifier).updateSearchFilter(value);
               },
               style: const TextStyle(color: Colors.white),
               textDirection: TextDirection.ltr,  // Ensure left-to-right text direction
               decoration: InputDecoration(
                 hintText: 'Search leads...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
                 prefixIcon: Icon(
                   Icons.search,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: Icon(
                           Icons.clear,
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(searchFilterProvider.notifier).state = '';
+                          ref.read(currentFilterStateProvider.notifier).updateSearchFilter('');
                         },
                       )
                     : null,
@@ -293,57 +280,57 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
     if (candidatesOnly) {
       activeFilters.add(_buildActiveFilterChip(
         label: 'Candidates',
-        onRemove: () => ref.read(candidatesOnlyProvider.notifier).state = false,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateCandidatesOnly(false,
+      )));
     }
     
     if (statusFilter != null) {
       activeFilters.add(_buildActiveFilterChip(
         label: statusFilter.toUpperCase(),
-        onRemove: () => ref.read(statusFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateStatusFilter(null,
+      )));
     }
     
     if (searchQuery.isNotEmpty) {
       activeFilters.add(_buildActiveFilterChip(
         label: 'Search: "$searchQuery"',
-        onRemove: () => ref.read(searchFilterProvider.notifier).state = '',
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateSearchFilter('',
+      )));
     }
     
     if (followUpFilter != null) {
       activeFilters.add(_buildActiveFilterChip(
         label: followUpFilter == 'upcoming' ? 'Upcoming' : 'Overdue',
-        onRemove: () => ref.read(followUpFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(null,
+      )));
     }
     
     if (hasWebsiteFilter != null) {
       activeFilters.add(_buildActiveFilterChip(
-        label: hasWebsiteFilter! ? 'Has Website' : 'No Website',
-        onRemove: () => ref.read(hasWebsiteFilterProvider.notifier).state = null,
-      ));
+        label: hasWebsiteFilter ? 'Has Website' : 'No Website',
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(null,
+      )));
     }
     
     if (meetsRatingFilter == true) {
       activeFilters.add(_buildActiveFilterChip(
         label: 'Quality Rating',
-        onRemove: () => ref.read(meetsRatingFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateMeetsRatingFilter(null,
+      )));
     }
     
     if (hasRecentReviewsFilter == true) {
       activeFilters.add(_buildActiveFilterChip(
         label: 'Recent Reviews',
-        onRemove: () => ref.read(hasRecentReviewsFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateHasRecentReviewsFilter(null,
+      )));
     }
     
     if (ratingRangeFilter != null) {
       activeFilters.add(_buildActiveFilterChip(
         label: '$ratingRangeFilter Stars',
-        onRemove: () => ref.read(ratingRangeFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updateRatingRangeFilter(null,
+      )));
     }
     
     if (pageSpeedFilter != null) {
@@ -366,8 +353,8 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
       }
       activeFilters.add(_buildActiveFilterChip(
         label: label,
-        onRemove: () => ref.read(pageSpeedFilterProvider.notifier).state = null,
-      ));
+        onRemove: () => ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(null,
+      )));
     }
 
     if (activeFilters.isEmpty) return const SizedBox.shrink();
@@ -382,7 +369,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
               Text(
                 'Active Filters',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -396,7 +383,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Text(
+                  child: const Text(
                     'Clear All',
                     style: TextStyle(
                       color: AppTheme.primaryGold,
@@ -424,8 +411,8 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.primaryGold.withOpacity(0.1),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+        color: AppTheme.primaryGold.withValues(alpha: 0.1),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -433,7 +420,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppTheme.primaryGold,
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -442,7 +429,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onRemove,
-            child: Icon(
+            child: const Icon(
               Icons.close,
               size: 14,
               color: AppTheme.primaryGold,
@@ -473,14 +460,13 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
         children: [
           InkWell(
             onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   Icon(
                     icon,
                     size: 18,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -494,7 +480,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                   const Spacer(),
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -524,7 +510,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: candidatesOnly,
             color: AppTheme.primaryGold,
             onPressed: () {
-              ref.read(candidatesOnlyProvider.notifier).state = !candidatesOnly;
+              ref.read(currentFilterStateProvider.notifier).updateCandidatesOnly(!candidatesOnly);
             },
           ),
         ]),
@@ -539,11 +525,10 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
               isSelected: isSelected,
               color: _getStatusColor(status),
               onPressed: () {
-                ref.read(statusFilterProvider.notifier).state = 
-                    isSelected ? null : label.toLowerCase();
+                ref.read(currentFilterStateProvider.notifier).updateStatusFilter(isSelected ? null : label.toLowerCase());
               },
             );
-          }).toList(),
+          }),
         ]),
       ],
     );
@@ -564,8 +549,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: meetsRatingFilter == true,
             color: AppTheme.successGreen,
             onPressed: () {
-              ref.read(meetsRatingFilterProvider.notifier).state = 
-                  meetsRatingFilter == true ? null : true;
+              ref.read(currentFilterStateProvider.notifier).updateMeetsRatingFilter(meetsRatingFilter == true ? null : true);
             },
           ),
           _buildFilterButton(
@@ -574,8 +558,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: hasRecentReviewsFilter == true,
             color: AppTheme.primaryIndigo,
             onPressed: () {
-              ref.read(hasRecentReviewsFilterProvider.notifier).state = 
-                  hasRecentReviewsFilter == true ? null : true;
+              ref.read(currentFilterStateProvider.notifier).updateHasRecentReviewsFilter(hasRecentReviewsFilter == true ? null : true);
             },
           ),
         ]),
@@ -587,8 +570,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: ratingRangeFilter == '4+',
             color: AppTheme.warningOrange,
             onPressed: () {
-              ref.read(ratingRangeFilterProvider.notifier).state = 
-                  ratingRangeFilter == '4+' ? null : '4+';
+              ref.read(currentFilterStateProvider.notifier).updateRatingRangeFilter(ratingRangeFilter == '4+' ? null : '4+');
             },
           ),
           _buildFilterButton(
@@ -597,8 +579,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: reviewCountRangeFilter == '50+',
             color: AppTheme.accentPurple,
             onPressed: () {
-              ref.read(reviewCountRangeFilterProvider.notifier).state = 
-                  reviewCountRangeFilter == '50+' ? null : '50+';
+              ref.read(currentFilterStateProvider.notifier).updateReviewCountRangeFilter(reviewCountRangeFilter == '50+' ? null : '50+');
             },
           ),
         ]),
@@ -619,8 +600,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: hasWebsiteFilter == true,
             color: AppTheme.accentCyan,
             onPressed: () {
-              ref.read(hasWebsiteFilterProvider.notifier).state = 
-                  hasWebsiteFilter == true ? null : true;
+              ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(hasWebsiteFilter == true ? null : true);
             },
           ),
           _buildFilterButton(
@@ -629,8 +609,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: hasWebsiteFilter == false,
             color: Colors.grey,
             onPressed: () {
-              ref.read(hasWebsiteFilterProvider.notifier).state = 
-                  hasWebsiteFilter == false ? null : false;
+              ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(hasWebsiteFilter == false ? null : false);
             },
           ),
         ]),
@@ -641,7 +620,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             Text(
               'PageSpeed Score',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -654,8 +633,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                 isSelected: pageSpeedFilter == 'good',
                 color: AppTheme.successGreen,
                 onPressed: () {
-                  ref.read(pageSpeedFilterProvider.notifier).state = 
-                      pageSpeedFilter == 'good' ? null : 'good';
+                  ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(pageSpeedFilter == 'good' ? null : 'good');
                 },
               ),
               _buildFilterButton(
@@ -664,8 +642,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                 isSelected: pageSpeedFilter == 'moderate',
                 color: AppTheme.warningOrange,
                 onPressed: () {
-                  ref.read(pageSpeedFilterProvider.notifier).state = 
-                      pageSpeedFilter == 'moderate' ? null : 'moderate';
+                  ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(pageSpeedFilter == 'moderate' ? null : 'moderate');
                 },
               ),
             ]),
@@ -677,8 +654,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                 isSelected: pageSpeedFilter == 'poor',
                 color: AppTheme.errorRed,
                 onPressed: () {
-                  ref.read(pageSpeedFilterProvider.notifier).state = 
-                      pageSpeedFilter == 'poor' ? null : 'poor';
+                  ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(pageSpeedFilter == 'poor' ? null : 'poor');
                 },
               ),
               _buildFilterButton(
@@ -687,8 +663,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
                 isSelected: pageSpeedFilter == 'untested',
                 color: Colors.grey,
                 onPressed: () {
-                  ref.read(pageSpeedFilterProvider.notifier).state = 
-                      pageSpeedFilter == 'untested' ? null : 'untested';
+                  ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(pageSpeedFilter == 'untested' ? null : 'untested');
                 },
               ),
             ]),
@@ -710,8 +685,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: followUpFilter == 'upcoming',
             color: AppTheme.primaryBlue,
             onPressed: () {
-              ref.read(followUpFilterProvider.notifier).state = 
-                  followUpFilter == 'upcoming' ? null : 'upcoming';
+              ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(followUpFilter == 'upcoming' ? null : 'upcoming');
             },
           ),
           _buildFilterButton(
@@ -720,8 +694,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             isSelected: followUpFilter == 'overdue',
             color: AppTheme.warningOrange,
             onPressed: () {
-              ref.read(followUpFilterProvider.notifier).state = 
-                  followUpFilter == 'overdue' ? null : 'overdue';
+              ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(followUpFilter == 'overdue' ? null : 'overdue');
             },
           ),
         ]),
@@ -750,7 +723,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : AppTheme.elevatedSurface,
+          color: isSelected ? color.withValues(alpha: 0.1) : AppTheme.elevatedSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -763,13 +736,13 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? color : Colors.white.withOpacity(0.7),
+              color: isSelected ? color : Colors.white.withValues(alpha: 0.7),
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : Colors.white.withOpacity(0.9),
+                color: isSelected ? color : Colors.white.withValues(alpha: 0.9),
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
               ),
@@ -781,16 +754,16 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
   }
 
   void _clearAllFilters() {
-    ref.read(statusFilterProvider.notifier).state = null;
-    ref.read(candidatesOnlyProvider.notifier).state = false;
-    ref.read(searchFilterProvider.notifier).state = '';
-    ref.read(followUpFilterProvider.notifier).state = null;
-    ref.read(hasWebsiteFilterProvider.notifier).state = null;
-    ref.read(meetsRatingFilterProvider.notifier).state = null;
-    ref.read(hasRecentReviewsFilterProvider.notifier).state = null;
-    ref.read(ratingRangeFilterProvider.notifier).state = null;
-    ref.read(reviewCountRangeFilterProvider.notifier).state = null;
-    ref.read(pageSpeedFilterProvider.notifier).state = null;
+    ref.read(currentFilterStateProvider.notifier).updateStatusFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateCandidatesOnly(false);
+    ref.read(currentFilterStateProvider.notifier).updateSearchFilter('');
+    ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateMeetsRatingFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateHasRecentReviewsFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateRatingRangeFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updateReviewCountRangeFilter(null);
+    ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(null);
     _searchController.clear();
   }
 

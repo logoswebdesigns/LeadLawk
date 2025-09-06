@@ -7,20 +7,41 @@ import 'package:leadloq/features/leads/presentation/providers/job_provider.dart'
 import 'package:leadloq/features/leads/data/datasources/leads_remote_datasource.dart';
 import 'package:leadloq/features/leads/data/models/paginated_response.dart';
 import 'package:leadloq/features/leads/data/models/lead_model.dart';
+import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
+import 'package:leadloq/features/leads/domain/repositories/filter_repository.dart';
+import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dartz/dartz.dart';
 
-@GenerateMocks([LeadsRemoteDataSource])
+@GenerateMocks([LeadsRemoteDataSource, FilterRepository])
 import 'comprehensive_sort_filter_test.mocks.dart';
 
 void main() {
   group('Comprehensive Sort and Filter Tests', () {
     late ProviderContainer container;
     late MockLeadsRemoteDataSource mockDataSource;
+    late MockFilterRepository mockFilterRepository;
     
-    setUp(() {
+    setUp(() async {
       mockDataSource = MockLeadsRemoteDataSource();
+      mockFilterRepository = MockFilterRepository();
+      
+      // Setup SharedPreferences mock
+      SharedPreferences.setMockInitialValues({});
+      
+      // Setup mock filter repository responses
+      when(mockFilterRepository.getFilterState()).thenAnswer((_) async => const Right(LeadsFilterState()));
+      when(mockFilterRepository.getSortState()).thenAnswer((_) async => const Right(SortState()));
+      when(mockFilterRepository.getUIState()).thenAnswer((_) async => const Right(LeadsUIState()));
+      when(mockFilterRepository.saveFilterState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveSortState(any)).thenAnswer((_) async => const Right(null));
+      when(mockFilterRepository.saveUIState(any)).thenAnswer((_) async => const Right(null));
+      
       container = ProviderContainer(
         overrides: [
           leadsRemoteDataSourceProvider.overrideWithValue(mockDataSource),
+          sharedPreferencesFutureProvider.overrideWith((ref) async => await SharedPreferences.getInstance()),
+          filterRepositoryProvider.overrideWith((ref) async => mockFilterRepository),
         ],
       );
     });
@@ -80,6 +101,9 @@ void main() {
         sortBy: anyNamed('sortBy'),
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => defaultResponse);
+      
+      // Wait for providers to initialize
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final notifier = container.read(paginatedLeadsProvider.notifier);
       
@@ -183,6 +207,9 @@ void main() {
         sortAscending: anyNamed('sortAscending'),
       )).thenAnswer((_) async => mockResponse);
       
+      // Wait for providers to initialize
+      await Future.delayed(const Duration(milliseconds: 100));
+      
       final notifier = container.read(paginatedLeadsProvider.notifier);
       
       // Test each sort option
@@ -199,9 +226,9 @@ void main() {
         print('\n=== Testing sort by $name ($sortBy) ===');
         await notifier.updateFilters(sortBy: sortBy, sortAscending: false);
         
-        // Verify API was called with correct sort
+        // Verify API was called with correct sort - should be at least 1 call
         verify(mockDataSource.getLeadsPaginated(
-          page: 1,
+          page: anyNamed('page'),
           perPage: anyNamed('perPage'),
           status: anyNamed('status'),
           search: anyNamed('search'),

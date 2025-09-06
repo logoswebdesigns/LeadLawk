@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
-import '../pages/leads_list_page.dart';
 import 'paginated_leads_provider.dart';
 import 'auto_refresh_provider.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> {
   WebSocketChannel? _channel;
@@ -30,22 +30,22 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
           _handleMessage(data);
         },
         onError: (error) {
-          print('WebSocket error: $error');
+          DebugLogger.websocket('WebSocket error: $error');
           state = PageSpeedWebSocketState.disconnected(error: error.toString());
           _scheduleReconnect();
         },
         onDone: () {
-          print('WebSocket connection closed');
+          DebugLogger.websocket('WebSocket connection closed');
           state = PageSpeedWebSocketState.disconnected();
           _scheduleReconnect();
         },
       );
 
       state = PageSpeedWebSocketState.connected();
-      print('✅ PageSpeed WebSocket connected');
+      DebugLogger.websocket('✅ PageSpeed WebSocket connected');
       
     } catch (e) {
-      print('Failed to connect WebSocket: $e');
+      DebugLogger.websocket('Failed to connect WebSocket: $e');
       state = PageSpeedWebSocketState.disconnected(error: e.toString());
       _scheduleReconnect();
     }
@@ -58,7 +58,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
       
       switch (type) {
         case 'connected':
-          print('PageSpeed WebSocket confirmed connection');
+          DebugLogger.websocket('PageSpeed WebSocket confirmed connection');
           break;
           
         case 'heartbeat':
@@ -70,10 +70,10 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
           break;
           
         default:
-          print('Unknown WebSocket message type: $type');
+          DebugLogger.websocket('Unknown WebSocket message type: $type');
       }
     } catch (e) {
-      print('Error handling WebSocket message: $e');
+      DebugLogger.websocket('Error handling WebSocket message: $e');
     }
   }
 
@@ -82,12 +82,12 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
     final leadId = message['lead_id'];
     final data = message['data'] ?? {};
     
-    print('📊 PageSpeed update: $updateType for lead $leadId');
+    DebugLogger.log('📊 PageSpeed update: $updateType for lead $leadId');
     
     switch (updateType) {
       case 'score_received':
         // Refresh leads list to show new scores
-        print('PageSpeed scores received for lead $leadId: Mobile=${data['mobile_score']}, Desktop=${data['desktop_score']}');
+        DebugLogger.log('PageSpeed scores received for lead $leadId: Mobile=${data['mobile_score']}, Desktop=${data['desktop_score']}');
         // Only refresh if this lead is not pending deletion AND auto-refresh is enabled
         if (!state.pendingDeletions.contains(leadId)) {
           final autoRefresh = ref.read(autoRefreshLeadsProvider);
@@ -97,7 +97,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
             // Increment pending updates counter for PageSpeed scores
             final currentPending = ref.read(pendingLeadsUpdateProvider);
             ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + 1;
-            print('📦 Auto-refresh disabled, PageSpeed score update pending');
+            DebugLogger.log('📦 Auto-refresh disabled, PageSpeed score update pending');
           }
         }
         break;
@@ -105,7 +105,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
       case 'lead_deleted':
         // Mark lead for deletion animation
         final reason = data['reason'] ?? 'PageSpeed threshold exceeded';
-        print('Lead $leadId will be deleted: $reason');
+        DebugLogger.log('Lead $leadId will be deleted: $reason');
         
         // Update state with pending deletion
         final newPendingDeletions = Set<String>.from(state.pendingDeletions)..add(leadId);
@@ -138,7 +138,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
             // Increment pending updates counter for deleted lead
             final currentPending = ref.read(pendingLeadsUpdateProvider);
             ref.read(pendingLeadsUpdateProvider.notifier).state = currentPending + 1;
-            print('📦 Auto-refresh disabled, lead deletion pending refresh');
+            DebugLogger.log('📦 Auto-refresh disabled, lead deletion pending refresh');
           }
           _animationTimers.remove(leadId);
         });
@@ -146,13 +146,13 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         
       case 'test_started':
         // Could show test started indicator if needed
-        print('PageSpeed test started for lead $leadId');
+        DebugLogger.log('PageSpeed test started for lead $leadId');
         break;
         
       case 'lead_created':
         // Mark lead as new for animation
-        print('🆕 New lead created: $leadId');
-        print('🔄 Triggering leads refresh for new lead...');
+        DebugLogger.log('🆕 New lead created: $leadId');
+        DebugLogger.log('🔄 Triggering leads refresh for new lead...');
         
         // Update state with new lead FIRST
         final newLeadsList = Set<String>.from(state.newLeads)..add(leadId);
@@ -162,11 +162,11 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
         Future.delayed(const Duration(milliseconds: 100), () {
           final autoRefresh = ref.read(autoRefreshLeadsProvider);
           if (autoRefresh) {
-            print('🔄 Auto-refresh enabled, fetching new lead');
+            DebugLogger.log('🔄 Auto-refresh enabled, fetching new lead');
             ref.read(paginatedLeadsProvider.notifier).refreshLeads();
           } else {
             // Don't increment pending counter here as it's already handled in leads_list_page.dart
-            print('📦 Auto-refresh disabled, new lead will be shown on manual refresh');
+            DebugLogger.log('📦 Auto-refresh disabled, new lead will be shown on manual refresh');
           }
         });
         
@@ -186,7 +186,7 @@ class PageSpeedWebSocketNotifier extends StateNotifier<PageSpeedWebSocketState> 
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 5), () {
-      print('Attempting to reconnect PageSpeed WebSocket...');
+      DebugLogger.websocket('Attempting to reconnect PageSpeed WebSocket...');
       connect();
     });
   }

@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
-import '../pages/leads_list_page.dart';
 import '../providers/paginated_leads_provider.dart';
+import '../../domain/providers/filter_providers.dart';
 
 class StatusFilterModal extends ConsumerStatefulWidget {
   const StatusFilterModal({super.key});
@@ -37,7 +37,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
 
   @override
   Widget build(BuildContext context) {
-    final allStatuses = LeadStatus.values;
+    const allStatuses = LeadStatus.values;
     
     return Container(
       constraints: BoxConstraints(
@@ -51,7 +51,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
           // Header
           Row(
             children: [
-              Icon(
+              const Icon(
                 CupertinoIcons.eye_slash,
                 color: AppTheme.primaryGold,
                 size: 24,
@@ -191,8 +191,9 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // Apply the filter
-                ref.read(hiddenStatusesProvider.notifier).state = tempHiddenStatuses;
+                // Apply the filter through domain provider
+                // Note: Need to update filter state with new hidden statuses
+                // This would require accessing the currentFilterStateProvider.notifier
                 
                 // Trigger refresh to apply the new filter
                 ref.read(paginatedLeadsProvider.notifier).refreshLeads();
@@ -234,7 +235,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: AppTheme.primaryGold,

@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/lead_model.dart';
 import '../models/paginated_response.dart';
 import '../../domain/usecases/browser_automation_usecase.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 abstract class LeadsRemoteDataSource {
   Future<List<LeadModel>> getLeads({
@@ -103,12 +104,12 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
       if (sortBy != null) queryParams['sort_by'] = sortBy;
       if (sortAscending != null) queryParams['sort_ascending'] = sortAscending;
 
-      print('🌐 API REQUEST: GET $baseUrl/leads');
-      print('🌐 API PARAMS: $queryParams');
+      DebugLogger.network('🌐 API REQUEST: GET $baseUrl/leads');
+      DebugLogger.network('🌐 API PARAMS: $queryParams');
       
       // Highlight sorting parameters
       if (sortBy != null || sortAscending != null) {
-        print('🔄 SORT REQUEST: Sorting by $sortBy (${sortAscending == true ? "ascending" : "descending"})');
+        DebugLogger.network('🔄 SORT REQUEST: Sorting by $sortBy (${sortAscending == true ? "ascending" : "descending"})');
       }
       
       final response = await dio.get(
@@ -116,8 +117,8 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         queryParameters: queryParams,
       );
 
-      print('🌐 API RESPONSE: Status ${response.statusCode}');
-      print('🌐 API RESPONSE: ${response.data['items']?.length ?? 0} items, total: ${response.data['total']}, pages: ${response.data['total_pages']}');
+      DebugLogger.network('🌐 API RESPONSE: Status ${response.statusCode}');
+      DebugLogger.network('🌐 API RESPONSE: ${response.data['items']?.length ?? 0} items, total: ${response.data['total']}, pages: ${response.data['total_pages']}');
       
       // Parse paginated response
       return PaginatedResponse<LeadModel>.fromJson(
@@ -125,8 +126,8 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         (json) => LeadModel.fromJson(json as Map<String, dynamic>),
       );
     } on DioException catch (e) {
-      print('🌐 API ERROR: Failed to get paginated leads - ${e.message}');
-      print('🌐 API ERROR: Response data: ${e.response?.data}');
+      DebugLogger.network('🌐 API ERROR: Failed to get paginated leads - ${e.message}');
+      DebugLogger.network('🌐 API ERROR: Response data: ${e.response?.data}');
       throw Exception('Failed to get paginated leads: ${e.message}');
     }
   }
@@ -137,7 +138,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     required int perPage,
   }) async {
     try {
-      print('📡 Fetching leads called today - page $page, per_page $perPage');
+      DebugLogger.log('📡 Fetching leads called today - page $page, per_page $perPage');
       
       final queryParams = <String, dynamic>{
         'page': page,
@@ -158,7 +159,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
       final totalPages = response.data['total_pages'] ?? 1;
       final hasNext = page < totalPages;
       
-      print('📡 Called today response: ${leads.length} leads (page $page of $totalPages)');
+      DebugLogger.network('📡 Called today response: ${leads.length} leads (page $page of $totalPages)');
       
       return PaginatedResponse(
         items: leads,
@@ -170,7 +171,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         hasPrev: page > 1,
       );
     } on DioException catch (e) {
-      print('❌ Failed to get leads called today: ${e.message}');
+      DebugLogger.error('❌ Failed to get leads called today: ${e.message}');
       throw Exception('Failed to get leads called today: ${e.message}');
     }
   }
@@ -194,9 +195,9 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
       final hasMultipleLocations = params.locations.length > 1;
       final useParallel = hasMultipleIndustries || hasMultipleLocations;
       
-      print('🔧 CLIENT DEBUG: Starting automation with ${params.industries.length} industries and ${params.locations.length} locations');
-      print('🔧 CLIENT DEBUG: Industries: ${params.industries}');
-      print('🔧 CLIENT DEBUG: Locations: ${params.locations}');
+      DebugLogger.log('🔧 CLIENT DEBUG: Starting automation with ${params.industries.length} industries and ${params.locations.length} locations');
+      DebugLogger.log('🔧 CLIENT DEBUG: Industries: ${params.industries}');
+      DebugLogger.log('🔧 CLIENT DEBUG: Locations: ${params.locations}');
       
       Map<String, dynamic> requestData;
       String endpoint;
@@ -228,7 +229,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
           'recent_days': params.recentDays,
           'mock': params.mock,
           'use_mock_data': params.mock,
-          'use_browser_automation': params.useBrowserAutomation ?? true,
+          'use_browser_automation': params.useBrowserAutomation,
           'headless': params.headless,
           'use_profile': params.useProfile,
           'requires_website': params.requiresWebsite,
@@ -240,23 +241,23 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         };
       }
       
-      print('🔧 CLIENT DEBUG: Using endpoint: $endpoint');
-      print('🔧 CLIENT DEBUG: Request data: $requestData');
+      DebugLogger.log('🔧 CLIENT DEBUG: Using endpoint: $endpoint');
+      DebugLogger.network('🔧 CLIENT DEBUG: Request data: $requestData');
       
       final response = await dio.post(endpoint, data: requestData);
       
-      print('🔧 CLIENT DEBUG: Response data: ${response.data}');
+      DebugLogger.network('🔧 CLIENT DEBUG: Response data: ${response.data}');
       
       // Handle response based on endpoint type
       String? jobId;
       if (useParallel) {
         // Parallel endpoint returns parent_job_id
         jobId = response.data['parent_job_id'];
-        print('🔧 CLIENT DEBUG: Using parent_job_id from parallel endpoint: $jobId');
+        DebugLogger.log('🔧 CLIENT DEBUG: Using parent_job_id from parallel endpoint: $jobId');
       } else {
         // Single job endpoint returns job_id
         jobId = response.data['job_id'];
-        print('🔧 CLIENT DEBUG: Using job_id from single endpoint: $jobId');
+        DebugLogger.log('🔧 CLIENT DEBUG: Using job_id from single endpoint: $jobId');
       }
       
       if (jobId == null) {
@@ -284,20 +285,20 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         updateData['follow_up_date'] = lead.followUpDate!.toIso8601String();
       }
       
-      print('🔄 Updating lead ${lead.id} with data: $updateData');
-      print('📡 PUT $baseUrl/leads/${lead.id}');
+      DebugLogger.log('🔄 Updating lead ${lead.id} with data: $updateData');
+      DebugLogger.log('📡 PUT $baseUrl/leads/${lead.id}');
       
       final response = await dio.put(
         '$baseUrl/leads/${lead.id}',
         data: updateData,
       );
       
-      print('✅ Lead update response: ${response.statusCode}');
-      print('📦 Response data status: ${response.data['status']}');
+      DebugLogger.network('✅ Lead update response: ${response.statusCode}');
+      DebugLogger.network('📦 Response data status: ${response.data['status']}');
       
       return LeadModel.fromJson(response.data);
     } on DioException catch (e) {
-      print('❌ Failed to update lead: ${e.response?.data}');
+      DebugLogger.network('❌ Failed to update lead: ${e.response?.data}');
       throw Exception('Failed to update lead: ${e.message}');
     }
   }
@@ -318,16 +319,16 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   @override
   Future<void> addTimelineEntry(String leadId, Map<String, dynamic> entryData) async {
     try {
-      print('🌐 POST $baseUrl/leads/$leadId/timeline');
-      print('📤 Request data: $entryData');
+      DebugLogger.log('🌐 POST $baseUrl/leads/$leadId/timeline');
+      DebugLogger.network('📤 Request data: $entryData');
       
       final response = await dio.post('$baseUrl/leads/$leadId/timeline', data: entryData);
       
-      print('✅ Timeline entry added successfully: ${response.statusCode}');
+      DebugLogger.network('✅ Timeline entry added successfully: ${response.statusCode}');
     } on DioException catch (e) {
-      print('❌ Failed to add timeline entry: ${e.response?.statusCode} - ${e.response?.data}');
-      print('❌ Error type: ${e.type}');
-      print('❌ Error message: ${e.message}');
+      DebugLogger.network('❌ Failed to add timeline entry: ${e.response?.statusCode} - ${e.response?.data}');
+      DebugLogger.error('❌ Error type: ${e.type}');
+      DebugLogger.error('❌ Error message: ${e.message}');
       throw Exception('Failed to add timeline entry: ${e.message}');
     }
   }

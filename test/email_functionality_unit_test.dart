@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +7,7 @@ import 'package:leadloq/features/leads/presentation/widgets/email_template_dialo
 
 void main() {
   group('Email Functionality Unit Tests', () {
-    late SharedPreferences prefs;
+    // late SharedPreferences prefs;
     
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,28 +16,33 @@ void main() {
     setUp(() async {
       // Reset SharedPreferences for each test
       SharedPreferences.setMockInitialValues({});
-      prefs = await SharedPreferences.getInstance();
+      // prefs = await SharedPreferences.getInstance();
     });
 
     test('Email templates provider initializes with default templates', () async {
       // Clear any existing templates first
       SharedPreferences.setMockInitialValues({
         'email_templates_initialized': false,
+        // Don't include email_templates key at all to simulate uninitialized state
       });
       
       final container = ProviderContainer();
       addTearDown(container.dispose);
       
-      // Get the notifier and wait for initialization
+      // Get the notifier to trigger initialization
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
-      // Wait for async initialization to complete
-      await Future.delayed(Duration(milliseconds: 200));
+      // Wait longer for async initialization to complete - the provider needs time to:
+      // 1. Load from SharedPreferences
+      // 2. Check if initialized 
+      // 3. Create default templates
+      // 4. Save them back to SharedPreferences
+      await Future.delayed(const Duration(milliseconds: 500));
       
       final templates = container.read(emailTemplatesLocalProvider);
       
-      // Should have at least 4 default templates (may have more if they already exist)
-      expect(templates.length, greaterThanOrEqualTo(4));
+      // Should have exactly 4 default templates
+      expect(templates.length, equals(4));
       expect(templates.any((t) => t.name == 'Initial Outreach'), true);
       expect(templates.any((t) => t.name == 'Follow-up After Call'), true);
       expect(templates.any((t) => t.name == 'Website Improvement Proposal'), true);
@@ -57,7 +60,7 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
@@ -88,7 +91,7 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
@@ -137,7 +140,7 @@ void main() {
       addTearDown(container.dispose);
       
       // Wait for initialization
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final notifier = container.read(emailTemplatesLocalProvider.notifier);
       
@@ -182,10 +185,10 @@ void main() {
         source: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-        timeline: [],
+        timeline: const [],
       );
       
-      final template = 'Hello {{businessName}} in {{location}}. Industry: {{industry}}, Phone: {{phone}}, Rating: {{rating}}, Reviews: {{reviewCount}}';
+      const template = 'Hello {{businessName}} in {{location}}. Industry: {{industry}}, Phone: {{phone}}, Rating: {{rating}}, Reviews: {{reviewCount}}';
       
       // This simulates what the email dialog does
       final processed = template

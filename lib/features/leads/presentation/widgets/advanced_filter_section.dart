@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../pages/leads_list_page.dart';
+import '../../domain/providers/filter_providers.dart';
 
 class AdvancedFilterSection extends ConsumerWidget {
   const AdvancedFilterSection({super.key});
@@ -32,16 +32,16 @@ class AdvancedFilterSection extends ConsumerWidget {
             runSpacing: 8,
             children: [
               _buildQuickFilter('Called Today', ref.watch(calledTodayProvider),
-                  (val) => ref.read(calledTodayProvider.notifier).state = val, ref,
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateCalledToday(val), ref,
                   icon: Icons.phone_in_talk),
               _buildQuickFilter('Has Website', ref.watch(hasWebsiteFilterProvider) == true,
-                  (val) => ref.read(hasWebsiteFilterProvider.notifier).state = val ? true : null, ref),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(val ? true : null), ref),
               _buildQuickFilter('No Website', ref.watch(hasWebsiteFilterProvider) == false,
-                  (val) => ref.read(hasWebsiteFilterProvider.notifier).state = val ? false : null, ref),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateHasWebsiteFilter(val ? false : null), ref),
               _buildQuickFilter('High Rating', ref.watch(meetsRatingFilterProvider) == true,
-                  (val) => ref.read(meetsRatingFilterProvider.notifier).state = val ? true : null, ref),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateMeetsRatingFilter(val ? true : null), ref),
               _buildQuickFilter('Recent Reviews', ref.watch(hasRecentReviewsFilterProvider) == true,
-                  (val) => ref.read(hasRecentReviewsFilterProvider.notifier).state = val ? true : null, ref),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateHasRecentReviewsFilter(val ? true : null), ref),
             ],
           ),
           const SizedBox(height: 16),
@@ -49,20 +49,20 @@ class AdvancedFilterSection extends ConsumerWidget {
           Row(
             children: [
               Expanded(child: _buildDropdown('Rating', ref.watch(ratingRangeFilterProvider), _ratingOptions(), 
-                  (val) => ref.read(ratingRangeFilterProvider.notifier).state = val)),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateRatingRangeFilter(val))),
               const SizedBox(width: 12),
               Expanded(child: _buildDropdown('Reviews', ref.watch(reviewCountRangeFilterProvider), _reviewOptions(),
-                  (val) => ref.read(reviewCountRangeFilterProvider.notifier).state = val)),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateReviewCountRangeFilter(val))),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(child: _buildDropdown('PageSpeed', ref.watch(pageSpeedFilterProvider), _speedOptions(),
-                  (val) => ref.read(pageSpeedFilterProvider.notifier).state = val)),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updatePageSpeedFilter(val))),
               const SizedBox(width: 12),
               Expanded(child: _buildDropdown('Follow-up', ref.watch(followUpFilterProvider), _followUpOptions(),
-                  (val) => ref.read(followUpFilterProvider.notifier).state = val)),
+                  (val) => ref.read(currentFilterStateProvider.notifier).updateFollowUpFilter(val))),
             ],
           ),
         ],

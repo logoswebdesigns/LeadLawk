@@ -51,19 +51,19 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
     });
     
     _wsService.status.listen((status) {
-      // DEBUG: print('🔔 WebSocket status update received: $status');
+      // DEBUG: DebugLogger.websocket('🔔 WebSocket status update received: $status');
       setState(() {
         _jobStatus = status;
       });
       
       if (status['status'] == 'done') {
-        // DEBUG: print('✅ Job completed - processed: ${status['processed']}, total: ${status['total']}');
+        // DEBUG: DebugLogger.log('✅ Job completed - processed: ${status['processed']}, total: ${status['total']}');
         _showCompletionDialog();
       } else if (status['status'] == 'error') {
-        // DEBUG: print('❌ Job failed with error: ${status['message']}');
+        // DEBUG: DebugLogger.error('❌ Job failed with error: ${status['message']}');
         _showErrorDialog(status['message'] ?? 'Unknown error');
       } else if (status['status'] == 'running') {
-        // DEBUG: print('🏃 Job running - processed: ${status['processed']}, total: ${status['total']}');
+        // DEBUG: DebugLogger.log('🏃 Job running - processed: ${status['processed']}, total: ${status['total']}');
       }
     });
   }
@@ -109,15 +109,15 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   void _showCompletionDialog() async {
     // Get the actual lead count from the API instead of relying on WebSocket status
     int actualLeadCount = _jobStatus?['processed'] ?? 0;
-    // DEBUG: print('💬 Completion dialog - WebSocket processed count: $actualLeadCount');
-    // DEBUG: print('💬 Full job status: $_jobStatus');
+    // DEBUG: DebugLogger.websocket('💬 Completion dialog - WebSocket processed count: $actualLeadCount');
+    // DEBUG: DebugLogger.log('💬 Full job status: $_jobStatus');
     
     try {
       final dio = ref.read(dioProvider);
       final response = await dio.get('http://localhost:8000/leads');
       if (response.statusCode == 200) {
         final leads = response.data as List;
-        // DEBUG: print('💬 Total leads in database: ${leads.length}');
+        // DEBUG: DebugLogger.database('💬 Total leads in database: ${leads.length}');
         
         // Count recently created leads (within the last few minutes)
         final now = DateTime.now();
@@ -130,19 +130,19 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
           }
         }).length;
         
-        // DEBUG: print('💬 Recent leads (last 10 minutes): $recentLeads');
+        // DEBUG: DebugLogger.log('💬 Recent leads (last 10 minutes): $recentLeads');
         
         // Use the higher count between WebSocket status and recent leads
         if (recentLeads > actualLeadCount) {
           actualLeadCount = recentLeads;
-          // DEBUG: print('💬 Using recent leads count: $actualLeadCount');
+          // DEBUG: DebugLogger.log('💬 Using recent leads count: $actualLeadCount');
         } else {
-          // DEBUG: print('💬 Using WebSocket count: $actualLeadCount');
+          // DEBUG: DebugLogger.websocket('💬 Using WebSocket count: $actualLeadCount');
         }
       }
     } catch (e) {
       // If API call fails, fall back to WebSocket status
-      // DEBUG: print('❌ Failed to fetch actual lead count: $e');
+      // DEBUG: DebugLogger.error('❌ Failed to fetch actual lead count: $e');
     }
     
     showDialog(
@@ -175,7 +175,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
   void _showErrorDialog(String error) {
     final logsPreview = _logs.isNotEmpty
         ? _logs.sublist(_logs.length - (_logs.length > 10 ? 10 : _logs.length))
-        : const <String>[];
+        : <String>[];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -209,8 +209,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                   shrinkWrap: true,
                   itemCount: logsPreview.length,
                   itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+                    return Padding(padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
                       child: Text(
                         logsPreview[index],
                         style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontSize: 12),
@@ -278,10 +277,10 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
               height: 24,
             ),
             const SizedBox(width: 8),
-            Expanded(
+            const Expanded(
               child: Text(
                 'Browser Automation Progress',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppTheme.darkGray,
                   fontWeight: FontWeight.w600,
                 ),
@@ -339,7 +338,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
           if ((_jobStatus?['message'] as String?) != null && (_jobStatus?['status'] == 'error'))
             Container(
               width: double.infinity,
-              color: AppTheme.errorRed.withOpacity(0.1),
+              color: AppTheme.errorRed.withValues(alpha: 0.1),
               padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,7 +384,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: AppTheme.mediumGray.withOpacity(0.2),
+                  backgroundColor: AppTheme.mediumGray.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     _getStatusColor(_jobStatus?['status']),
                   ),
@@ -439,8 +438,7 @@ class _AutomationMonitorPageState extends ConsumerState<AutomationMonitorPage> {
                       controller: _scrollController,
                       itemCount: _logs.length,
                       itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
+                        return Padding(padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Text(
                             _logs[index],
                             style: const TextStyle(

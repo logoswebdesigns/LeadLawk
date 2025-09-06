@@ -1,0 +1,71 @@
+ 111  The constructor being called isn't a const constructor 
+  97  Invalid constant value 
+  43  Methods can't be invoked in constant expressions 
+  38  Undefined name 'SortOption' 
+  23  Arguments of a constant creation must be constant expressions 
+  18  The named parameter 'updatedAt' isn't defined 
+  18  The named parameter 'source' isn't defined 
+  18  The named parameter 'meetsRatingThreshold' isn't defined 
+  18  The named parameter 'location' isn't defined 
+  18  The named parameter 'isCandidate' isn't defined 
+  18  The named parameter 'industry' isn't defined 
+  18  The named parameter 'hasWebsite' isn't defined 
+  18  The named parameter 'hasRecentReviews' isn't defined 
+  18  The named parameter 'createdAt' isn't defined 
+  17  Expected an identifier 
+  15  Undefined name 'sortStateProvider' 
+  14  Undefined name 'selectedLeadsProvider' 
+  12  The named parameter 'status' isn't defined 
+  11  Undefined name 'isSelectionModeProvider' 
+   8  Undefined name 'ratingRangeFilterProvider' 
+   8  Undefined name 'GroupByOption' 
+   8  Undefined class 'SortOption' 
+   6  Undefined name 'reviewCountRangeFilterProvider' 
+   5  Undefined name 'hiddenStatusesProvider' 
+   5  A value of type 'String?' can't be assigned to a variable of type 'int?' 
+   4  Undefined name 'groupByOptionProvider' 
+   4  The body might complete normally, causing 'null' to be returned, but the return type, 'String', is a potentially non-nullable type 
+   3  Undefined name 'searchFilterProvider' 
+   3  Undefined name 'locationFilterProvider' 
+   3  Undefined name 'industryFilterProvider' 
+   3  Undefined name 'candidatesOnlyProvider' 
+   3  A value of type 'String?' can't be assigned to a variable of type 'bool' 
+   3  A value of type 'String?' can't be assigned to a variable of type 'LeadStatus?' 
+   2  Undefined name 'refreshTriggerProvider' 
+   2  Undefined name 'followUpFilterProvider' 
+   2  Undefined name 'expandedGroupsProvider' 
+   2  Undefined name 'calledTodayProvider' 
+   2  The named parameter 'ascending' isn't defined 
+   2  The function 'SortState' isn't defined 
+   2  The function 'LeadsFilterState' isn't defined 
+   2  The argument type 'LeadStatus?' can't be assigned to the parameter type 'String?'.  
+   2  Expected to find ';' 
+   2  Const variables must be initialized with a constant value 
+   2  A value of type 'Null' can't be assigned to a variable of type 'bool' 
+   1  Variables must be declared using the keywords 'const', 'final', 'var' or a type name 
+   1  Undefined name 'statusFilterProvider' 
+   1  Undefined class 'GroupByOption' 
+   1  There's no constant named 'pageSpeed' in 'SortOption' 
+   1  There's no constant named 'pageSpeed' in 'GroupByOption' 
+   1  There's no constant named 'location' in 'GroupByOption' 
+   1  The property 'shade600' can't be accessed on the type 'MaterialColor' in a constant expression 
+   1  The property 'shade400' can't be accessed on the type 'MaterialColor' in a constant expression 
+   1  The non-nullable variable 'formatconst' must be initialized 
+   1  The named parameter 'isAscending' is required, but there's no corresponding argument 
+   1  The name 'SortState' isn't a class 
+   1  The method 'toUpperCase' isn't defined for the type 'LeadStatus' 
+   1  The method 'SortState' isn't defined for the type '_UnifiedFilterModalState' 
+   1  The method 'SortState' isn't defined for the type 'SortOptionsModal' 
+   1  The getter 'notifier' isn't defined for the type 'Provider<int>' 
+   1  The getter 'notifier' isn't defined for the type 'Provider<Set<String>>' 
+   1  The getter 'lightBlue' isn't defined for the type 'AppTheme' 
+   1  The getter 'infoBlue' isn't defined for the type 'AppTheme' 
+   1  The getter 'history' isn't defined for the type 'CommandBus' 
+   1  The getter 'future' isn't defined for the type 'FilterStateNotifier' 
+   1  The getter 'ascending' isn't defined for the type 'SortState' 
+   1  The body might complete normally, causing 'null' to be returned, but the return type, 'IconData', is a potentially non-nullable type 
+   1  The argument type 'StateProvider<int?>' can't be assigned to the parameter type 'ProviderListenable<String?>'.  
+   1  The argument type 'StateProvider<bool>' can't be assigned to the parameter type 'ProviderListenable<String?>'.  
+   1  Expected to find ')' 
+   1  Duration isn't a type 
+   1  Constant expressions don't support 'for' elements 

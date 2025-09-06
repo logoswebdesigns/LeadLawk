@@ -8,10 +8,10 @@ class CollapsibleScreenshots extends StatefulWidget {
   final bool defaultExpanded;
   
   const CollapsibleScreenshots({
-    Key? key,
+    super.key,
     required this.lead,
     this.defaultExpanded = true,
-  }) : super(key: key);
+  });
   
   @override
   State<CollapsibleScreenshots> createState() => _CollapsibleScreenshotsState();
@@ -67,10 +67,10 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
     
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.3),
+        color: Theme.of(context).cardColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -81,14 +81,13 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
           InkWell(
             onTap: _toggleExpanded,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            child: Padding(padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Icon(
                     CupertinoIcons.photo_on_rectangle,
                     size: 20,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -104,7 +103,7 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -115,8 +114,7 @@ class _CollapsibleScreenshotsState extends State<CollapsibleScreenshots>
           // Content
           SizeTransition(
             sizeFactor: _expandAnimation,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: _buildScreenshotsContent(
                 isMobile, 
                 isDesktop, 
