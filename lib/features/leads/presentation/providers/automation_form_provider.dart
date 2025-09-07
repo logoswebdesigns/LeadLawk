@@ -24,6 +24,7 @@ class AutomationFormState {
   final int? minDescriptionLength;
   final bool enablePagespeed;
   final int maxPagespeedScore; // Filter leads by max PageSpeed score
+  final int maxRuntimeMinutes; // Maximum runtime in minutes before job auto-stops
 
   AutomationFormState({
     this.industry = '',
@@ -46,6 +47,7 @@ class AutomationFormState {
     this.minDescriptionLength,  // null = any, int = minimum description chars
     this.enablePagespeed = true,  // Default to enabled for better lead qualification
     this.maxPagespeedScore = 75,  // Default threshold for PageSpeed filtering
+    this.maxRuntimeMinutes = 15,  // Default to 15 minutes max runtime for all jobs
   });
 
   AutomationFormState copyWith({
@@ -69,6 +71,7 @@ class AutomationFormState {
     int? minDescriptionLength,
     bool? enablePagespeed,
     int? maxPagespeedScore,
+    int? maxRuntimeMinutes,
   }) {
     return AutomationFormState(
       industry: industry ?? this.industry,
@@ -91,6 +94,7 @@ class AutomationFormState {
       minDescriptionLength: minDescriptionLength ?? this.minDescriptionLength,
       enablePagespeed: enablePagespeed ?? this.enablePagespeed,
       maxPagespeedScore: maxPagespeedScore ?? this.maxPagespeedScore,
+      maxRuntimeMinutes: maxRuntimeMinutes ?? this.maxRuntimeMinutes,
     );
   }
 
@@ -136,6 +140,7 @@ class AutomationFormState {
       minDescriptionLength: minDescriptionLength,
       enablePagespeed: enablePagespeed,
       maxPagespeedScore: maxPagespeedScore,
+      maxRuntimeMinutes: maxRuntimeMinutes,
     );
   }
 }
@@ -158,6 +163,7 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
       minReviews: prefs.getInt('last_min_reviews') ?? 3,
       recentDays: prefs.getInt('last_recent_days') ?? 365,
       recentReviewMonths: prefs.getInt('last_recent_review_months') ?? 24,
+      maxRuntimeMinutes: prefs.getInt('last_max_runtime_minutes') ?? 15,
     );
   }
 
@@ -169,6 +175,7 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
     await prefs.setDouble('last_min_rating', state.minRating);
     await prefs.setInt('last_min_reviews', state.minReviews);
     await prefs.setInt('last_recent_days', state.recentDays);
+    await prefs.setInt('last_max_runtime_minutes', state.maxRuntimeMinutes);
   }
 
   void setIndustry(String industry) {
@@ -322,6 +329,11 @@ class AutomationFormNotifier extends StateNotifier<AutomationFormState> {
 
   void setMaxPagespeedScore(int score) {
     state = state.copyWith(maxPagespeedScore: score.clamp(0, 100));
+    _savePreferences();
+  }
+  
+  void setMaxRuntimeMinutes(int minutes) {
+    state = state.copyWith(maxRuntimeMinutes: minutes.clamp(5, 60));
     _savePreferences();
   }
 }

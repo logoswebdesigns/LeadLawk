@@ -14,7 +14,7 @@ abstract class LeadsRepository {
   
   Future<Either<Failure, Lead>> getLead(String id);
   
-  Future<Either<Failure, Lead>> updateLead(Lead lead);
+  Future<Either<Failure, Lead>> updateLead(Lead lead, {bool? addToBlacklist, String? blacklistReason});
 
   Future<Either<Failure, Lead>> updateTimelineEntry(String leadId, LeadTimelineEntry entry);
   
@@ -31,4 +31,6 @@ abstract class LeadsRepository {
   Future<Either<Failure, void>> deleteLead(String id);
   
   Future<Either<Failure, void>> deleteLeads(List<String> ids);
+  
+  Future<Either<Failure, Map<DateTime, int>>> getCallStatistics();
 }

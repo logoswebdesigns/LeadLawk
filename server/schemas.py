@@ -25,6 +25,7 @@ class BrowserAutomationRequest(BaseModel):
     min_description_length: Optional[int] = None  # Minimum description length: None = any, int = minimum chars
     enable_pagespeed: bool = False  # Enable automatic PageSpeed testing for leads with websites
     max_pagespeed_score: Optional[int] = None  # Maximum acceptable PageSpeed score (leads above this are filtered out, required if enable_pagespeed is True)
+    max_runtime_minutes: Optional[int] = 30  # Maximum runtime in minutes before job auto-stops (default 30 minutes)
 
 
 class JobResponse(BaseModel):
@@ -104,6 +105,8 @@ class LeadUpdate(BaseModel):
     notes: Optional[str] = None
     follow_up_date: Optional[datetime] = None
     timeline: Optional[List[LeadTimelineEntryCreate]] = None
+    add_to_blacklist: Optional[bool] = False  # Add to blacklist when marking as didNotConvert
+    blacklist_reason: Optional[str] = None  # Reason for blacklisting ('too_big', 'franchise', etc.)
 
 
 class LeadResponse(BaseModel):

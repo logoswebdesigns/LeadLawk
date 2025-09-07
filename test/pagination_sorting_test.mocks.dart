@@ -181,17 +181,29 @@ class MockLeadsRemoteDataSource extends _i1.Mock
       ) as _i6.Future<_i3.LeadModel>);
 
   @override
-  _i6.Future<_i3.LeadModel> updateLead(_i3.LeadModel? lead) =>
+  _i6.Future<_i3.LeadModel> updateLead(
+    _i3.LeadModel? lead, {
+    bool? addToBlacklist,
+    String? blacklistReason,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateLead,
           [lead],
+          {
+            #addToBlacklist: addToBlacklist,
+            #blacklistReason: blacklistReason,
+          },
         ),
         returnValue: _i6.Future<_i3.LeadModel>.value(_FakeLeadModel_1(
           this,
           Invocation.method(
             #updateLead,
             [lead],
+            {
+              #addToBlacklist: addToBlacklist,
+              #blacklistReason: blacklistReason,
+            },
           ),
         )),
       ) as _i6.Future<_i3.LeadModel>);
@@ -307,6 +319,32 @@ class MockLeadsRemoteDataSource extends _i1.Mock
         returnValue: _i6.Future<void>.value(),
         returnValueForMissingStub: _i6.Future<void>.value(),
       ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<List<Map<String, dynamic>>> getBlacklist() => (super.noSuchMethod(
+        Invocation.method(
+          #getBlacklist,
+          [],
+        ),
+        returnValue: _i6.Future<List<Map<String, dynamic>>>.value(
+            <Map<String, dynamic>>[]),
+      ) as _i6.Future<List<Map<String, dynamic>>>);
+
+  @override
+  _i6.Future<bool> addToBlacklist(
+    String? businessName,
+    String? reason,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #addToBlacklist,
+          [
+            businessName,
+            reason,
+          ],
+        ),
+        returnValue: _i6.Future<bool>.value(false),
+      ) as _i6.Future<bool>);
 }
 
 /// A class which mocks [FilterRepository].

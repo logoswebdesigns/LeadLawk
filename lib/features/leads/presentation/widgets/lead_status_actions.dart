@@ -83,9 +83,29 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
         return;
       }
       
+      // Prepare update data
+      final updateData = <String, dynamic>{'status': newStatus};
+      
+      // Check if this is a "did not convert" with "too_big" reason - should be blacklisted
+      if (newStatus == LeadStatus.didNotConvert && metadata != null) {
+        final reasonCode = metadata['reason_code'];
+        print('🔍 DID NOT CONVERT: reasonCode = $reasonCode, metadata = $metadata');
+        if (reasonCode == 'TB') {  // TB = Too Big
+          updateData['addToBlacklist'] = true;
+          updateData['blacklistReason'] = 'too_big';
+          print('🚫 AUTO-BLACKLIST: Marking ${widget.lead.businessName} as too_big for blacklist');
+        }
+        // Store the reason in the lead's metadata
+        updateData['conversionFailureReason'] = reasonCode;
+        updateData['conversionFailureNotes'] = metadata['notes'];
+      }
+      
+      print('📤 Sending update data: $updateData');
+      print('📤 Status: $newStatus, Metadata: $metadata');
+      
       // Use command pattern for update
       final updateCommand = ref.read(updateLeadCommandProvider);
-      final result = await updateCommand(widget.lead, {'status': newStatus});
+      final result = await updateCommand(widget.lead, updateData);
       
       if (result.isLeft()) {
         result.fold(

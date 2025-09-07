@@ -18,6 +18,8 @@ class Job extends Equatable {
   final List<String>? childJobs; // For parent jobs
   final String? parentId; // For child jobs
   final int? leadsFound; // Number of leads found in this job
+  final int? totalRequested; // Total number of leads requested for this job
+  final int? elapsedSeconds; // Server-calculated elapsed time in seconds
 
   const Job({
     required this.id,
@@ -35,13 +37,15 @@ class Job extends Equatable {
     this.childJobs,
     this.parentId,
     this.leadsFound,
+    this.totalRequested,
+    this.elapsedSeconds,
   });
 
   @override
   List<Object?> get props => [
     id, status, processed, total, message, industry, location, query, 
     timestamp, type, totalCombinations, completedCombinations, 
-    childJobs, parentId, leadsFound
+    childJobs, parentId, leadsFound, totalRequested, elapsedSeconds
   ];
   
   // Helper methods

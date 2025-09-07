@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/debug_logger.dart';
 import '../providers/filter_providers.dart' as presentation_providers;
 import '../../domain/entities/filter_state.dart';
+import '../../domain/providers/filter_providers.dart' show currentSortStateProvider;
 
 class SortOptionsModal extends ConsumerWidget {
   const SortOptionsModal({super.key});
@@ -63,9 +64,11 @@ class SortOptionsModal extends ConsumerWidget {
                     GestureDetector(
                       onTap: () {
                         DebugLogger.log('🔄 SORT MODAL: Toggling sort direction from ${isAscending ? "ascending" : "descending"} to ${!isAscending ? "ascending" : "descending"}');
-                        // Update only the ascending property of the combined state
+                        // Update both presentation and domain state to trigger API call
                         ref.read(presentation_providers.sortStateProvider.notifier).state = sortState.copyWith(ascending: !isAscending);
-                        DebugLogger.log('🔄 SORT MODAL: Sort direction toggled');
+                        // Also update domain state to trigger the API refresh
+                        ref.read(currentSortStateProvider.notifier).updateSort(currentSort, !isAscending);
+                        DebugLogger.log('🔄 SORT MODAL: Sort direction toggled and API call triggered');
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -138,6 +141,9 @@ class SortOptionsModal extends ConsumerWidget {
             option: option,
             ascending: newAscending,
           );
+          
+          // Also update domain state to trigger the API refresh
+          ref.read(currentSortStateProvider.notifier).updateSort(option, newAscending);
           
           // Close the modal
           Navigator.of(context).pop();

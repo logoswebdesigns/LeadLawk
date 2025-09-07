@@ -184,8 +184,12 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     });
     
     _ref.listen<AsyncValue<SortState>>(currentSortStateProvider, (previous, next) {
-      next.whenData((sortState) {
-        _syncWithDomainState();
+      next.whenData((sortState) async {
+        await _syncWithDomainState();
+        // Refresh leads when sort changes
+        if (previous?.hasValue == true && previous?.value != sortState) {
+          refreshLeads();
+        }
       });
     });
     

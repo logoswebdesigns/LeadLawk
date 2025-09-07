@@ -54,7 +54,8 @@ class BrowserAutomation:
     def search_google_maps(self, query, limit=20, min_rating=0.0, min_reviews=0,
                           requires_website=None, recent_review_months=None,
                           min_photos=None, min_description_length=None, 
-                          enable_click_through=True, enable_pagespeed=False, max_pagespeed_score=None):
+                          enable_click_through=True, enable_pagespeed=False, max_pagespeed_score=None,
+                          max_runtime_minutes=None):
         """Search Google Maps using the search engine"""
         if not self.search_engine:
             print("❌ Browser not properly initialized")
@@ -70,7 +71,7 @@ class BrowserAutomation:
         return self.search_engine.search_google_maps(
             query, limit, min_rating, min_reviews, requires_website,
             recent_review_months, min_photos, min_description_length,
-            enable_click_through
+            enable_click_through, max_runtime_minutes
         )
 
     def close(self):

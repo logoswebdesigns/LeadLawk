@@ -74,7 +74,7 @@ class RepositoryAdapter implements LeadsRepository {
   }
   
   @override
-  Future<Either<Failure, Lead>> updateLead(Lead lead) async {
+  Future<Either<Failure, Lead>> updateLead(Lead lead, {bool? addToBlacklist, String? blacklistReason}) async {
     try {
       final updated = await _simpleRepo.updateLead(lead);
       return Right(updated);
@@ -172,5 +172,12 @@ class RepositoryAdapter implements LeadsRepository {
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
+  }
+
+  @override
+  Future<Either<Failure, Map<DateTime, int>>> getCallStatistics() async {
+    // For the simple repository, return empty statistics
+    // This would be implemented properly in a real repository
+    return const Right({});
   }
 }

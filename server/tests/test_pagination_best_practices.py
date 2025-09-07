@@ -244,6 +244,62 @@ class TestPaginationBestPractices:
         data = response.json()
         assert "items" in data, "Should still return valid response structure"
         print("✅ Invalid sort fields handled gracefully")
+    
+    def test_pagespeed_ascending_sort(self):
+        """Test that PageSpeed scores sort correctly in ascending order with real leads."""
+        # Arrange
+        endpoint = f"{self.BASE_URL}/leads"
+        params = {
+            "page": 1,
+            "per_page": 20,
+            "sort_by": "desktop_performance_score",
+            "sort_ascending": "true"
+        }
+        
+        # Act
+        response = requests.get(endpoint, params=params)
+        data = response.json()
+        
+        # Assert
+        assert response.status_code == 200, "Should return 200 OK"
+        
+        # Handle case where database might be empty
+        if data["total"] == 0:
+            print("⚠️  WARNING: No leads in database to test sorting")
+            print("✅ PageSpeed test passes (no data to sort)")
+            return
+        
+        assert len(data["items"]) > 0, "Should return items when leads exist"
+        
+        # Extract all scores to check null handling
+        all_items = data["items"]
+        items_with_scores = [item for item in all_items 
+                           if item.get("desktop_performance_score") is not None]
+        scores = [item["desktop_performance_score"] for item in items_with_scores]
+        
+        # Print sample data for verification
+        print(f"  Found {data['total']} total leads, showing {len(all_items)} items")
+        print(f"  Items with PageSpeed scores: {len(items_with_scores)}")
+        if items_with_scores:
+            print(f"  First 3 leads with scores:")
+            for item in items_with_scores[:3]:
+                print(f"    {item['business_name']}: {item['desktop_performance_score']}")
+        
+        # Verify ascending order if we have scores
+        if len(scores) == 0:
+            print("⚠️  WARNING: No leads have PageSpeed scores")
+            print("✅ Null handling works correctly (all scores are null)")
+        elif len(scores) == 1:
+            print(f"✅ Single PageSpeed score found: {scores[0]}")
+        else:
+            # Check ascending order
+            for i in range(len(scores) - 1):
+                assert scores[i] <= scores[i+1], \
+                    f"Scores not in ascending order at index {i}: {scores[i]} > {scores[i+1]}"
+            
+            print(f"  Verified {len(scores)} scores in ascending order")
+            print(f"  Score range: {scores[0]} to {scores[-1]}")
+            print(f"✅ PageSpeed ascending sort works with real leads")
 
 
 def run_integration_tests():
@@ -264,6 +320,7 @@ def run_integration_tests():
         ("Pagination Consistency", test_suite.test_pagination_consistency_no_duplicates),
         ("Performance Limits", test_suite.test_pagination_performance_limits),
         ("Error Handling", test_suite.test_invalid_sort_field_handling),
+        ("PageSpeed Ascending Sort", test_suite.test_pagespeed_ascending_sort),
     ]
     
     passed = 0

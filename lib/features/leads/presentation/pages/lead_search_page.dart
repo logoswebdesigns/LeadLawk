@@ -675,6 +675,48 @@ class _LeadSearchPageState extends ConsumerState<LeadSearchPage> {
                                   ),
                                 ],
                               ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.timer, size: 16, color: AppTheme.primaryGold),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Max Runtime: ${formState.maxRuntimeMinutes} min',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Slider(
+                                      value: formState.maxRuntimeMinutes.toDouble(),
+                                      min: 5,
+                                      max: 60,
+                                      divisions: 11,
+                                      label: '${formState.maxRuntimeMinutes} minutes',
+                                      activeColor: AppTheme.primaryGold,
+                                      inactiveColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+                                      onChanged: (value) {
+                                        formNotifier.setMaxRuntimeMinutes(value.toInt());
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                'Global runtime limit for all jobs to prevent system overload',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
                               const SizedBox(height: 16),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -43,10 +43,14 @@ class LeadsRepositoryImpl implements LeadsRepository {
   }
 
   @override
-  Future<Either<Failure, Lead>> updateLead(Lead lead) async {
+  Future<Either<Failure, Lead>> updateLead(Lead lead, {bool? addToBlacklist, String? blacklistReason}) async {
     try {
       final leadModel = LeadModel.fromEntity(lead);
-      final updatedModel = await remoteDataSource.updateLead(leadModel);
+      final updatedModel = await remoteDataSource.updateLead(
+        leadModel,
+        addToBlacklist: addToBlacklist,
+        blacklistReason: blacklistReason,
+      );
       return Right(updatedModel.toEntity());
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -186,6 +190,16 @@ class LeadsRepositoryImpl implements LeadsRepository {
     try {
       await remoteDataSource.deleteLeads(ids);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<DateTime, int>>> getCallStatistics() async {
+    try {
+      final statistics = await remoteDataSource.getCallStatistics();
+      return Right(statistics);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

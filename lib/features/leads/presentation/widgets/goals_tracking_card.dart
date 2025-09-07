@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/goals_provider.dart';
 import 'goals_setting_dialog.dart';
+import 'call_calendar_drawer.dart';
 
 class GoalsTrackingCard extends ConsumerWidget {
   const GoalsTrackingCard({super.key});
@@ -31,13 +32,17 @@ class GoalsTrackingCard extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            child: _buildCompactGoalItem(
-              'Calls Today',
-              goalsState.todaysCalls,
-              goalsState.dailyCallGoal,
-              dailyProgress,
-              Icons.phone,
-              AppTheme.primaryGold,
+            child: InkWell(
+              onTap: () => CallCalendarDrawer.show(context),
+              borderRadius: BorderRadius.circular(8),
+              child: _buildCompactGoalItem(
+                'Calls Today',
+                goalsState.todaysCalls,
+                goalsState.dailyCallGoal,
+                dailyProgress,
+                Icons.phone,
+                AppTheme.primaryGold,
+              ),
             ),
           ),
           const SizedBox(width: 12),

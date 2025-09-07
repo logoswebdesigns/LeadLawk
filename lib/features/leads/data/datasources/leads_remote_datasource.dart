@@ -25,7 +25,7 @@ abstract class LeadsRemoteDataSource {
     required int perPage,
   });
   Future<LeadModel> getLead(String id);
-  Future<LeadModel> updateLead(LeadModel lead);
+  Future<LeadModel> updateLead(LeadModel lead, {bool? addToBlacklist, String? blacklistReason});
   Future<LeadModel> updateTimelineEntry(String leadId, String entryId, Map<String, dynamic> updates);
   Future<void> addTimelineEntry(String leadId, Map<String, dynamic> entryData);
   Future<String> startAutomation(BrowserAutomationParams params);
@@ -34,6 +34,9 @@ abstract class LeadsRemoteDataSource {
   Future<Map<String, dynamic>> recalculateConversionScores();
   Future<void> deleteLead(String id);
   Future<void> deleteLeads(List<String> ids);
+  Future<List<Map<String, dynamic>>> getBlacklist();
+  Future<bool> addToBlacklist(String businessName, String reason);
+  Future<Map<DateTime, int>> getCallStatistics();
 }
 
 class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
@@ -215,6 +218,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
           'recent_review_months': params.recentReviewMonths,
           'enable_pagespeed': params.enablePagespeed,
           'max_pagespeed_score': params.maxPagespeedScore,
+          'max_runtime_minutes': params.maxRuntimeMinutes,
         };
       } else {
         // Use single job endpoint
@@ -238,6 +242,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
           'min_description_length': params.minDescriptionLength,
           'enable_pagespeed': params.enablePagespeed,
           'max_pagespeed_score': params.maxPagespeedScore,
+          'max_runtime_minutes': params.maxRuntimeMinutes,
         };
       }
       
@@ -270,7 +275,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
   }
 
   @override
-  Future<LeadModel> updateLead(LeadModel lead) async {
+  Future<LeadModel> updateLead(LeadModel lead, {bool? addToBlacklist, String? blacklistReason}) async {
     try {
       // Build update data - only send fields that can be updated
       final updateData = <String, dynamic>{
@@ -283,6 +288,14 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
       }
       if (lead.followUpDate != null) {
         updateData['follow_up_date'] = lead.followUpDate!.toIso8601String();
+      }
+      
+      // Add blacklist parameters if provided
+      if (addToBlacklist != null) {
+        updateData['add_to_blacklist'] = addToBlacklist;
+      }
+      if (blacklistReason != null) {
+        updateData['blacklist_reason'] = blacklistReason;
       }
       
       DebugLogger.log('🔄 Updating lead ${lead.id} with data: $updateData');
@@ -409,6 +422,62 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     }
     if (errors.isNotEmpty) {
       throw Exception('Some leads failed to delete: ${errors.join(', ')}');
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getBlacklist() async {
+    try {
+      final response = await dio.get('$baseUrl/blacklist');
+      return List<Map<String, dynamic>>.from(response.data);
+    } on DioException catch (e) {
+      DebugLogger.network('❌ Failed to get blacklist: ${e.response?.data}');
+      throw Exception('Failed to get blacklist: ${e.message}');
+    }
+  }
+
+  @override
+  Future<bool> addToBlacklist(String businessName, String reason) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/blacklist',
+        queryParameters: {
+          'business_name': businessName,
+          'reason': reason,
+        },
+      );
+      return response.data['success'] ?? false;
+    } on DioException catch (e) {
+      DebugLogger.network('❌ Failed to add to blacklist: ${e.response?.data}');
+      throw Exception('Failed to add to blacklist: ${e.message}');
+    }
+  }
+
+  @override
+  Future<Map<DateTime, int>> getCallStatistics() async {
+    try {
+      final response = await dio.get(
+        '$baseUrl/leads/call-statistics',
+      );
+      
+      // Log the raw response
+      DebugLogger.network('📊 Call statistics API response: ${response.data}');
+      
+      final Map<DateTime, int> statistics = {};
+      final data = response.data as Map<String, dynamic>;
+      
+      data.forEach((dateStr, count) {
+        final date = DateTime.parse(dateStr);
+        // Normalize to just the date (no time)
+        final normalizedDate = DateTime(date.year, date.month, date.day);
+        statistics[normalizedDate] = count as int;
+      });
+      
+      DebugLogger.network('📊 Parsed call statistics: $statistics');
+      return statistics;
+    } on DioException catch (e) {
+      DebugLogger.network('❌ Failed to get call statistics: ${e.response?.data}');
+      throw Exception('Failed to get call statistics: ${e.message}');
     }
   }
 }

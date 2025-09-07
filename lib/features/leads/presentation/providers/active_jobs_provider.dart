@@ -73,6 +73,12 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
       if (response.statusCode == 200) {
         final List<dynamic> jobsJson = response.data;
         
+        // Debug logging
+        print('📊 Total jobs from server: ${jobsJson.length}');
+        final runningJobs = jobsJson.where((j) => j['status'] == 'running').length;
+        final completedJobs = jobsJson.where((j) => j['status'] == 'completed' || j['status'] == 'done').length;
+        print('  Running: $runningJobs, Completed: $completedJobs');
+        
         // Filter for active jobs (running or pending)
         final activeJobs = jobsJson
             .where((job) => 
@@ -89,9 +95,7 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
                   industry: job['industry'],
                   location: job['location'],
                   query: job['query'],
-                  timestamp: job['timestamp'] != null 
-                      ? DateTime.tryParse(job['timestamp'])
-                      : DateTime.now(),
+                  timestamp: _parseTimestamp(job),
                   type: job['type'],
                   totalCombinations: job['total_combinations'],
                   completedCombinations: job['completed_combinations'],
@@ -100,9 +104,20 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
                       : null,
                   parentId: job['parent_id'],
                   leadsFound: job['leads_found'],
+                  totalRequested: job['total_requested'] ?? job['total'],
+                  elapsedSeconds: job['elapsed_seconds'],
                 ))
             .toList();
 
+        print('  Active jobs to display: ${activeJobs.length}');
+        if (activeJobs.isNotEmpty) {
+          for (final job in activeJobs) {
+            if (job.parentId != null) {
+              print('    Child job: ${job.location} - Status: ${job.status} - Elapsed: ${job.elapsedSeconds}s');
+            }
+          }
+        }
+        
         state = state.copyWith(
           jobs: activeJobs,
           isLoading: false,
@@ -209,10 +224,19 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
   }
 
   void _updateJobFromWebSocket(String jobId, Map<String, dynamic> data) {
+    // Debug logging for WebSocket data
+    print('🔄 WebSocket update for job $jobId:');
+    print('  Status: ${data['status']}');
+    print('  Elapsed seconds: ${data['elapsed_seconds']}');
+    print('  Processed: ${data['processed']} / Total: ${data['total']}');
+    print('  Leads found: ${data['leads_found']}');
+    print('  Message: ${data['message']}');
+    
     final jobs = List<Job>.from(state.jobs);
     final index = jobs.indexWhere((job) => job.id == jobId);
     
     if (index != -1) {
+      print('  Found job at index $index, updating...');
       jobs[index] = Job(
         id: jobId,
         status: _parseJobStatus(data['status']),
@@ -222,20 +246,33 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
         industry: data['industry'] ?? jobs[index].industry,
         location: data['location'] ?? jobs[index].location,
         query: data['query'] ?? jobs[index].query,
-        timestamp: jobs[index].timestamp,
+        timestamp: _parseTimestamp(data) ?? jobs[index].timestamp,
         type: jobs[index].type,
         totalCombinations: data['total_combinations'] ?? jobs[index].totalCombinations,
         completedCombinations: data['completed_combinations'] ?? jobs[index].completedCombinations,
+        childJobs: jobs[index].childJobs,
+        parentId: jobs[index].parentId,
+        leadsFound: data['leads_found'] ?? jobs[index].leadsFound,
+        totalRequested: data['total_requested'] ?? data['total'] ?? jobs[index].totalRequested,
+        elapsedSeconds: data['elapsed_seconds'] ?? jobs[index].elapsedSeconds,
       );
+      
+      // Log the updated job status
+      print('  Updated job status: ${jobs[index].status}');
+      print('  Updated elapsed: ${jobs[index].elapsedSeconds}s');
       
       // Remove completed jobs after a delay
       if (jobs[index].status == JobStatus.done) {
-        Future.delayed(Duration(seconds: 3), () {
+        print('  🏁 Job marked as done, will remove in 3 seconds');
+        Future.delayed(const Duration(seconds: 3), () {
           removeJob(jobId);
         });
       }
       
       state = state.copyWith(jobs: jobs);
+      print('  State updated with ${jobs.length} jobs');
+    } else {
+      print('  ⚠️ Job not found in current state');
     }
   }
 
@@ -263,6 +300,61 @@ class ActiveJobsNotifier extends StateNotifier<ActiveJobsState> {
       default:
         return JobStatus.pending;
     }
+  }
+
+  DateTime? _parseTimestamp(Map<String, dynamic> job) {
+    
+    // Try timestamp field first (server now consistently uses this)
+    if (job['timestamp'] != null) {
+      // Handle number (could be event loop time or unix timestamp)
+      if (job['timestamp'] is num) {
+        final value = (job['timestamp'] as num).toDouble();
+        
+        // If it's a small number (< year 2000 in unix time), treat as seconds ago
+        if (value < 946684800) {
+          final result = DateTime.now().subtract(Duration(seconds: value.toInt()));
+          return result;
+        }
+        // Otherwise treat as unix timestamp
+        final result = DateTime.fromMillisecondsSinceEpoch((value * 1000).toInt());
+        return result;
+      }
+      // Handle string (ISO format)
+      if (job['timestamp'] is String) {
+        // Parse as UTC and convert to local
+        final parsed = DateTime.tryParse(job['timestamp']);
+        if (parsed != null) {
+          // If the timestamp doesn't have a timezone indicator, assume it's UTC
+          final utcTime = parsed.isUtc ? parsed : DateTime.utc(
+            parsed.year, parsed.month, parsed.day,
+            parsed.hour, parsed.minute, parsed.second,
+            parsed.millisecond, parsed.microsecond
+          );
+          final localTime = utcTime.toLocal();
+          return localTime;
+        }
+      }
+    }
+    
+    // Fall back to created_at field (for older jobs)
+    if (job['created_at'] != null) {
+      if (job['created_at'] is String) {
+        final parsed = DateTime.tryParse(job['created_at']);
+        if (parsed != null) {
+          // If the timestamp doesn't have a timezone indicator, assume it's UTC
+          final utcTime = parsed.isUtc ? parsed : DateTime.utc(
+            parsed.year, parsed.month, parsed.day,
+            parsed.hour, parsed.minute, parsed.second,
+            parsed.millisecond, parsed.microsecond
+          );
+          final localTime = utcTime.toLocal();
+          return localTime;
+        }
+      }
+    }
+    
+    // If neither exists or parse fails, return null
+    return null;
   }
 
   @override

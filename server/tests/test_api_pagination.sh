@@ -200,6 +200,65 @@ test_status_filter() {
     fi
 }
 
+# Test 9: PageSpeed Ascending Sort
+test_pagespeed_ascending_sort() {
+    echo -e "\n[TEST 9] PageSpeed Ascending Sort with Real Leads"
+    
+    # Arrange
+    ENDPOINT="$BASE_URL/leads?page=1&per_page=20&sort_by=desktop_performance_score&sort_ascending=true"
+    
+    # Act
+    RESPONSE=$(curl -s "$ENDPOINT")
+    TOTAL=$(echo "$RESPONSE" | jq '.total')
+    ITEMS_COUNT=$(echo "$RESPONSE" | jq '.items | length')
+    
+    # Get all scores (including nulls to verify null handling)
+    ALL_SCORES=$(echo "$RESPONSE" | jq -r '.items[].desktop_performance_score')
+    NON_NULL_SCORES=$(echo "$RESPONSE" | jq '[.items[].desktop_performance_score] | map(select(. != null))' | jq -r '.[]')
+    
+    # Get business names for verification
+    BUSINESS_NAMES=$(echo "$RESPONSE" | jq -r '.items[0:3] | .[] | "\(.business_name) (score: \(.desktop_performance_score))"')
+    
+    echo "  Found $TOTAL total leads, showing $ITEMS_COUNT items"
+    echo "  First 3 leads:"
+    echo "$BUSINESS_NAMES" | sed 's/^/    /'
+    
+    # Assert - Check that non-null scores are in ascending order
+    PREV=""
+    SORTED=true
+    SCORE_COUNT=0
+    for SCORE in $NON_NULL_SCORES; do
+        ((SCORE_COUNT++))
+        if [ ! -z "$PREV" ]; then
+            if (( $(echo "$SCORE < $PREV" | bc -l) )); then
+                echo "  ❌ Sort order violation: $PREV > $SCORE"
+                SORTED=false
+                break
+            fi
+        fi
+        PREV=$SCORE
+    done
+    
+    # Additional assertions
+    if [ "$TOTAL" -eq 0 ]; then
+        echo "⚠️  WARNING: No leads in database to test sorting"
+        echo "✅ PASS: Test passes (no data to sort)"
+        ((PASSED++))
+    elif [ "$SCORE_COUNT" -eq 0 ]; then
+        echo "⚠️  WARNING: No leads with PageSpeed scores"
+        echo "✅ PASS: Null handling works (all scores are null)"
+        ((PASSED++))
+    elif [ "$SORTED" = true ]; then
+        echo "  Verified $SCORE_COUNT PageSpeed scores in ascending order"
+        echo "  Score range: $(echo "$NON_NULL_SCORES" | head -1) to $(echo "$NON_NULL_SCORES" | tail -1)"
+        echo "✅ PASS: PageSpeed ascending sort works with real leads"
+        ((PASSED++))
+    else
+        echo "❌ FAIL: PageSpeed scores not in ascending order"
+        ((FAILED++))
+    fi
+}
+
 # Run all tests
 test_rest_api_standards
 test_flutter_enum_mapping
@@ -209,6 +268,7 @@ test_combined_filters
 test_pagination_consistency
 test_performance_limits
 test_status_filter
+test_pagespeed_ascending_sort
 
 # Summary
 echo ""

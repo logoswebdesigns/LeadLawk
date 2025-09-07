@@ -7,6 +7,7 @@ import json
 import asyncio
 from typing import List
 from pathlib import Path
+from datetime import datetime
 from fastapi import WebSocket, WebSocketDisconnect
 from job_management import job_statuses
 
@@ -75,6 +76,45 @@ class JobWebSocketManager:
             # Remove disconnected websockets
             for ws in disconnected:
                 self.disconnect(ws, job_id)
+    
+    def _calculate_elapsed_seconds(self, job_data: dict) -> int:
+        """Calculate elapsed seconds for a job"""
+        current_time = datetime.utcnow()
+        
+        if job_data.get('timestamp'):
+            try:
+                # Parse the timestamp
+                if isinstance(job_data['timestamp'], str):
+                    start_time = datetime.fromisoformat(job_data['timestamp'].replace('Z', ''))
+                else:
+                    start_time = job_data['timestamp']
+                
+                # For completed jobs, use last_updated as end time
+                if job_data.get('status') in ['completed', 'done', 'failed', 'error', 'cancelled']:
+                    if job_data.get('last_updated'):
+                        end_time = datetime.fromisoformat(job_data['last_updated'].replace('Z', ''))
+                    else:
+                        end_time = current_time
+                else:
+                    # For running jobs, calculate to current time
+                    end_time = current_time
+                
+                # Calculate elapsed seconds
+                elapsed = (end_time - start_time).total_seconds()
+                
+                # For child jobs, cap elapsed time at runtime limit (5 minutes + buffer)
+                if job_data.get('type') == 'child' and job_data.get('parent_id'):
+                    max_seconds = 330  # 5.5 minutes
+                    if elapsed > max_seconds:
+                        elapsed = max_seconds
+                
+                return int(elapsed)
+                
+            except Exception as e:
+                print(f"Error calculating elapsed time: {e}")
+                return 0
+        
+        return 0
 
     async def handle_job_websocket(self, websocket: WebSocket, job_id: str):
         """Handle WebSocket connection for job updates"""
@@ -82,9 +122,11 @@ class JobWebSocketManager:
         
         # Send initial status
         if job_id in job_statuses:
+            job_data = dict(job_statuses[job_id])
+            job_data['elapsed_seconds'] = self._calculate_elapsed_seconds(job_data)
             status_message = {
                 "type": "status",
-                "data": job_statuses[job_id]
+                "data": job_data
             }
             await websocket.send_text(json.dumps(status_message))
         
@@ -100,9 +142,11 @@ class JobWebSocketManager:
                 except asyncio.TimeoutError:
                     # Send status update
                     if job_id in job_statuses:
+                        job_data = dict(job_statuses[job_id])
+                        job_data['elapsed_seconds'] = self._calculate_elapsed_seconds(job_data)
                         status_message = {
                             "type": "status", 
-                            "data": job_statuses[job_id]
+                            "data": job_data
                         }
                         await websocket.send_text(json.dumps(status_message))
                         

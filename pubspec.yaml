@@ -29,6 +29,7 @@ dependencies:
   add_2_calendar: ^3.0.1
   mailer: ^6.0.1
   enough_icalendar: ^0.16.0
+  table_calendar: ^3.0.9
   
   # Authentication & Security
   flutter_secure_storage: ^9.2.2

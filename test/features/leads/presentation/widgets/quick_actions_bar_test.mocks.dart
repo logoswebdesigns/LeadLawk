@@ -98,11 +98,19 @@ class MockLeadsRepository extends _i1.Mock implements _i3.LeadsRepository {
       ) as _i4.Future<_i2.Either<_i5.Failure, _i6.Lead>>);
 
   @override
-  _i4.Future<_i2.Either<_i5.Failure, _i6.Lead>> updateLead(_i6.Lead? lead) =>
+  _i4.Future<_i2.Either<_i5.Failure, _i6.Lead>> updateLead(
+    _i6.Lead? lead, {
+    bool? addToBlacklist,
+    String? blacklistReason,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateLead,
           [lead],
+          {
+            #addToBlacklist: addToBlacklist,
+            #blacklistReason: blacklistReason,
+          },
         ),
         returnValue: _i4.Future<_i2.Either<_i5.Failure, _i6.Lead>>.value(
             _FakeEither_0<_i5.Failure, _i6.Lead>(
@@ -110,6 +118,10 @@ class MockLeadsRepository extends _i1.Mock implements _i3.LeadsRepository {
           Invocation.method(
             #updateLead,
             [lead],
+            {
+              #addToBlacklist: addToBlacklist,
+              #blacklistReason: blacklistReason,
+            },
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, _i6.Lead>>);

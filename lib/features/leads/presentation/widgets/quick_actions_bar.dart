@@ -248,7 +248,21 @@ class QuickActionsBar extends ConsumerWidget {
         conversionFailureNotes: result['notes'] as String?,
         conversionFailureDate: DateTime.now(),
       );
-      await repository.updateLead(updatedLead);
+      
+      // Check if we should auto-blacklist for "Too Big" reason
+      bool? addToBlacklist;
+      String? blacklistReason;
+      if (reason.code == 'TB') {  // TB = Too Big
+        addToBlacklist = true;
+        blacklistReason = 'too_big';
+        print('🚫 AUTO-BLACKLIST: Marking ${lead.businessName} as too_big for blacklist (from quick actions)');
+      }
+      
+      await repository.updateLead(
+        updatedLead,
+        addToBlacklist: addToBlacklist,
+        blacklistReason: blacklistReason,
+      );
       
       // Add timeline entry with reason code
       await repository.addTimelineEntry(lead.id, {

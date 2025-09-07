@@ -21,6 +21,14 @@ def update_job_status(job_id: str, status: str, processed: int = 0, total: int =
     # Get existing job status to preserve additional data
     existing_job = job_statuses.get(job_id, {})
     
+    # For child jobs, NEVER override their timestamp with parent's timestamp
+    # Child jobs should keep their own creation time
+    if existing_job.get("type") == "child" and existing_job.get("timestamp"):
+        creation_time = existing_job["timestamp"]  # Keep child's own timestamp
+    else:
+        # For non-child jobs or first-time creation
+        creation_time = existing_job.get("created_at") or existing_job.get("timestamp") or datetime.utcnow().isoformat()
+    
     # Create updated status
     job_status = {
         "id": job_id,
@@ -28,12 +36,13 @@ def update_job_status(job_id: str, status: str, processed: int = 0, total: int =
         "processed": processed,
         "total": total,
         "message": message,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": creation_time,  # Keep the appropriate creation time
+        "last_updated": datetime.utcnow().isoformat()  # Track when last updated
     }
     
     # Preserve existing additional data (industry, location, etc.)
     for key, value in existing_job.items():
-        if key not in job_status and key not in ["status", "processed", "total", "message", "timestamp"]:
+        if key not in job_status and key not in ["status", "processed", "total", "message", "timestamp", "last_updated"]:
             job_status[key] = value
     
     # Add/override with any new additional parameters
@@ -110,8 +119,53 @@ def get_job_by_id(job_id: str):
 
 
 def get_all_jobs():
-    """Get all jobs from in-memory storage"""
-    return list(job_statuses.values())
+    """Get all jobs from in-memory storage with calculated elapsed time"""
+    jobs = []
+    current_time = datetime.utcnow()
+    
+    for job_id, job_data in job_statuses.items():
+        # Create a copy to avoid modifying original
+        job = dict(job_data)
+        
+        # Calculate elapsed time for each job
+        if job.get('timestamp'):
+            try:
+                # Parse the timestamp
+                if isinstance(job['timestamp'], str):
+                    start_time = datetime.fromisoformat(job['timestamp'].replace('Z', ''))
+                else:
+                    start_time = job['timestamp']
+                
+                # For completed child jobs, use last_updated as end time
+                if job.get('status') in ['completed', 'done', 'failed', 'error', 'cancelled']:
+                    if job.get('last_updated'):
+                        end_time = datetime.fromisoformat(job['last_updated'].replace('Z', ''))
+                    else:
+                        end_time = current_time
+                else:
+                    # For running jobs, calculate to current time
+                    end_time = current_time
+                
+                # Calculate elapsed seconds
+                elapsed = (end_time - start_time).total_seconds()
+                
+                # For child jobs, cap elapsed time at runtime limit (5 minutes + buffer)
+                if job.get('type') == 'child' and job.get('parent_id'):
+                    max_seconds = 330  # 5.5 minutes
+                    if elapsed > max_seconds:
+                        elapsed = max_seconds
+                
+                job['elapsed_seconds'] = int(elapsed)
+                
+            except Exception as e:
+                print(f"Error calculating elapsed time for job {job_id}: {e}")
+                job['elapsed_seconds'] = 0
+        else:
+            job['elapsed_seconds'] = 0
+        
+        jobs.append(job)
+    
+    return jobs
 
 
 def cancel_job(job_id: str) -> bool:

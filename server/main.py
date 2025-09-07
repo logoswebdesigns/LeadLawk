@@ -26,6 +26,7 @@ from sqlalchemy import func
 from database import SessionLocal, init_db
 from sqlalchemy.orm import selectinload
 from models import Lead, LeadStatus, SalesPitch, LeadTimelineEntry, TimelineEntryType, EmailTemplate
+from blacklist_manager import BlacklistManager, initialize_blacklist
 from schemas import (BrowserAutomationRequest, JobResponse, LeadResponse, LeadUpdate, 
                     LeadTimelineEntryUpdate, LeadTimelineEntryCreate, ConversionModelResponse, ConversionScoringResponse,
                     SalesPitchResponse, SalesPitchCreate, SalesPitchUpdate, LeadUpdateRequest,
@@ -550,6 +551,7 @@ async def get_leads(
             "review_count": Lead.review_count,
             "pagespeed_mobile_score": Lead.pagespeed_mobile_score,
             "pagespeed_desktop_score": Lead.pagespeed_desktop_score,
+            "desktop_performance_score": Lead.pagespeed_desktop_score,  # Alias for API compatibility
             "conversion_score": Lead.conversion_score,
         }
         
@@ -559,7 +561,7 @@ async def get_leads(
         # For nullable fields (rating, review_count, pagespeed scores, conversion_score),
         # we want to show non-null values first, then nulls at the end
         nullable_fields = ["rating", "review_count", "pagespeed_mobile_score", 
-                          "pagespeed_desktop_score", "conversion_score"]
+                          "pagespeed_desktop_score", "desktop_performance_score", "conversion_score"]
         
         # Log which sorting strategy is being used
         if sort_by in nullable_fields:
@@ -766,6 +768,57 @@ async def get_today_statistics():
         db.close()
 
 
+@app.get("/leads/call-statistics")
+async def get_call_statistics():
+    """Get call statistics by date for calendar display"""
+    from datetime import timedelta
+    from sqlalchemy import func, text
+    
+    db = SessionLocal()
+    try:
+        # Get call statistics for the last 90 days
+        end_date = datetime.now(timezone.utc).date()
+        start_date = end_date - timedelta(days=90)
+        
+        # Query to get call counts grouped by date
+        # Includes phone_call entries and status changes to called/interested/converted
+        query = text("""
+            SELECT 
+                DATE(created_at) as call_date,
+                COUNT(DISTINCT lead_id) as call_count
+            FROM lead_timeline_entries
+            WHERE (
+                UPPER(type) = 'PHONE_CALL'
+                OR (UPPER(type) = 'STATUS_CHANGE' AND UPPER(title) IN ('STATUS CHANGED TO CALLED', 'STATUS CHANGED TO INTERESTED', 'STATUS CHANGED TO CONVERTED'))
+            )
+            AND DATE(created_at) >= :start_date
+            AND DATE(created_at) <= :end_date
+            GROUP BY DATE(created_at)
+            ORDER BY call_date DESC
+        """)
+        
+        result = db.execute(query, {
+            'start_date': start_date,
+            'end_date': end_date
+        })
+        
+        # Convert to dictionary with date strings as keys
+        statistics = {}
+        for row in result:
+            # call_date is already a string from SQLite DATE() function
+            date_str = row.call_date
+            if date_str:
+                statistics[date_str] = row.call_count
+        
+        return statistics
+        
+    except Exception as e:
+        logger.error(f"Error fetching call statistics: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch call statistics: {str(e)}")
+    finally:
+        db.close()
+
+
 @app.get("/leads/{lead_id}", response_model=LeadResponse)
 async def get_lead(lead_id: str):
     """Get specific lead"""
@@ -945,6 +998,7 @@ class ParallelJobRequest(BaseModel):
     recent_review_months: Optional[int] = 24
     enable_pagespeed: bool = False
     max_pagespeed_score: Optional[int] = None  # Maximum acceptable PageSpeed score (required if enable_pagespeed is True)
+    max_runtime_minutes: Optional[int] = 30  # Maximum runtime in minutes before job auto-stops (default 30 minutes)
 
 @app.post("/jobs/parallel", response_model=Dict[str, Any])
 async def create_parallel_jobs(
@@ -964,6 +1018,7 @@ async def create_parallel_jobs(
         recent_review_months = job_request.recent_review_months
         enable_pagespeed = job_request.enable_pagespeed
         max_pagespeed_score = job_request.max_pagespeed_score
+        max_runtime_minutes = job_request.max_runtime_minutes
         
         # Validate PageSpeed parameters
         if enable_pagespeed and max_pagespeed_score is None:
@@ -978,6 +1033,7 @@ async def create_parallel_jobs(
         print(f"    requires_website: {requires_website}")
         print(f"    enable_pagespeed: {enable_pagespeed} (from Pydantic model)")
         print(f"    max_pagespeed_score: {max_pagespeed_score}")
+        print(f"    max_runtime_minutes: {max_runtime_minutes} (per child job)")
         print(f"    limit: {limit}, min_rating: {min_rating}, min_reviews: {min_reviews}")
         
         # Check Selenium Grid status
@@ -1004,7 +1060,8 @@ async def create_parallel_jobs(
             "requires_website": requires_website,
             "recent_review_months": recent_review_months,
             "enable_pagespeed": enable_pagespeed,
-            "max_pagespeed_score": max_pagespeed_score
+            "max_pagespeed_score": max_pagespeed_score,
+            "max_runtime_minutes": max_runtime_minutes
         }
         
         job_matrix = parallel_executor.create_multi_location_jobs(
@@ -1643,6 +1700,80 @@ def get_pitch_analytics():
             "overall_conversion_rate": (sum(p["conversions"] for p in analytics) / 
                                        max(sum(p["attempts"] for p in analytics), 1)) * 100
         }
+    finally:
+        db.close()
+
+
+# Blacklist Management Endpoints
+@app.get("/blacklist")
+def get_blacklist():
+    """Get all blacklisted businesses"""
+    db = SessionLocal()
+    try:
+        blacklist_manager = BlacklistManager(db)
+        blacklisted = blacklist_manager.get_all_blacklisted()
+        return [
+            {
+                "business_name": b.business_name,
+                "reason": b.reason,
+                "notes": b.notes,
+                "created_at": b.created_at.isoformat() if b.created_at else None
+            }
+            for b in blacklisted
+        ]
+    finally:
+        db.close()
+
+
+@app.post("/blacklist")
+def add_to_blacklist(business_name: str, reason: str = "too_big", notes: str = None):
+    """Add a business to the blacklist"""
+    db = SessionLocal()
+    try:
+        blacklist_manager = BlacklistManager(db)
+        success = blacklist_manager.add_to_blacklist(business_name, reason, notes)
+        if success:
+            return {"success": True, "message": f"Added '{business_name}' to blacklist"}
+        else:
+            return {"success": False, "message": f"'{business_name}' is already blacklisted"}
+    finally:
+        db.close()
+
+
+@app.delete("/blacklist/{business_name}")
+def remove_from_blacklist(business_name: str):
+    """Remove a business from the blacklist"""
+    db = SessionLocal()
+    try:
+        blacklist_manager = BlacklistManager(db)
+        success = blacklist_manager.remove_from_blacklist(business_name)
+        if success:
+            return {"success": True, "message": f"Removed '{business_name}' from blacklist"}
+        else:
+            return {"success": False, "message": f"'{business_name}' not found in blacklist"}
+    finally:
+        db.close()
+
+
+@app.get("/blacklist/count")
+def get_blacklist_count():
+    """Get count of blacklisted businesses"""
+    db = SessionLocal()
+    try:
+        blacklist_manager = BlacklistManager(db)
+        count = blacklist_manager.get_blacklist_count()
+        return {"count": count}
+    finally:
+        db.close()
+
+
+@app.post("/blacklist/initialize")
+def initialize_blacklist_with_franchises():
+    """Initialize blacklist with known franchises"""
+    db = SessionLocal()
+    try:
+        count = initialize_blacklist(db)
+        return {"success": True, "message": f"Initialized blacklist with {count} known franchises"}
     finally:
         db.close()
 

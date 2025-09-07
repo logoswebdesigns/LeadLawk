@@ -24,6 +24,7 @@ class BrowserAutomationParams extends Equatable {
   final int? minDescriptionLength;  // Description quality filter: null = any, int = minimum chars
   final bool enablePagespeed;  // Enable automatic PageSpeed testing for leads with websites
   final int maxPagespeedScore;  // Maximum acceptable PageSpeed score (leads above this are filtered out)
+  final int maxRuntimeMinutes;  // Maximum runtime in minutes before job auto-stops
 
   const BrowserAutomationParams({
     required this.industry,
@@ -45,6 +46,7 @@ class BrowserAutomationParams extends Equatable {
     this.minDescriptionLength,
     this.enablePagespeed = true,  // Default to enabled for better lead qualification
     this.maxPagespeedScore = 75,  // Default threshold
+    this.maxRuntimeMinutes = 15,  // Default to 15 minutes
   });
 
   @override
@@ -68,6 +70,7 @@ class BrowserAutomationParams extends Equatable {
         minDescriptionLength,
         enablePagespeed,
         maxPagespeedScore,
+        maxRuntimeMinutes,
       ];
 }
 

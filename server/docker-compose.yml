@@ -29,7 +29,7 @@ services:
     volumes:
       - ./screenshots:/screenshots
     environment:
-      - SE_NODE_MAX_SESSIONS=3
+      - SE_NODE_MAX_SESSIONS=10
       - SE_NODE_SESSION_TIMEOUT=120
       - SE_VNC_PASSWORD=secret
     shm_size: '2gb'

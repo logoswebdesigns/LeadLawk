@@ -83,7 +83,8 @@ class EnhancedLeadsRepository implements LeadsRepository {
   Future<Either<Failure, Lead>> getLead(String id) => _enhanced.getById(id);
 
   @override
-  Future<Either<Failure, Lead>> updateLead(Lead lead) => _enhanced.update(lead);
+  Future<Either<Failure, Lead>> updateLead(Lead lead, {bool? addToBlacklist, String? blacklistReason}) => 
+      _original.updateLead(lead, addToBlacklist: addToBlacklist, blacklistReason: blacklistReason);
 
   @override
   Future<Either<Failure, void>> deleteLead(String id) => _enhanced.delete(id);
@@ -113,6 +114,10 @@ class EnhancedLeadsRepository implements LeadsRepository {
   @override
   Future<Either<Failure, Map<String, dynamic>>> recalculateConversionScores() =>
       _original.recalculateConversionScores();
+
+  @override
+  Future<Either<Failure, Map<DateTime, int>>> getCallStatistics() =>
+      _original.getCallStatistics();
 }
 
 /// Wrapper for JobRepository

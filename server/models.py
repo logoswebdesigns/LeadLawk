@@ -40,6 +40,16 @@ class LeadStatus(str, enum.Enum):
     didNotConvert = "didNotConvert"
 
 
+class BlacklistedBusiness(Base):
+    __tablename__ = "blacklisted_businesses"
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    business_name = Column(String, nullable=False, unique=True, index=True)
+    reason = Column(String, nullable=True)  # 'too_big', 'franchise', 'did_not_convert'
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    notes = Column(Text, nullable=True)
+
+
 class TimelineEntryType(str, enum.Enum):
     LEAD_CREATED = "lead_created"
     STATUS_CHANGE = "status_change"
@@ -71,6 +81,8 @@ class Lead(Base):
     meets_rating_threshold = Column(Boolean, default=False)
     has_recent_reviews = Column(Boolean, default=False)
     is_candidate = Column(Boolean, default=False)
+    is_franchise = Column(Boolean, default=False)  # Marks if business is a franchise/chain
+    exclusion_reason = Column(String, nullable=True)  # Why lead was excluded ('too_big', 'franchise', etc.)
     status = Column(SQLEnum(LeadStatus), default=LeadStatus.new)
     notes = Column(Text, nullable=True)
     screenshot_path = Column(String, nullable=True)  # Google Maps business screenshot

@@ -25,6 +25,8 @@ class JobModel {
   final String? parentId;
   @JsonKey(name: 'leads_found')
   final int? leadsFound;
+  @JsonKey(name: 'total_requested')
+  final int? totalRequested;
 
   JobModel({
     required this.id,
@@ -42,6 +44,7 @@ class JobModel {
     this.childJobs,
     this.parentId,
     this.leadsFound,
+    this.totalRequested,
   });
 
   factory JobModel.fromJson(Map<String, dynamic> json) => _$JobModelFromJson(json);
@@ -64,6 +67,7 @@ class JobModel {
       childJobs: childJobs,
       parentId: parentId,
       leadsFound: leadsFound,
+      totalRequested: totalRequested,
     );
   }
 
@@ -84,6 +88,7 @@ class JobModel {
       childJobs: job.childJobs,
       parentId: job.parentId,
       leadsFound: job.leadsFound,
+      totalRequested: job.totalRequested,
     );
   }
 

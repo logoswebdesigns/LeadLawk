@@ -85,12 +85,12 @@ class SimpleCachedRepository implements LeadsRepository {
   }
   
   @override
-  Future<Either<Failure, Lead>> updateLead(Lead lead) async {
+  Future<Either<Failure, Lead>> updateLead(Lead lead, {bool? addToBlacklist, String? blacklistReason}) async {
     // Invalidate cache
     await _cache.remove('lead_${lead.id}');
     await _cache.clear();
     
-    return await _repository.updateLead(lead);
+    return await _repository.updateLead(lead, addToBlacklist: addToBlacklist, blacklistReason: blacklistReason);
   }
   
   @override
@@ -161,5 +161,11 @@ class SimpleCachedRepository implements LeadsRepository {
     await _cache.clear();
     
     return await _repository.deleteLeads(ids);
+  }
+
+  @override
+  Future<Either<Failure, Map<DateTime, int>>> getCallStatistics() async {
+    // Call statistics are not cached as they should be fresh
+    return await _repository.getCallStatistics();
   }
 }

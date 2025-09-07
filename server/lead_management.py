@@ -7,8 +7,10 @@ from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import selectinload
 from database import SessionLocal
-from models import Lead, LeadStatus, LeadTimelineEntry
+from models import Lead, LeadStatus, LeadTimelineEntry, TimelineEntryType
 from schemas import LeadResponse, LeadUpdate, LeadTimelineEntryUpdate
+from blacklist_manager import BlacklistManager
+import uuid
 
 
 def get_all_leads() -> List[Lead]:
@@ -195,11 +197,67 @@ def update_lead(lead_id: str, update_data: LeadUpdate) -> Optional[Lead]:
             db.close()
             return None
         
-        # Update fields if provided
+        # Check if we're changing status to didNotConvert and need to blacklist
+        if (update_data.status == "didNotConvert" and 
+            update_data.add_to_blacklist and 
+            lead.business_name):
+            
+            # Add to blacklist
+            blacklist_manager = BlacklistManager(db)
+            blacklist_reason = update_data.blacklist_reason or 'too_big'
+            blacklist_manager.add_to_blacklist(
+                lead.business_name,
+                reason=blacklist_reason,
+                notes=f"Marked as did not convert on {datetime.utcnow().isoformat()}"
+            )
+            
+            # Add timeline entry about blacklisting
+            timeline_entry = LeadTimelineEntry(
+                id=str(uuid.uuid4()),
+                lead_id=lead_id,
+                type=TimelineEntryType.NOTE,
+                title="Added to Blacklist",
+                description=f"Business added to blacklist (reason: {blacklist_reason})",
+                created_at=datetime.utcnow()
+            )
+            db.add(timeline_entry)
+            
+            # Update lead's exclusion reason
+            lead.exclusion_reason = blacklist_reason
+            if blacklist_reason in ['franchise', 'chain']:
+                lead.is_franchise = True
+        
+        # Track if status is changing
+        old_status = lead.status
+        
+        # Update fields if provided (excluding blacklist-specific fields)
         update_dict = update_data.dict(exclude_unset=True)
+        # Remove blacklist fields as they're handled separately
+        update_dict.pop('add_to_blacklist', None)
+        update_dict.pop('blacklist_reason', None)
+        
         for field, value in update_dict.items():
             if hasattr(lead, field):
                 setattr(lead, field, value)
+        
+        # If status changed, create a timeline entry with new_status populated
+        if 'status' in update_dict and update_dict['status'] != old_status.value:
+            try:
+                new_status_enum = LeadStatus(update_dict['status'])
+                timeline_entry = LeadTimelineEntry(
+                    id=str(uuid.uuid4()),
+                    lead_id=lead_id,
+                    type=TimelineEntryType.STATUS_CHANGE,
+                    title=f"Status changed to {new_status_enum.value.upper()}",
+                    description=f"Status updated from {old_status.value.upper()} to {new_status_enum.value.upper()}",
+                    previous_status=old_status,
+                    new_status=new_status_enum,
+                    created_at=datetime.utcnow()
+                )
+                db.add(timeline_entry)
+            except ValueError:
+                # Invalid status value, skip timeline entry
+                pass
         
         lead.updated_at = datetime.utcnow()
         db.commit()
@@ -210,6 +268,9 @@ def update_lead(lead_id: str, update_data: LeadUpdate) -> Optional[Lead]:
         
     except Exception as e:
         print(f"Error updating lead {lead_id}: {e}")
+        if 'db' in locals():
+            db.rollback()
+            db.close()
         return None
 
 

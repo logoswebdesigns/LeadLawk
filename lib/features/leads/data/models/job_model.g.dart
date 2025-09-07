@@ -26,6 +26,7 @@ JobModel _$JobModelFromJson(Map<String, dynamic> json) => JobModel(
           .toList(),
       parentId: json['parent_id'] as String?,
       leadsFound: (json['leads_found'] as num?)?.toInt(),
+      totalRequested: (json['total_requested'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$JobModelToJson(JobModel instance) => <String, dynamic>{
@@ -44,4 +45,5 @@ Map<String, dynamic> _$JobModelToJson(JobModel instance) => <String, dynamic>{
       'child_jobs': instance.childJobs,
       'parent_id': instance.parentId,
       'leads_found': instance.leadsFound,
+      'total_requested': instance.totalRequested,
     };

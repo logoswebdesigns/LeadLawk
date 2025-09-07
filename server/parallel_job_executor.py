@@ -50,7 +50,7 @@ class ParallelJobExecutor:
             "child_jobs": [],
             "industries": industries,
             "locations": locations,
-            "created_at": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat()
         }
         
         # Create child jobs for each combination
@@ -75,7 +75,8 @@ class ParallelJobExecutor:
                     requires_website=requires_website_value,
                     recent_review_months=base_params.get('recent_review_months', 24),
                     enable_pagespeed=enable_pagespeed_value,
-                    max_pagespeed_score=max_pagespeed_score_value
+                    max_pagespeed_score=max_pagespeed_score_value,
+                    max_runtime_minutes=base_params.get('max_runtime_minutes', 30)
                 )
                 
                 # Log the parameters for this job
@@ -85,6 +86,7 @@ class ParallelJobExecutor:
                 print(f"    PageSpeed enabled: {enable_pagespeed_value}")
                 if enable_pagespeed_value:
                     print(f"    Max PageSpeed score: {max_pagespeed_score_value}")
+                print(f"    Max runtime: {base_params.get('max_runtime_minutes', 30)} minutes per job")
                 
                 # Store job info
                 job_statuses[child_job_id] = {
@@ -95,7 +97,7 @@ class ParallelJobExecutor:
                     "industry": industry,
                     "location": location,
                     "params": job_params.dict(),
-                    "created_at": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat()
                 }
                 
                 # Add to queue
@@ -181,7 +183,9 @@ class ParallelJobExecutor:
             add_job_log(job_id, f"🌐 Connecting to shared Selenium Grid for {params.industry}")
             
             update_job_status(job_id, "running", 
-                            message=f"Searching {params.industry} in {params.location}")
+                            message=f"Searching {params.industry} in {params.location}",
+                            total_requested=params.limit,
+                            leads_found=0)
             
             # Create browser automation instance - always use headless for parallel jobs
             automation = BrowserAutomation(job_id=job_id, headless=True)
@@ -201,17 +205,20 @@ class ParallelJobExecutor:
                 requires_website=params.requires_website,
                 recent_review_months=params.recent_review_months,
                 enable_pagespeed=params.enable_pagespeed,
-                max_pagespeed_score=params.max_pagespeed_score
+                max_pagespeed_score=params.max_pagespeed_score,
+                max_runtime_minutes=params.max_runtime_minutes
             )
             
             # Clean up browser session
             automation.close()
             add_job_log(job_id, "🧹 Cleaned up browser session")
             
-            # Update job status
+            # Update job status with leads_found and total_requested
             update_job_status(job_id, "completed", 
                             len(results), params.limit,
-                            f"Found {len(results)} qualifying businesses")
+                            f"Found {len(results)} qualifying businesses",
+                            leads_found=len(results),
+                            total_requested=params.limit)
             
             return {
                 "job_id": job_id,

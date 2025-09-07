@@ -11,7 +11,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from business_extractor_utils import BusinessExtractorUtils
 from database_operations import save_lead_to_database
-from job_management import add_job_log
+from job_management import add_job_log, update_job_status, job_statuses
+from blacklist_manager import BlacklistManager
+from database import SessionLocal
 
 
 class MapsSearchEngine:
@@ -44,10 +46,15 @@ class MapsSearchEngine:
 
     def search_google_maps(self, query, limit=20, min_rating=0.0, min_reviews=0, 
                           requires_website=None, recent_review_months=None, 
-                          min_photos=None, min_description_length=None, enable_click_through=True):
+                          min_photos=None, min_description_length=None, enable_click_through=True,
+                          max_runtime_minutes=None):
         """Enhanced Google Maps search with proper iteration and scrolling"""
         self._log(f"🚀 ENHANCED MAPS SEARCH ENGINE")
         self._log(f"   Query: {query}, Limit: {limit}, Recent Review Months: {recent_review_months}")
+        
+        # Track start time for runtime limit
+        start_time = time.time()
+        max_runtime_seconds = (max_runtime_minutes * 60) if max_runtime_minutes else None
         
         results = []
         processed_names = set()
@@ -56,6 +63,9 @@ class MapsSearchEngine:
         self._log_search_criteria(query, limit, min_rating, min_reviews, 
                                  requires_website, recent_review_months, 
                                  min_photos, min_description_length)
+        
+        if max_runtime_minutes:
+            self._log(f"⏱️ Maximum runtime: {max_runtime_minutes} minutes")
         
         try:
             # Navigate to Google Maps and perform search
@@ -66,7 +76,8 @@ class MapsSearchEngine:
             results = self._iterate_through_results(
                 results, processed_names, evaluated_businesses, query, limit,
                 min_rating, min_reviews, requires_website, recent_review_months,
-                min_photos, min_description_length, enable_click_through
+                min_photos, min_description_length, enable_click_through,
+                start_time, max_runtime_seconds
             )
             
             self._log(f"✅ Search completed! Found {len(results)} qualifying businesses")
@@ -141,7 +152,7 @@ class MapsSearchEngine:
     def _iterate_through_results(self, results, processed_names, evaluated_businesses,
                                 query, limit, min_rating, min_reviews, requires_website,
                                 recent_review_months, min_photos, min_description_length,
-                                enable_click_through):
+                                enable_click_through, start_time=None, max_runtime_seconds=None):
         """Main iteration loop through search results"""
         scroll_attempts = 0
         max_scroll_attempts = 20
@@ -151,6 +162,18 @@ class MapsSearchEngine:
         max_no_new_results = 3
         
         while len(results) < limit and scroll_attempts < max_scroll_attempts:
+            # Check runtime limit
+            if max_runtime_seconds and start_time:
+                elapsed_time = time.time() - start_time
+                # Log elapsed time every iteration for debugging
+                if scroll_attempts % 2 == 0:  # Log every 2nd iteration
+                    self._log(f"⏰ Elapsed: {round(elapsed_time/60, 1)} min / Max: {round(max_runtime_seconds/60, 1)} min")
+                if elapsed_time > max_runtime_seconds:
+                    self._log(f"⏱️ Runtime limit reached ({round(elapsed_time/60, 1)} minutes). Stopping search.")
+                    if self.job_id:
+                        add_job_log(self.job_id, f"⏱️ Maximum runtime of {round(max_runtime_seconds/60)} minutes reached. Returning {len(results)} leads found so far.")
+                    break
+            
             if self.is_cancelled():
                 self._log("🛑 Search cancelled by user")
                 break
@@ -177,7 +200,7 @@ class MapsSearchEngine:
                 business_elements, results, processed_names, evaluated_businesses,
                 query, limit, min_rating, min_reviews, requires_website,
                 recent_review_months, min_photos, min_description_length,
-                enable_click_through
+                enable_click_through, start_time, max_runtime_seconds
             )
             
             if new_results_found == 0:
@@ -282,7 +305,8 @@ class MapsSearchEngine:
     def _process_business_elements(self, business_elements, results, processed_names,
                                   evaluated_businesses, query, limit, min_rating,
                                   min_reviews, requires_website, recent_review_months,
-                                  min_photos, min_description_length, enable_click_through):
+                                  min_photos, min_description_length, enable_click_through,
+                                  start_time=None, max_runtime_seconds=None):
         """Process business elements starting from where we left off after scrolling"""
         new_results_count = 0
         elements_processed_this_iteration = 0
@@ -312,6 +336,15 @@ class MapsSearchEngine:
         for i, business_element in enumerate(business_elements):
             if len(results) >= limit or self.is_cancelled():
                 break
+            
+            # Check runtime limit inside the inner loop
+            if max_runtime_seconds and start_time:
+                elapsed_time = time.time() - start_time
+                if elapsed_time > max_runtime_seconds:
+                    self._log(f"⏱️ Runtime limit reached ({round(elapsed_time/60, 1)} minutes) during business processing. Stopping search.")
+                    if self.job_id:
+                        add_job_log(self.job_id, f"⏱️ Maximum runtime of {round(max_runtime_seconds/60)} minutes reached. Returning {len(results)} leads found so far.")
+                    return new_results_count  # Return count to preserve behavior
             
             try:
                 # Get unique identifier for this element
@@ -349,6 +382,18 @@ class MapsSearchEngine:
                     continue
                 
                 business_name = business_details['name']
+                
+                # Check blacklist BEFORE any further processing
+                db_session = SessionLocal()
+                try:
+                    blacklist_manager = BlacklistManager(db_session)
+                    if blacklist_manager.is_blacklisted(business_name):
+                        self._log(f"⛔ Skipping blacklisted business: {business_name}")
+                        evaluated_businesses.add(business_name)
+                        self.last_processed_element_id = element_id
+                        continue
+                finally:
+                    db_session.close()
                 
                 # Skip if already processed by business name (final safeguard)
                 if business_name in evaluated_businesses:
@@ -417,6 +462,20 @@ class MapsSearchEngine:
                             processed_names.add(business_name)
                             new_results_count += 1
                             self._log(f"✅ Added qualifying business #{len(results)}: {business_name}")
+                            
+                            # Update job status with current leads count
+                            if self.job_id and self.job_id in job_statuses:
+                                current_job = job_statuses.get(self.job_id, {})
+                                total_requested = current_job.get('total_requested', limit)
+                                update_job_status(
+                                    self.job_id, 
+                                    "running",
+                                    len(results),  # processed
+                                    total_requested,  # total
+                                    f"Found {len(results)} qualifying businesses",
+                                    leads_found=len(results),
+                                    total_requested=total_requested
+                                )
                     else:
                         self._log(f"⚠️ Duplicate business skipped: {business_name}")
                 else:

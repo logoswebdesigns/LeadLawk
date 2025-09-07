@@ -24,6 +24,7 @@ import '../utils/lead_detail_utils.dart';
 import '../../data/datasources/pagespeed_datasource.dart';
 import '../../../../core/utils/debug_logger.dart';
 import '../providers/command_provider.dart';
+import '../widgets/blacklist_badge.dart';
 
 class LeadDetailPage extends ConsumerStatefulWidget {
   final String leadId;
@@ -445,12 +446,21 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            lead.businessName,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  lead.businessName,
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              BlacklistBadge(businessName: lead.businessName),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 8),

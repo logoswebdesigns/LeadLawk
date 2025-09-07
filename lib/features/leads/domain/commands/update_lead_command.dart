@@ -36,8 +36,16 @@ class UpdateLeadCommand extends UndoableCommand<Lead> {
       // Apply updates
       final updatedLead = _applyUpdates(lead, updates);
       
-      // Save to repository
-      final result = await repository.updateLead(updatedLead);
+      // Extract blacklist parameters if present
+      final addToBlacklist = updates['addToBlacklist'] as bool?;
+      final blacklistReason = updates['blacklistReason'] as String?;
+      
+      // Save to repository with blacklist parameters
+      final result = await repository.updateLead(
+        updatedLead,
+        addToBlacklist: addToBlacklist,
+        blacklistReason: blacklistReason,
+      );
       
       return result.fold(
         (failure) => Left(CommandFailure(failure.toString())),

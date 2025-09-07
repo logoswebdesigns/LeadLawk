@@ -37,6 +37,7 @@ class LeadRepository:
         "industry": Lead.industry,
         "pagespeed_mobile_score": Lead.pagespeed_mobile_score,
         "pagespeed_desktop_score": Lead.pagespeed_desktop_score,
+        "desktop_performance_score": Lead.pagespeed_desktop_score,  # Alias for API compatibility
         "conversion_score": Lead.conversion_score,
         "follow_up_date": Lead.follow_up_date,
     }
