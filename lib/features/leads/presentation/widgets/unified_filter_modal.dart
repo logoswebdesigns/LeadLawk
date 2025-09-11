@@ -40,11 +40,20 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     // Initialize with current filter values
     searchController = TextEditingController(text: ref.read(domain_providers.searchFilterProvider));
     
-    // Initialize visible statuses (inverse of hidden)
-    final hiddenStatuses = ref.read(domain_providers.hiddenStatusesProvider);
-    visibleStatuses = LeadStatus.values
-        .where((status) => !hiddenStatuses.contains(status.name))
-        .toSet();
+    // Initialize visible statuses from the current API filter state
+    final currentState = ref.read(paginatedLeadsProvider);
+    if (currentState.filters.statuses != null && currentState.filters.statuses!.isNotEmpty) {
+      // If we have specific statuses in the filter, use those
+      visibleStatuses = currentState.filters.statuses!
+          .map((statusName) => LeadStatus.values.firstWhere((s) => s.name == statusName))
+          .toSet();
+    } else if (currentState.filters.status != null) {
+      // If we have a single status filter, use that
+      visibleStatuses = {LeadStatus.values.firstWhere((s) => s.name == currentState.filters.status)};
+    } else {
+      // Default to NEW and VIEWED as per our default filters
+      visibleStatuses = {LeadStatus.new_, LeadStatus.viewed};
+    }
     
     candidatesOnly = ref.read(domain_providers.candidatesOnlyProvider);
   }
@@ -483,14 +492,11 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     }
     
     // Update filters directly in the paginated leads provider
-    final sortState = ref.read(domain_providers.sortStateProvider);
     ref.read(paginatedLeadsProvider.notifier).updateFilters(
       status: singleStatus,
       statuses: selectedStatuses,
-      search: null,  // Keep existing search
-      candidatesOnly: false,
-      sortBy: sortState.sortField,
-      sortAscending: sortState.ascending,
+      search: searchController.text.isEmpty ? null : searchController.text,
+      candidatesOnly: candidatesOnly,
     );
     
     // Also update hidden statuses for UI consistency

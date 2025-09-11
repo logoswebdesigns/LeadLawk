@@ -340,13 +340,9 @@ class _SortOptionsModalState extends ConsumerState<SortOptionsModal> {
     // Update domain provider (single source of truth)
     ref.read(domain_providers.currentSortStateProvider.notifier).updateSort(option, ascending);
     
-    // Update filters directly in the paginated leads provider
+    // Update only sort fields in the paginated leads provider, preserving existing filters
     final sortState = SortState(option: option, ascending: ascending);
     ref.read(paginatedLeadsProvider.notifier).updateFilters(
-      status: null,
-      statuses: null,
-      search: null,  // Keep existing search
-      candidatesOnly: null,
       sortBy: sortState.sortField,
       sortAscending: sortState.ascending,
     );
