@@ -292,7 +292,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: _addSearchQuery,
-                  icon: Icon(Icons.refresh),
+                  icon: Icon(Icons.add),
                   iconSize: 32,
                 ),
               ],
@@ -335,7 +335,7 @@ class _SmartSearchInputState extends State<SmartSearchInput> {
                         ),
                       ],
                     ),
-                    deleteIcon: Icon(Icons.refresh),
+                    deleteIcon: Icon(Icons.close),
                     deleteIconColor: Colors.white.withValues(alpha: 0.7),
                     onDeleted: () => _removeQuery(query),
                     backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),

@@ -102,7 +102,7 @@ class _EmailTemplateDialogState extends ConsumerState<EmailTemplateDialog> {
                 decoration: InputDecoration(
                   labelText: 'Recipient Email *',
                   hintText: 'Enter client email address',
-                  prefixIcon: Icon(Icons.refresh),
+                  prefixIcon: Icon(Icons.email),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

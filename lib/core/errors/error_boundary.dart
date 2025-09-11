@@ -380,7 +380,7 @@ class ErrorDisplay extends StatelessWidget {
               ),
               if (onDismiss != null)
                 IconButton(
-                  icon: const Icon(Icons.refresh),
+                  icon: const Icon(Icons.close),
                   onPressed: onDismiss,
                   color: _getColor(theme),
                 ),

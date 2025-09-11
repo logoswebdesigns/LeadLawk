@@ -153,7 +153,7 @@ class TimelineEntryWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.refresh),
+          Icon(Icons.schedule),
           const SizedBox(width: 4),
           Text(
             'Follow up: ${GitHubFormatter.formatFullDate(entry.followUpDate!)}',
@@ -166,14 +166,14 @@ class TimelineEntryWidget extends StatelessWidget {
 
   Widget _buildActions(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.refresh),
+      icon: Icon(Icons.more_vert),
       itemBuilder: (context) => [
         if (onEdit != null)
           const PopupMenuItem(
             value: 'edit',
             child: Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.edit),
                 const SizedBox(width: 8),
                 const Text('Edit'),
               ],
@@ -184,7 +184,7 @@ class TimelineEntryWidget extends StatelessWidget {
             value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.delete, color: Colors.red),
                 const SizedBox(width: 8),
                 Text('Delete', style: TextStyle(color: Colors.red)),
               ],

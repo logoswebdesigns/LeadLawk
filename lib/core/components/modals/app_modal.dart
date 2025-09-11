@@ -149,7 +149,7 @@ class _ModalContainer extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.refresh),
+                    icon: Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],

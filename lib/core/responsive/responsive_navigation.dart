@@ -48,7 +48,7 @@ class ResponsiveAppBar extends StatelessWidget implements PreferredSizeWidget {
       // Show overflow menu on mobile for many actions
       return [
         PopupMenuButton<int>(
-          icon: Icon(Icons.refresh),
+          icon: Icon(Icons.more_vert),
           onSelected: (index) {
             // Handle action selection
           },

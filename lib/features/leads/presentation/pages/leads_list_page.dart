@@ -294,7 +294,7 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.refresh),
+                                Icon(Icons.error_outline),
                                 const SizedBox(height: 16),
                                 Text('Error: ${paginatedState.error}', textAlign: TextAlign.center),
                                 const SizedBox(height: 16),
@@ -538,7 +538,7 @@ class _LeadCardState extends ConsumerState<_LeadCard> with SingleTickerProviderS
                               child: Row(
                                 children: [
                                   if (widget.lead.rating != null) ...[
-                                    Icon(Icons.refresh),
+                                    Icon(Icons.star, color: Colors.amber, size: 14),
                                     const SizedBox(width: 2),
                                     Text(
                                       widget.lead.rating!.toStringAsFixed(1),
@@ -663,7 +663,7 @@ class ServerStatusBadge extends ConsumerWidget {
                 ),
               )
             else
-              Icon(Icons.refresh),
+              Icon(Icons.signal_wifi_off),
             const SizedBox(width: 8),
             Text(
               serverState.status == ServerStatus.starting

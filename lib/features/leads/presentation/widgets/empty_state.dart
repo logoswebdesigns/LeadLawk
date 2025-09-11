@@ -127,7 +127,7 @@ class _EmptyStateState extends State<EmptyState>
                   if (widget.buttonText != null && widget.onButtonPressed != null) ...[
                     ElevatedButton.icon(
                       onPressed: widget.onButtonPressed,
-                      icon: Icon(Icons.refresh),
+                      icon: Icon(Icons.add),
                       label: Text(widget.buttonText!),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryIndigo,
@@ -145,7 +145,7 @@ class _EmptyStateState extends State<EmptyState>
                   if (widget.secondaryButtonText != null && widget.onSecondaryButtonPressed != null)
                     OutlinedButton.icon(
                       onPressed: widget.onSecondaryButtonPressed,
-                      icon: Icon(widget.secondaryButtonIcon ?? Icons.refresh),
+                      icon: Icon(widget.secondaryButtonIcon ?? Icons.settings),
                       label: Text(widget.secondaryButtonText!),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primaryGold,

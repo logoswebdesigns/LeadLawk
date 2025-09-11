@@ -180,7 +180,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.refresh),
+                  Icon(Icons.call),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,7 +315,7 @@ class _CallTrackingDialogState extends ConsumerState<CallTrackingDialog> {
                                 title: Text(_followUpDate == null 
                                   ? 'Select Date' 
                                   : 'Follow-up: ${_followUpDate!.toLocal().toString().split(' ')[0]}'),
-                                trailing: Icon(Icons.refresh),
+                                trailing: Icon(Icons.calendar_today),
                                 onTap: () async {
                                   final date = await showDatePicker(
                                     context: context,

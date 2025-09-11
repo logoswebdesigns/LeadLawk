@@ -75,7 +75,7 @@ class _LeadNotesSectionState extends State<LeadNotesSection> {
             const Spacer(),
             IconButton(
               onPressed: _startEditingNotes,
-              icon: Icon(Icons.refresh),
+              icon: Icon(Icons.edit),
               color: AppTheme.accentCyan,
             ),
           ],

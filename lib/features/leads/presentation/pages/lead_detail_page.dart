@@ -40,12 +40,31 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   PageSpeedDataSource? _pageSpeedDataSource;
   String? _lastUpdatedLeadId; // Track which lead we've already updated
   bool _isInitialized = false;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _pageSpeedKey = GlobalKey();
+  
+  // Track expansion state for collapsible sections - all collapsed by default
+  final Map<String, bool> _sectionExpanded = {
+    'notes': false,
+    'status': false,
+    'pitch': false,
+    'screenshots': false,
+    'pagespeed': false,
+    'pipeline': false,
+    'timeline': false,
+  };
 
   @override
   void initState() {
     super.initState();
     // Initialize non-context dependent services in initState
     _pageSpeedDataSource = PageSpeedDataSource();
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -267,6 +286,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
     final isMobile = MediaQuery.of(context).size.width < 600;
     
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,68 +314,104 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
               }
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           
-          // Notes Section - MOVED UP for quick access during calls
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
+          // Notes Section
+          _buildCollapsibleSection(
+            key: 'notes',
+            title: 'Notes',
+            icon: Icons.note_alt_outlined,
             child: const LeadNotesSection(),
           ),
-          const SizedBox(height: 20),
           
-          // Status Actions - Quick status changes and terminal actions
-          LeadStatusActions(lead: lead),
-          const SizedBox(height: 20),
-          
-          // Sales Pitch Section - For quick reference during calls
-          LeadSalesPitchSection(lead: lead),
-          const SizedBox(height: 20),
-          
-          // Screenshots - Collapsible to save space
-          CollapsibleScreenshots(
-            lead: lead,
-            defaultExpanded: true,
+          // Current Status Section
+          _buildCollapsibleSection(
+            key: 'status',
+            title: 'Current Status',
+            icon: Icons.timeline,
+            child: LeadStatusActions(lead: lead),
           ),
-          const SizedBox(height: 20),
           
-          // PageSpeed Score - Below screenshots
-          if (lead.hasWebsite) ...[
-            PageSpeedScoreCard(
+          // Sales Pitch Section
+          _buildCollapsibleSection(
+            key: 'pitch',
+            title: 'Sales Pitch',
+            icon: Icons.campaign_outlined,
+            child: LeadSalesPitchSection(lead: lead),
+          ),
+          
+          // Screenshots Section
+          _buildCollapsibleSection(
+            key: 'screenshots',
+            title: 'Screenshots',
+            icon: Icons.photo_library_outlined,
+            child: CollapsibleScreenshots(
               lead: lead,
-              onTestPressed: () => _runPageSpeedTest(lead),
+              defaultExpanded: true,
             ),
-            const SizedBox(height: 20),
+          ),
+          
+          // PageSpeed Score Section
+          if (lead.hasWebsite) ...[
+            _buildCollapsibleSection(
+              key: 'pagespeed',
+              title: 'PageSpeed Analysis',
+              icon: Icons.speed,
+              child: PageSpeedScoreCard(
+                key: _pageSpeedKey,
+                lead: lead,
+                onTestPressed: () => _runPageSpeedTest(lead),
+              ),
+              trailing: lead.pagespeedTestedAt != null
+                ? Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Tested',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                : null,
+            ),
           ],
           
-          // Dynamic Pipeline - Visual status tracking
-          Container(
-            height: 250,
-            padding: EdgeInsets.symmetric(horizontal: isMobile ? 0 : 16),
-            child: DynamicPipelineWidget(
-              lead: lead,
-              timeline: const [], // TODO: Pass actual timeline entries
-              onStatusChanged: () {
-                HapticFeedback.lightImpact();
-                ref.invalidate(leadDetailProvider(widget.leadId));
-              },
+          // Pipeline Visualization Section
+          _buildCollapsibleSection(
+            key: 'pipeline',
+            title: 'Pipeline Status',
+            icon: Icons.account_tree_outlined,
+            child: Container(
+              height: 220,
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 0 : 16),
+              child: DynamicPipelineWidget(
+                lead: lead,
+                timeline: const [], // TODO: Pass actual timeline entries
+                onStatusChanged: () {
+                  HapticFeedback.lightImpact();
+                  ref.invalidate(leadDetailProvider(widget.leadId));
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 24),
           
-          // Timeline - Full history at the bottom
-          LeadTimeline(
-            lead: lead,
-            onAddEntry: (entry) {}, // TODO: Implement
-            onUpdateEntry: (entry) {}, // TODO: Implement
-            onSetFollowUpDate: (date) {}, // TODO: Implement
+          // Timeline Section
+          _buildCollapsibleSection(
+            key: 'timeline',
+            title: 'Activity Timeline',
+            icon: Icons.history,
+            child: LeadTimeline(
+              lead: lead,
+              onAddEntry: (entry) {}, // TODO: Implement
+              onUpdateEntry: (entry) {}, // TODO: Implement
+              onSetFollowUpDate: (date) {}, // TODO: Implement
+            ),
           ),
         ],
       ),
@@ -619,6 +675,14 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             ],
           ),
           
+          // PageSpeed Lighthouse scores if available
+          if (lead.hasWebsite && (lead.pagespeedMobileScore != null || lead.pagespeedDesktopScore != null)) ...[
+            const SizedBox(height: 12),
+            Divider(color: Colors.white.withValues(alpha: 0.1)),
+            const SizedBox(height: 12),
+            _buildCompactPageSpeedScores(lead),
+          ],
+          
           // Callback info if scheduled
           if (lead.status == LeadStatus.callbackScheduled && lead.followUpDate != null) ...[
             const SizedBox(height: 12),
@@ -652,6 +716,239 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildCompactPageSpeedScores(Lead lead) {
+    // Gather all available Lighthouse scores
+    final performanceScore = lead.pagespeedMobileScore ?? lead.pagespeedDesktopScore;
+    final accessibilityScore = lead.pagespeedAccessibilityScore;
+    final bestPracticesScore = lead.pagespeedBestPracticesScore;
+    final seoScore = lead.pagespeedSeoScore;
+    
+    return InkWell(
+      onTap: () {
+        // First expand the PageSpeed section if it's collapsed
+        setState(() {
+          _sectionExpanded['pagespeed'] = true;
+        });
+        
+        // Then scroll to the PageSpeed card after a brief delay to allow expansion animation
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (_pageSpeedKey.currentContext != null) {
+            Scrollable.ensureVisible(
+              _pageSpeedKey.currentContext!,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.05),
+              Colors.white.withValues(alpha: 0.02),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.insights,
+                  size: 16,
+                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Lighthouse Scores',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.expand_more,
+                  size: 16,
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              children: [
+                if (performanceScore != null)
+                  _buildMetricChip('Performance', performanceScore, Icons.speed),
+                if (accessibilityScore != null)
+                  _buildMetricChip('Accessibility', accessibilityScore, Icons.accessibility_new),
+                if (bestPracticesScore != null)
+                  _buildMetricChip('Best Practices', bestPracticesScore, Icons.verified_user),
+                if (seoScore != null)
+                  _buildMetricChip('SEO', seoScore, Icons.search),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildMetricChip(String label, int score, IconData icon) {
+    final color = _getScoreColor(score);
+    
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: color.withValues(alpha: 0.8),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              score.toString(),
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Color _getScoreColor(int score) {
+    if (score >= 90) return Colors.green;
+    if (score >= 50) return Colors.orange;
+    return Colors.red;
+  }
+  
+  Widget _buildCollapsibleSection({
+    required String key,
+    required String title,
+    required IconData icon,
+    required Widget child,
+    Widget? trailing,
+    bool showDivider = true,
+  }) {
+    final isExpanded = _sectionExpanded[key] ?? false;
+    
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _sectionExpanded[key] = !isExpanded;
+              });
+              HapticFeedback.lightImpact();
+            },
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (trailing != null) ...[
+                    trailing,
+                    const SizedBox(width: 8),
+                  ],
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 20,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (showDivider && isExpanded)
+            Divider(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          AnimatedCrossFade(
+            firstChild: Container(),
+            secondChild: Padding(
+              padding: EdgeInsets.all(16),
+              child: child,
+            ),
+            crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: Duration(milliseconds: 200),
+          ),
         ],
       ),
     );

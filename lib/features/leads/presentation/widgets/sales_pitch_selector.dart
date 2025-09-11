@@ -208,7 +208,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     if (!isSelected)
                       ElevatedButton.icon(
                         onPressed: () => _selectPitch(pitch.id),
-                        icon: Icon(Icons.refresh),
+                        icon: Icon(Icons.check_circle),
                         label: const Text('Select'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryGold,
@@ -251,7 +251,7 @@ class _SalesPitchSelectorState extends ConsumerState<SalesPitchSelector> {
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => _copyToClipboard(pitch.content),
-                      icon: Icon(Icons.refresh),
+                      icon: Icon(Icons.copy),
                       label: const Text('Copy'),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.accentPurple,

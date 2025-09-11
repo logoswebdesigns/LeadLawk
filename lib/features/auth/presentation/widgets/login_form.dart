@@ -50,7 +50,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             decoration: InputDecoration(
               labelText: 'Password',
               hintText: 'Enter your password',
-              prefixIcon: Icon(Icons.refresh),
+              prefixIcon: Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,

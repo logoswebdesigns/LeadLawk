@@ -38,7 +38,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.speed),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -65,7 +65,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.warning),
                 const SizedBox(width: 8),
                 Text('Website Issue Detected',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -76,7 +76,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
               Chip(
                 label: const Text('UNREACHABLE WEBSITE'),
                 backgroundColor: Colors.red.shade100,
-                avatar: Icon(Icons.refresh),
+                avatar: Icon(Icons.error),
               ),
               const SizedBox(height: 8),
               const Text('Website is broken or extremely slow',
@@ -110,7 +110,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.speed),
                 const SizedBox(width: 8),
                 Text('PageSpeed Insights',
                     style: Theme.of(context).textTheme.titleMedium),
@@ -126,7 +126,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
         width: 16,
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.refresh),
+                  : Icon(Icons.play_arrow),
               label: Text(isLoading ? 'Testing...' : 'Run PageSpeed Test'),
             ),
           ],
@@ -143,7 +143,7 @@ class PageSpeedResultsWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.analytics),
                 const SizedBox(width: 8),
                 Text('PageSpeed Results',
                     style: Theme.of(context).textTheme.titleMedium),

@@ -11,10 +11,10 @@ extension AdvancedFilterSearchExtension on AdvancedFilterBarState {
       controller: searchController,
       decoration: InputDecoration(
         hintText: 'Search leads by name, phone, location, or industry...',
-        prefixIcon: Icon(Icons.refresh),
+        prefixIcon: Icon(Icons.search),
         suffixIcon: searchController.text.isNotEmpty
             ? IconButton(
-                icon: Icon(Icons.refresh),
+                icon: Icon(Icons.clear),
                 onPressed: () {
                   searchController.clear();
                   ref.read(currentFilterStateProvider.notifier).updateSearchFilter('');

@@ -30,7 +30,7 @@ class BiometricLoginButton extends ConsumerWidget {
       ),
       child: TextButton.icon(
         onPressed: () => _handleBiometricLogin(ref),
-        icon: Icon(Icons.refresh),
+        icon: Icon(Icons.fingerprint),
         label: const Text(
           'Use Biometric Authentication',
           style: TextStyle(fontSize: 16),

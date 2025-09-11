@@ -130,7 +130,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
       appBar: AppBar(
         backgroundColor: AppTheme.surfaceDark,
         leading: IconButton(
-          icon: Icon(Icons.refresh),
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -193,7 +193,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
               } catch (_) {}
             },
             tooltip: 'Diagnostics',
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.build),
           ),
         ],
       ),
@@ -485,7 +485,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.refresh),
+                      Icon(Icons.work),
                       const SizedBox(width: 8),
                       Expanded(child: Text('Job $jobId', style: const TextStyle(fontWeight: FontWeight.w600))),
                       TextButton(
@@ -555,7 +555,7 @@ class _ServerDiagnosticsPageState extends ConsumerState<ServerDiagnosticsPage> {
                     const SnackBar(content: Text('Job logs copied to clipboard')),
                   );
                 },
-                icon: Icon(Icons.refresh),
+                icon: Icon(Icons.copy),
                 label: const Text('Copy Logs'),
               ),
             ),

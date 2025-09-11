@@ -118,7 +118,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.refresh),
+                  icon: Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

@@ -67,7 +67,7 @@ class _StatusFilterModalState extends ConsumerState<StatusFilterModal> {
               ),
               const Spacer(),
               IconButton(
-                icon: Icon(Icons.refresh),
+                icon: Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             ],

@@ -590,7 +590,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                   if (!isSynthetic) // Only show edit button for non-synthetic entries
                     IconButton(
                       onPressed: () => _startEditingEntry(entry),
-                      icon: Icon(Icons.refresh),
+                      icon: Icon(Icons.edit),
                       style: IconButton.styleFrom(
                         foregroundColor: const Color(0xFF8B949E),
                         padding: EdgeInsets.all(4),
@@ -691,7 +691,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.refresh),
+              Icon(Icons.edit),
               const SizedBox(width: 4),
               const Text(
                 'Editing',
@@ -778,7 +778,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.refresh),
+                        Icon(Icons.calendar_today),
                         const SizedBox(width: 8),
                         Text(
                           _editingFollowUpDate == null
@@ -806,7 +806,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                       _editingFollowUpDate = null;
                     });
                   },
-                  icon: Icon(Icons.refresh),
+                  icon: Icon(Icons.clear),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -911,7 +911,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               if (!_showAddForm)
                 IconButton(
                   onPressed: _showAddEntryForm,
-                  icon: Icon(Icons.refresh),
+                  icon: Icon(Icons.add),
                   style: IconButton.styleFrom(
                     foregroundColor: AppTheme.primaryGold,
                     backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.1),
@@ -939,7 +939,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.refresh),
+                    Icon(Icons.note_add),
                     const SizedBox(width: 8),
                     const Text(
                       'Add Timeline Entry',
@@ -951,7 +951,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                     const Spacer(),
                     IconButton(
                       onPressed: _cancelAdd,
-                      icon: Icon(Icons.refresh),
+                      icon: Icon(Icons.close),
                       style: IconButton.styleFrom(
                         foregroundColor: Colors.white.withValues(alpha: 0.7),
                       ),
@@ -1083,7 +1083,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.refresh),
+                              Icon(Icons.calendar_today),
                               const SizedBox(width: 8),
                               Text(
                                 _selectedFollowUpDate == null
@@ -1111,7 +1111,7 @@ class _LeadTimelineState extends ConsumerState<LeadTimeline> {
                             _selectedFollowUpDate = null;
                           });
                         },
-                        icon: Icon(Icons.refresh),
+                        icon: Icon(Icons.clear),
                         style: IconButton.styleFrom(
                           foregroundColor: Colors.white.withValues(alpha: 0.7),
                         ),
