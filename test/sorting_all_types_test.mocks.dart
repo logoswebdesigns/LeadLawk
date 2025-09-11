@@ -559,6 +559,7 @@ class MockLeadsRemoteDataSource extends _i1.Mock
     required int? page,
     required int? perPage,
     String? status,
+    List<String>? statuses,
     String? search,
     bool? candidatesOnly,
     String? sortBy,
@@ -572,6 +573,7 @@ class MockLeadsRemoteDataSource extends _i1.Mock
             #page: page,
             #perPage: perPage,
             #status: status,
+            #statuses: statuses,
             #search: search,
             #candidatesOnly: candidatesOnly,
             #sortBy: sortBy,
@@ -588,6 +590,7 @@ class MockLeadsRemoteDataSource extends _i1.Mock
               #page: page,
               #perPage: perPage,
               #status: status,
+              #statuses: statuses,
               #search: search,
               #candidatesOnly: candidatesOnly,
               #sortBy: sortBy,
@@ -805,6 +808,15 @@ class MockLeadsRemoteDataSource extends _i1.Mock
         ),
         returnValue: _i6.Future<bool>.value(false),
       ) as _i6.Future<bool>);
+
+  @override
+  _i6.Future<Map<DateTime, int>> getCallStatistics() => (super.noSuchMethod(
+        Invocation.method(
+          #getCallStatistics,
+          [],
+        ),
+        returnValue: _i6.Future<Map<DateTime, int>>.value(<DateTime, int>{}),
+      ) as _i6.Future<Map<DateTime, int>>);
 }
 
 /// A class which mocks [GetSortState].

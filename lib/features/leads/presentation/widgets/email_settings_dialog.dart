@@ -149,7 +149,7 @@ class _EmailSettingsDialogState extends ConsumerState<EmailSettingsDialog> {
                       children: [
                         ElevatedButton.icon(
                           onPressed: _applyGmailPreset,
-                          icon: Icon(Icons.refresh),
+                          icon: Icon(Icons.email),
                           label: const Text('Gmail'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryGold,

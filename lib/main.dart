@@ -132,7 +132,7 @@ class _LeadLoqAppState extends ConsumerState<LeadLoqApp> {
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.refresh),
+                  Icon(Icons.fiber_new),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../domain/entities/lead.dart';
 import '../../domain/entities/filter_state.dart';
 import '../../domain/providers/filter_providers.dart';
@@ -16,6 +18,7 @@ class _Undefined {
 // Simple filter state for API calls - uses basic values from domain filter state
 class ApiFilterState {
   final String? status;
+  final List<String>? statuses;  // Support multiple statuses
   final String? search;
   final bool? candidatesOnly;
   final bool? calledToday;
@@ -24,6 +27,7 @@ class ApiFilterState {
   
   const ApiFilterState({
     this.status,
+    this.statuses,  // Support multiple statuses
     this.search,
     this.candidatesOnly,
     this.calledToday,
@@ -37,6 +41,7 @@ class ApiFilterState {
       other is ApiFilterState &&
           runtimeType == other.runtimeType &&
           status == other.status &&
+          statuses == other.statuses &&
           search == other.search &&
           candidatesOnly == other.candidatesOnly &&
           calledToday == other.calledToday &&
@@ -46,6 +51,7 @@ class ApiFilterState {
   @override
   int get hashCode =>
       status.hashCode ^
+      statuses.hashCode ^
       search.hashCode ^
       candidatesOnly.hashCode ^
       calledToday.hashCode ^
@@ -54,6 +60,7 @@ class ApiFilterState {
   
   ApiFilterState copyWith({
     Object? status = const _Undefined(),
+    Object? statuses = const _Undefined(),
     Object? search = const _Undefined(),
     Object? candidatesOnly = const _Undefined(),
     Object? calledToday = const _Undefined(),
@@ -62,6 +69,7 @@ class ApiFilterState {
   }) {
     return ApiFilterState(
       status: status is _Undefined ? this.status : status as String?,
+      statuses: statuses is _Undefined ? this.statuses : statuses as List<String>?,
       search: search is _Undefined ? this.search : search as String?,
       candidatesOnly: candidatesOnly is _Undefined ? this.candidatesOnly : candidatesOnly as bool?,
       calledToday: calledToday is _Undefined ? this.calledToday : calledToday as bool?,
@@ -79,6 +87,7 @@ class ApiFilterState {
       calledToday: filterState.calledToday,
       sortBy: sortState.sortField,
       sortAscending: sortState.ascending,
+      // Don't set statuses here - let the caller handle it
     );
   }
 }
@@ -104,7 +113,10 @@ class PaginatedLeadsState {
     this.totalPages = 1,
     this.total = 0,
     this.error,
-    this.filters = const ApiFilterState(),
+    this.filters = const ApiFilterState(
+      // Default to showing NEW and VIEWED leads
+      statuses: ['new_', 'viewed'],
+    ),
   });
   
   PaginatedLeadsState copyWith({
@@ -169,7 +181,8 @@ final filteredPaginatedLeadsProvider = Provider<PaginatedLeadsState>((ref) {
 class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   final LeadsRemoteDataSource _dataSource;
   final Ref _ref;
-  int _perPage = 25;
+  int _perPage = 500;
+  bool _isInitialized = false;
   
   PaginatedLeadsNotifier(this._dataSource, this._ref) : super(PaginatedLeadsState()) {
     _initializeWithDomainState();
@@ -204,8 +217,39 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
       });
     });
     
-    // Initial sync and load
+    // Wait for domain sort state to be initialized (includes loading user defaults)
+    int retries = 0;
+    while (retries < 10) {
+      final sortStateAsync = _ref.read(currentSortStateProvider);
+      if (sortStateAsync.hasValue) {
+        final sortState = sortStateAsync.value!;
+        DebugLogger.log('📊 Sort state ready: ${sortState.option.name} (${sortState.ascending ? "asc" : "desc"})');
+        
+        // Apply the sort state immediately to our filters
+        state = state.copyWith(
+          filters: state.filters.copyWith(
+            sortBy: sortState.sortField,
+            sortAscending: sortState.ascending,
+          ),
+        );
+        DebugLogger.log('📊 Applied sort to filters: ${state.filters.sortBy} (${state.filters.sortAscending ? "asc" : "desc"})');
+        break;
+      }
+      await Future.delayed(Duration(milliseconds: 50));
+      retries++;
+    }
+    
+    // Load and apply any saved filter defaults
+    await _loadAndApplyDefaultFilters();
+    
+    // Now sync with domain state
     await _syncWithDomainState();
+    
+    // Mark as initialized
+    _isInitialized = true;
+    DebugLogger.log('✅ PaginatedLeadsNotifier fully initialized with sort: ${state.filters.sortBy} (${state.filters.sortAscending ? "asc" : "desc"})');
+    
+    // Now load initial leads
     loadInitialLeads();
   }
   
@@ -224,12 +268,19 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
       // Update page size
       _perPage = uiState.pageSize;
       
-      // Create API filter state from domain states
-      final apiFilters = ApiFilterState.fromDomain(filterState, sortState);
+      // Create API filter state from domain states, but IGNORE status filter
+      // We don't want any persisted status filters
+      final cleanFilterState = filterState.copyWith(statusFilter: null);
+      final apiFilters = ApiFilterState.fromDomain(cleanFilterState, sortState);
+      
+      // Preserve the default statuses if no specific status filter is set
+      final finalFilters = apiFilters.copyWith(
+        statuses: state.filters.statuses, // Keep existing statuses (including defaults)
+      );
       
       // Check if filters actually changed before updating
-      if (state.filters != apiFilters) {
-        state = state.copyWith(filters: apiFilters);
+      if (state.filters != finalFilters) {
+        state = state.copyWith(filters: finalFilters);
         // Don't auto-refresh here to avoid loops, let the UI trigger refreshes
       }
     }
@@ -238,8 +289,9 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   Future<void> loadInitialLeads() async {
     if (state.isLoading) return;
     
-    DebugLogger.network('📊 API QUERY: Loading leads with filters:');
+    DebugLogger.network('📊 INITIAL LOAD: Loading leads with filters:');
     DebugLogger.state('  • Status: ${state.filters.status ?? "all"}');
+    DebugLogger.state('  • Statuses: ${state.filters.statuses ?? "all"}');
     DebugLogger.state('  • Search: ${state.filters.search ?? "none"}');
     DebugLogger.state('  • Candidates only: ${state.filters.candidatesOnly}');
     DebugLogger.state('  • Sort: ${state.filters.sortBy} (${state.filters.sortAscending ? "asc" : "desc"})');
@@ -259,7 +311,9 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
         response = await _dataSource.getLeadsPaginated(
           page: 1,
           perPage: _perPage,
-          status: state.filters.status,
+          // Only pass status if statuses is not set
+          status: (state.filters.statuses == null || state.filters.statuses!.isEmpty) ? state.filters.status : null,
+          statuses: state.filters.statuses,  // Pass multiple statuses
           search: state.filters.search,
           candidatesOnly: state.filters.candidatesOnly,
           sortBy: state.filters.sortBy,
@@ -312,7 +366,9 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
         response = await _dataSource.getLeadsPaginated(
           page: nextPage,
           perPage: _perPage,
-          status: state.filters.status,
+          // Only pass status if statuses is not set
+          status: (state.filters.statuses == null || state.filters.statuses!.isEmpty) ? state.filters.status : null,
+          statuses: state.filters.statuses,  // Pass multiple statuses
           search: state.filters.search,
           candidatesOnly: state.filters.candidatesOnly,
           sortBy: state.filters.sortBy,
@@ -347,6 +403,21 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   }
   
   Future<void> refreshLeads() async {
+    // Wait for initialization to complete
+    if (!_isInitialized) {
+      DebugLogger.log('⏳ refreshLeads called before initialization complete, waiting...');
+      int retries = 0;
+      while (!_isInitialized && retries < 20) {
+        await Future.delayed(Duration(milliseconds: 100));
+        retries++;
+      }
+      if (!_isInitialized) {
+        DebugLogger.log('❌ refreshLeads timeout waiting for initialization');
+        return;
+      }
+      DebugLogger.log('✅ refreshLeads proceeding after initialization');
+    }
+    
     state = state.copyWith(
       leads: [],
       currentPage: 1,
@@ -358,6 +429,7 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
   // Update filters and reload - this now syncs back to domain state
   Future<void> updateFilters({
     Object? status = const _Undefined(),
+    Object? statuses = const _Undefined(),  // Support multiple statuses
     Object? search = const _Undefined(),
     Object? candidatesOnly = const _Undefined(),
     Object? calledToday = const _Undefined(),
@@ -365,20 +437,25 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     Object? sortAscending = const _Undefined(),
   }) async {
     DebugLogger.log('📊 PAGINATION: updateFilters called with:');
+    DebugLogger.log('  status: ${status is _Undefined ? "undefined" : status}');
+    DebugLogger.log('  statuses: ${statuses is _Undefined ? "undefined" : statuses}');
     DebugLogger.log('  sortBy: ${sortBy is _Undefined ? "undefined" : sortBy}');
     DebugLogger.log('  sortAscending: ${sortAscending is _Undefined ? "undefined" : sortAscending}');
     
-    // Update domain state
-    await _updateDomainState(
-      status: status,
-      search: search,
-      candidatesOnly: candidatesOnly,
-      calledToday: calledToday,
-      sortBy: sortBy,
-      sortAscending: sortAscending,
+    // Update local filter state directly (bypassing domain state for status filters)
+    final updatedFilters = state.filters.copyWith(
+      status: status is _Undefined ? state.filters.status : status as String?,
+      statuses: statuses is _Undefined ? state.filters.statuses : statuses as List<String>?,
+      search: search is _Undefined ? state.filters.search : search as String?,
+      candidatesOnly: candidatesOnly is _Undefined ? state.filters.candidatesOnly : candidatesOnly as bool?,
+      calledToday: calledToday is _Undefined ? state.filters.calledToday : calledToday as bool?,
+      sortBy: sortBy is _Undefined ? state.filters.sortBy : sortBy as String?,
+      sortAscending: sortAscending is _Undefined ? state.filters.sortAscending : sortAscending as bool?,
     );
     
-    // Refresh leads with current filters
+    state = state.copyWith(filters: updatedFilters);
+    
+    // Refresh leads with new filters
     await refreshLeads();
   }
 
@@ -465,5 +542,52 @@ class PaginatedLeadsNotifier extends StateNotifier<PaginatedLeadsState> {
     DebugLogger.log('📊 PAGINATION: Changing page size from $_perPage to $newPageSize');
     _perPage = newPageSize;
     await refreshLeads();
+  }
+  
+  Future<void> _loadAndApplyDefaultFilters() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final defaultSettingsJson = prefs.getString('default_filter_settings');
+      
+      if (defaultSettingsJson != null) {
+        final defaultSettings = json.decode(defaultSettingsJson) as Map<String, dynamic>;
+        DebugLogger.log('📋 Loading default filter settings: $defaultSettings');
+        
+        // Extract filter settings only (sort is handled by domain provider)
+        final visibleStatusIndices = (defaultSettings['visibleStatuses'] as List?)?.cast<int>() ?? [];
+        final candidatesOnly = defaultSettings['candidatesOnly'] as bool? ?? false;
+        
+        // Convert status indices to enum names
+        List<String>? statusFilter;
+        if (visibleStatusIndices.isNotEmpty && visibleStatusIndices.length < LeadStatus.values.length) {
+          final visibleStatuses = visibleStatusIndices
+              .map((index) => LeadStatus.values[index])
+              .toList();
+          statusFilter = visibleStatuses.map((s) => s.name).toList();
+        }
+        
+        // Note: Sort settings are now handled by the domain provider's default_sort_settings
+        // We don't set sortBy or sortAscending here - they come from domain state
+        
+        // Apply default filters to state (sort will come from domain sync)
+        final defaultFilters = ApiFilterState(
+          statuses: statusFilter,
+          candidatesOnly: candidatesOnly,
+          // sortBy and sortAscending will be set by _syncWithDomainState
+        );
+        
+        state = state.copyWith(filters: state.filters.copyWith(
+          statuses: statusFilter,
+          candidatesOnly: candidatesOnly,
+        ));
+        DebugLogger.log('✅ Default filters applied (sort handled by domain)');
+      } else {
+        // No saved preferences - keep the default statuses (NEW and VIEWED)
+        DebugLogger.log('📋 No saved filter preferences, using defaults: NEW and VIEWED');
+        // The default statuses are already set in the initial state
+      }
+    } catch (e) {
+      DebugLogger.log('❌ Error loading default filters: $e');
+    }
   }
 }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../domain/providers/filter_providers.dart' as domain_providers;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
-import '../../domain/entities/filter_state.dart';
 import '../../../../core/utils/debug_logger.dart';
+import '../providers/paginated_leads_provider.dart';
 
 class UnifiedFilterModal extends ConsumerStatefulWidget {
   const UnifiedFilterModal({super.key});
@@ -30,8 +32,6 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
   late TextEditingController searchController;
   late Set<LeadStatus> visibleStatuses;
   late bool candidatesOnly;
-  late SortOption sortOption;
-  late bool sortAscending;
   
   @override
   void initState() {
@@ -47,9 +47,6 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
         .toSet();
     
     candidatesOnly = ref.read(domain_providers.candidatesOnlyProvider);
-    final sortState = ref.read(domain_providers.sortStateProvider);
-    sortOption = sortState.option;
-    sortAscending = sortState.ascending;
   }
 
   @override
@@ -212,13 +209,6 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
                   
                   const SizedBox(height: 24),
                   
-                  // Sort Section
-                  _buildSectionHeader('Sort By', CupertinoIcons.sort_down),
-                  const SizedBox(height: 12),
-                  _buildSortOptions(),
-                  
-                  const SizedBox(height: 24),
-                  
                   // Additional Filters
                   _buildSectionHeader('Additional Filters', CupertinoIcons.flag),
                   const SizedBox(height: 12),
@@ -228,7 +218,7 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
             ),
           ),
           
-          // Apply Button
+          // Apply Button and Set as Default
           Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -241,28 +231,69 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
             ),
             child: SafeArea(
               top: false,
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _applyFilters,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGold,
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Apply button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _applyFilters,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGold,
+                        foregroundColor: Colors.black,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        activeFilterCount > 0 
+                          ? 'Apply Filters ($activeFilterCount active)'
+                          : 'Apply Filters',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    activeFilterCount > 0 
-                      ? 'Apply Filters ($activeFilterCount active)'
-                      : 'Apply Filters',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  const SizedBox(height: 12),
+                  // Set as default button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _saveAsDefault,
+                          icon: Icon(Icons.save_alt, size: 18),
+                          label: const Text('Save as Default'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.primaryGold,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: _clearDefaults,
+                        icon: Icon(Icons.clear, size: 18),
+                        label: const Text('Clear'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -371,158 +402,6 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     );
   }
 
-  Widget _buildSortOptions() {
-    return Column(
-      children: [
-        // Sort field selection
-        Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.elevatedSurface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              _buildSortOptionTile(SortOption.newest, 'Newest First'),
-              _buildSortOptionTile(SortOption.rating, 'Rating'),
-              _buildSortOptionTile(SortOption.reviews, 'Review Count'),
-              _buildSortOptionTile(SortOption.alphabetical, 'Alphabetical'),
-              _buildSortOptionTile(SortOption.pageSpeed, 'Page Speed'),
-              _buildSortOptionTile(SortOption.conversion, 'Conversion Score'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Sort direction
-        Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.elevatedSurface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => sortAscending = false),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: !sortAscending 
-                        ? AppTheme.primaryGold.withValues(alpha: 0.2)
-                        : null,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          CupertinoIcons.sort_down,
-                          size: 16,
-                          color: !sortAscending 
-                            ? AppTheme.primaryGold
-                            : Colors.white.withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Descending',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: !sortAscending 
-                              ? AppTheme.primaryGold
-                              : Colors.white.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => sortAscending = true),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: sortAscending 
-                        ? AppTheme.primaryGold.withValues(alpha: 0.2)
-                        : null,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          CupertinoIcons.sort_up,
-                          size: 16,
-                          color: sortAscending 
-                            ? AppTheme.primaryGold
-                            : Colors.white.withValues(alpha: 0.5),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Ascending',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: sortAscending 
-                              ? AppTheme.primaryGold
-                              : Colors.white.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSortOptionTile(SortOption option, String label) {
-    final isSelected = sortOption == option;
-    return GestureDetector(
-      onTap: () => setState(() => sortOption = option),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSelected 
-            ? AppTheme.primaryGold.withValues(alpha: 0.1)
-            : null,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected 
-                ? CupertinoIcons.checkmark_circle_fill
-                : CupertinoIcons.circle,
-              size: 20,
-              color: isSelected 
-                ? AppTheme.primaryGold
-                : Colors.white.withValues(alpha: 0.3),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected 
-                  ? AppTheme.primaryGold
-                  : Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildAdditionalFilters() {
     return Container(
@@ -567,8 +446,6 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
       searchController.clear();
       visibleStatuses = Set.from(LeadStatus.values);
       candidatesOnly = false;
-      sortOption = SortOption.newest;
-      sortAscending = false;
     });
   }
 
@@ -582,25 +459,39 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
     // Update candidates only filter  
     ref.read(domain_providers.currentFilterStateProvider.notifier).updateCandidatesOnly(candidatesOnly);
     
-    // Update sort state atomically
-    ref.read(domain_providers.currentSortStateProvider.notifier).updateSort(sortOption, sortAscending);
-    
     // Status filtering: Convert selection to API-compatible format
     // Following Riverpod's Filter Pattern - single selected status for API query
-    String? selectedStatus;
-    if (visibleStatuses.length == 1) {
-      // Single status selected - pass it to API
-      selectedStatus = visibleStatuses.first.name;
-      DebugLogger.network('🔍 FILTER: Single status selected for API query: $selectedStatus');
-    } else if (visibleStatuses.length < LeadStatus.values.length) {
-      // Multiple but not all - for now we'll use the first one
-      // TODO: Backend should support multiple status filtering
-      selectedStatus = visibleStatuses.isEmpty ? null : visibleStatuses.first.name;
-      DebugLogger.log('🔍 FILTER: Multiple statuses selected, using first: $selectedStatus');
+    // Handle multiple status selection properly
+    List<String>? selectedStatuses;
+    String? singleStatus;
+    
+    if (visibleStatuses.isEmpty || visibleStatuses.length == LeadStatus.values.length) {
+      // No filter or all selected - don't filter
+      selectedStatuses = null;
+      singleStatus = null;
+      DebugLogger.network('🔍 FILTER: No status filter or all statuses selected');
+    } else if (visibleStatuses.length == 1) {
+      // Single status selected - use single status parameter for backward compatibility
+      singleStatus = visibleStatuses.first.name;
+      selectedStatuses = null;
+      DebugLogger.network('🔍 FILTER: Single status selected for API query: $singleStatus');
+    } else {
+      // Multiple statuses selected - use the new statuses parameter
+      selectedStatuses = visibleStatuses.map((s) => s.name).toList();
+      singleStatus = null;
+      DebugLogger.network('🔍 FILTER: Multiple statuses selected for API query: $selectedStatuses');
     }
     
-    // Update the status filter provider which triggers API call
-    ref.read(domain_providers.currentFilterStateProvider.notifier).updateStatusFilter(selectedStatus);
+    // Update filters directly in the paginated leads provider
+    final sortState = ref.read(domain_providers.sortStateProvider);
+    ref.read(paginatedLeadsProvider.notifier).updateFilters(
+      status: singleStatus,
+      statuses: selectedStatuses,
+      search: null,  // Keep existing search
+      candidatesOnly: false,
+      sortBy: sortState.sortField,
+      sortAscending: sortState.ascending,
+    );
     
     // Also update hidden statuses for UI consistency
     // final hiddenStatuses = LeadStatus.values
@@ -635,6 +526,79 @@ class _UnifiedFilterModalState extends ConsumerState<UnifiedFilterModal> {
       case LeadStatus.didNotConvert: return const Color(0xFFFF3B30);
       case LeadStatus.callbackScheduled: return const Color(0xFF5AC8FA);
       case LeadStatus.doNotCall: return const Color(0xFF8E8E93);
+    }
+  }
+
+  Future<void> _saveAsDefault() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Create a map of current filter settings
+      final defaultSettings = {
+        'visibleStatuses': visibleStatuses.map((s) => s.index).toList(),
+        'candidatesOnly': candidatesOnly,
+        'searchText': searchController.text,
+      };
+      
+      // Save to SharedPreferences
+      await prefs.setString('default_filter_settings', json.encode(defaultSettings));
+      
+      DebugLogger.log('✅ Default filter settings saved');
+      
+      // Show confirmation snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('Default filters saved'),
+              ],
+            ),
+            backgroundColor: AppTheme.successGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      DebugLogger.log('❌ Error saving default filters: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save defaults: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _clearDefaults() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('default_filter_settings');
+      
+      DebugLogger.log('✅ Default filter settings cleared');
+      
+      // Show confirmation snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.clear, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('Default filters cleared'),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      DebugLogger.log('❌ Error clearing default filters: $e');
     }
   }
 }

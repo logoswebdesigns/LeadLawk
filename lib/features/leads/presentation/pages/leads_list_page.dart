@@ -10,7 +10,6 @@ import '../providers/pagespeed_websocket_provider.dart';
 import '../providers/server_status_provider.dart';
 import '../providers/paginated_leads_provider.dart';
 import '../providers/lead_statistics_provider.dart';
-import '../widgets/filter_bar.dart';
 import '../widgets/conversion_pipeline.dart';
 import '../widgets/active_jobs_monitor.dart';
 import '../widgets/lead_tile.dart';
@@ -48,7 +47,12 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   void initState() {
     super.initState();
     
-    // Initialize filters
+    // Initialize search controller
+    _searchController.addListener(() {
+      setState(() {}); // Rebuild to update suffix icon visibility
+    });
+    
+    // Initialize filters if needed
     if (widget.initialFilter == 'candidates') {
       Future.microtask(() async {
         final filterNotifier = ref.read(currentFilterStateProvider.notifier);
@@ -132,86 +136,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
   
   @override
   Widget build(BuildContext context) {
-    // Status filter listener
-    ref.listen(statusFilterProvider, (previous, next) {
-      if (previous != next) {
-        DebugLogger.log('📱 UI: Status filter changed to $next');
-        // Get current state of all other filters
-        final search = ref.read(searchFilterProvider);
-        final candidatesOnly = ref.read(candidatesOnlyProvider);
-        final sortState = ref.read(sortStateProvider);
-        
-        ref.read(paginatedLeadsProvider.notifier).updateFilters(
-          status: next,
-          search: search.isEmpty ? null : search,
-          candidatesOnly: candidatesOnly,
-          sortBy: sortState.sortField,
-          sortAscending: sortState.ascending,
-        );
-      }
-    });
-    
-    // Search filter listener with debounce
-    ref.listen(searchFilterProvider, (previous, next) {
-      if (previous != next) {
-        _debounceTimer?.cancel();
-        _debounceTimer = Timer(Duration(milliseconds: 300), () {
-          DebugLogger.log('📱 UI: Search filter changed to "$next"');
-          // Get current state of all other filters
-          final status = ref.read(statusFilterProvider);
-          final candidatesOnly = ref.read(candidatesOnlyProvider);
-          final sortState = ref.read(sortStateProvider);
-          
-          ref.read(paginatedLeadsProvider.notifier).updateFilters(
-            status: status,
-            search: next.isEmpty ? null : next,
-            candidatesOnly: candidatesOnly,
-            sortBy: sortState.sortField,
-            sortAscending: sortState.ascending,
-          );
-        });
-      }
-    });
-    
-    // Candidates only filter listener
-    ref.listen(candidatesOnlyProvider, (previous, next) {
-      if (previous != next) {
-        DebugLogger.log('📱 UI: Candidates only filter changed to $next');
-        // Get current state of all other filters
-        final status = ref.read(statusFilterProvider);
-        final search = ref.read(searchFilterProvider);
-        final sortState = ref.read(sortStateProvider);
-        
-        ref.read(paginatedLeadsProvider.notifier).updateFilters(
-          status: status,
-          search: search.isEmpty ? null : search,
-          candidatesOnly: next,
-          sortBy: sortState.sortField,
-          sortAscending: sortState.ascending,
-        );
-      }
-    });
-    
-    // Called today filter listener
-    ref.listen(calledTodayProvider, (previous, next) {
-      if (previous != next) {
-        DebugLogger.log('📱 UI: Called today filter changed to $next');
-        // Get current state of all other filters
-        final status = ref.read(statusFilterProvider);
-        final search = ref.read(searchFilterProvider);
-        final candidatesOnly = ref.read(candidatesOnlyProvider);
-        final sortState = ref.read(sortStateProvider);
-        
-        ref.read(paginatedLeadsProvider.notifier).updateFilters(
-          status: status,
-          search: search.isEmpty ? null : search,
-          candidatesOnly: candidatesOnly,
-          calledToday: next,
-          sortBy: sortState.sortField,
-          sortAscending: sortState.ascending,
-        );
-      }
-    });
+    // Removed all filter listeners since we don't have filter UI anymore
+    // Only keeping the search functionality through direct text field onChange
     
     // Single sort state listener - no race conditions!
     ref.listen(sortStateProvider, (previous, next) {
@@ -219,17 +145,14 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
         DebugLogger.log('🔀 SORT CHANGED: ${previous?.option.name} (${previous?.ascending == true ? "asc" : "desc"}) -> ${next.option.name} (${next.ascending ? "asc" : "desc"})');
         DebugLogger.log('🔀 SORT FIELD: sortBy = ${next.sortField}, ascending = ${next.ascending}');
         
-        // Get current state of all filters
-        final status = ref.read(statusFilterProvider);
-        final search = ref.read(searchFilterProvider);
-        final candidatesOnly = ref.read(candidatesOnlyProvider);
-        final calledToday = ref.read(calledTodayProvider);
+        // Only use search from the text field, no other filters
+        final searchText = _searchController.text;
         
         ref.read(paginatedLeadsProvider.notifier).updateFilters(
-          status: status,
-          search: search.isEmpty ? null : search,
-          candidatesOnly: candidatesOnly,
-          calledToday: calledToday,
+          status: null,  // Always null - no status filter
+          search: searchText.isEmpty ? null : searchText,
+          candidatesOnly: false,
+          calledToday: false,
           sortBy: next.sortField,
           sortAscending: next.ascending,
         );
@@ -263,8 +186,8 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
       }
     });
     
-    // Use filtered provider that applies hidden statuses
-    final paginatedState = ref.watch(filteredPaginatedLeadsProvider);
+    // Use regular paginated provider without hidden status filtering
+    final paginatedState = ref.watch(paginatedLeadsProvider);
     final pageSize = ref.watch(pageSizeProvider);
     
     return Scaffold(
@@ -282,69 +205,82 @@ class _LeadsListPageState extends ConsumerState<LeadsListPage> with TickerProvid
               ),
               // Active jobs monitor
               const ActiveJobsMonitor(),
-              // Filter bar with page size selector
-              Column(
-                children: [
-                  const FilterBar(),
-                  // Page size selector
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: AppTheme.elevatedSurface,
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Show:',
-                          style: TextStyle(
-                            color: AppTheme.mediumGray,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: AppTheme.backgroundDark,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: pageSize,
-                              dropdownColor: AppTheme.elevatedSurface,
-                              icon: Icon(Icons.refresh),
-                              style: const TextStyle(color: Colors.white, fontSize: 14),
-                              items: [25, 50, 100, 500].map((size) {
-                                return DropdownMenuItem(
-                                  value: size,
-                                  child: Text('$size per page'),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  DebugLogger.log('📱 UI: User changed page size to $value');
-                                  // Update the UI state with new page size
-                                  ref.read(currentUIStateProvider.notifier).updatePageSize(value);
-                                  ref.read(paginatedLeadsProvider.notifier).updatePageSize(value);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        if (paginatedState.total > 0)
-                          Text(
-                            'Total: ${paginatedState.total} leads',
-                            style: const TextStyle(
-                              color: AppTheme.mediumGray,
-                              fontSize: 14,
-                            ),
-                          ),
-                      ],
-                    ),
+              // Search bar only
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: AppTheme.elevatedSurface,
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
                   ),
-                ],
+                  decoration: InputDecoration(
+                    hintText: 'Search leads...',
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontWeight: FontWeight.w400,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: AppTheme.primaryGold,
+                      size: 20,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.white.withValues(alpha: 0.3),
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              // Directly update without going through filter state
+                              final sortState = ref.read(sortStateProvider);
+                              ref.read(paginatedLeadsProvider.notifier).updateFilters(
+                                status: null,  // Always null - no status filter
+                                search: null,
+                                candidatesOnly: false,
+                                sortBy: sortState.sortField,
+                                sortAscending: sortState.ascending,
+                              );
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppTheme.primaryGold),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  ),
+                  onChanged: (value) {
+                    _debounceTimer?.cancel();
+                    _debounceTimer = Timer(Duration(milliseconds: 300), () {
+                      if (mounted) {
+                        // Directly update the paginated leads provider without going through filter state
+                        final sortState = ref.read(sortStateProvider);
+                        ref.read(paginatedLeadsProvider.notifier).updateFilters(
+                          status: null,  // Always null - no status filter
+                          search: value.isEmpty ? null : value,
+                          candidatesOnly: false,
+                          sortBy: sortState.sortField,
+                          sortAscending: sortState.ascending,
+                        );
+                      }
+                    });
+                  },
+                ),
               ),
               // Sort bar OR Selection action bar (mutually exclusive)
               const SortBar(),

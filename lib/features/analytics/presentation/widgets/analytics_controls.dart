@@ -187,7 +187,7 @@ class TimeRangeSelector extends StatelessWidget {
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () => _showCustomRangePicker(context),
-                    icon: Icon(Icons.refresh),
+                    icon: Icon(Icons.calendar_today),
                     label: const Text('Custom'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white70,
@@ -201,7 +201,7 @@ class TimeRangeSelector extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.refresh),
+              Icon(Icons.date_range),
               const SizedBox(width: 4),
               Text(
                 'From: ${_formatDate(selectedRange.start)}',

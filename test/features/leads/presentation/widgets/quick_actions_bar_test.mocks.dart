@@ -273,4 +273,22 @@ class MockLeadsRepository extends _i1.Mock implements _i3.LeadsRepository {
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, Map<DateTime, int>>> getCallStatistics() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getCallStatistics,
+          [],
+        ),
+        returnValue:
+            _i4.Future<_i2.Either<_i5.Failure, Map<DateTime, int>>>.value(
+                _FakeEither_0<_i5.Failure, Map<DateTime, int>>(
+          this,
+          Invocation.method(
+            #getCallStatistics,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, Map<DateTime, int>>>);
 }

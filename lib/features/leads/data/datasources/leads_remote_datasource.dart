@@ -15,6 +15,7 @@ abstract class LeadsRemoteDataSource {
     required int page,
     required int perPage,
     String? status,
+    List<String>? statuses,  // Support multiple statuses
     String? search,
     bool? candidatesOnly,
     String? sortBy,
@@ -89,6 +90,7 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
     required int page,
     required int perPage,
     String? status,
+    List<String>? statuses,  // Support multiple statuses
     String? search,
     bool? candidatesOnly,
     String? sortBy,
@@ -101,7 +103,16 @@ class LeadsRemoteDataSourceImpl implements LeadsRemoteDataSource {
         'pagination': true,
       };
       
-      if (status != null) queryParams['status'] = status;
+      // Support both single status and multiple statuses
+      // Prioritize statuses array over single status
+      if (statuses != null && statuses.isNotEmpty) {
+        // Send as comma-separated list for multiple statuses
+        queryParams['statuses'] = statuses.join(',');
+        DebugLogger.log('📊 API: Sending multiple statuses: ${statuses.join(',')}');
+      } else if (status != null) {
+        // Only use single status if no statuses array is provided
+        queryParams['status'] = status;
+      }
       if (search != null) queryParams['search'] = search;
       if (candidatesOnly == true) queryParams['candidates_only'] = true;
       if (sortBy != null) queryParams['sort_by'] = sortBy;

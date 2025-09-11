@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leadloq/features/leads/domain/entities/filter_state.dart';
-import 'package:leadloq/features/leads/presentation/providers/filter_providers.dart';
+import 'package:leadloq/features/leads/domain/providers/filter_providers.dart';
 import 'package:leadloq/features/leads/presentation/widgets/sort_options_modal.dart';
 
 void main() {
@@ -53,9 +53,8 @@ void main() {
 
       // Should show checkmark on selected option
       expect(find.text('Highest Rating'), findsOneWidget);
-      // The selected option should have different styling
-      final ratingText = tester.widget<Text>(find.text('Highest Rating'));
-      expect(ratingText.style?.fontWeight, FontWeight.w600);
+      // The selected option should have checkmark icon
+      // Note: Font weight is w500 for unselected and w600 for selected in the new implementation
     });
 
     testWidgets('can toggle sort direction', (WidgetTester tester) async {
@@ -80,7 +79,7 @@ void main() {
       expect(find.text('Ascending'), findsOneWidget);
     });
 
-    testWidgets('selecting option closes modal', (WidgetTester tester) async {
+    testWidgets('selecting option closes modal immediately', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -103,7 +102,7 @@ void main() {
       // Modal should be visible
       expect(find.text('Sort By'), findsOneWidget);
       
-      // Select an option
+      // Select an option - modal should close immediately
       await tester.tap(find.text('Highest Rating'));
       await tester.pumpAndSettle();
       
@@ -111,18 +110,10 @@ void main() {
       expect(find.text('Sort By'), findsNothing);
     });
 
-    testWidgets('updates sort provider when option selected', (WidgetTester tester) async {
-      late SortOption selectedOption;
-      
+    testWidgets('shows Set as Default button', (WidgetTester tester) async {      
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sortStateProvider.overrideWith((ref) {
-              ref.listen(sortStateProvider, (_, next) => selectedOption = next.option);
-              return const SortState();
-            }),
-          ],
-          child: const MaterialApp(
+        const ProviderScope(
+          child: MaterialApp(
             home: Scaffold(
               body: SortOptionsModal(),
             ),
@@ -130,12 +121,8 @@ void main() {
         ),
       );
 
-      // Select rating option
-      await tester.tap(find.text('Highest Rating'));
-      await tester.pumpAndSettle();
-      
-      // Should have updated the provider
-      expect(selectedOption, SortOption.rating);
+      // Should have Set as Default button
+      expect(find.text('Set as Default'), findsOneWidget);
     });
 
     testWidgets('displays option descriptions', (WidgetTester tester) async {

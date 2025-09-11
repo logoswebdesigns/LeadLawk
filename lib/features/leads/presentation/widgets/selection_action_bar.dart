@@ -50,7 +50,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               ref.read(selectedLeadsProvider.notifier).state = {};
               ref.read(isSelectionModeProvider.notifier).state = false;
             },
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.close),
             style: IconButton.styleFrom(
               foregroundColor: Colors.white70,
             ),
@@ -114,7 +114,7 @@ class _SelectionActionBarState extends ConsumerState<SelectionActionBar> {
               onPressed: () {
                 ref.read(selectedLeadsProvider.notifier).state = {};
               },
-              icon: Icon(Icons.refresh),
+              icon: Icon(Icons.clear_all),
               label: const Text('Clear'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white70,

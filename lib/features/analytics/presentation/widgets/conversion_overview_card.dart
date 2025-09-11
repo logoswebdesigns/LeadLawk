@@ -17,7 +17,7 @@ class ConversionOverviewCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.trending_up),
                 const SizedBox(width: 8),
                 Text(
                   'Conversion Overview',

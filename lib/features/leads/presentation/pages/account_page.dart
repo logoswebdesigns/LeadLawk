@@ -298,7 +298,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
               Padding(padding: EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    Icon(Icons.refresh),
+                    Icon(Icons.email_outlined),
                     const SizedBox(width: 12),
                     const Text(
                       'Email Templates',
@@ -310,7 +310,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: Icon(Icons.refresh),
+                      icon: Icon(Icons.add),
                       onPressed: () => _showAddTemplateDialog(context),
                     ),
                   ],
@@ -351,7 +351,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             const SizedBox(height: 24),
                             ElevatedButton.icon(
                               onPressed: () => _showAddTemplateDialog(context),
-                              icon: Icon(Icons.refresh),
+                              icon: Icon(Icons.add),
                               label: const Text('Add Template'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryGold,
@@ -395,12 +395,12 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.refresh),
+                                  icon: Icon(Icons.edit),
                                   color: Colors.teal,
                                   onPressed: () => _showEditTemplateDialog(context, template),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.refresh),
+                                  icon: Icon(Icons.delete),
                                   color: Colors.red,
                                   onPressed: () => _confirmDeleteTemplate(context, ref, template),
                                 ),

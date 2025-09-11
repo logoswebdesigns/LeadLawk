@@ -40,14 +40,6 @@ final isSelectionModeProvider = StateProvider<bool>((ref) => false);
 // Selected leads
 final selectedLeadsProvider = StateProvider<Set<String>>((ref) => {});
 
-// Sort state - using domain entities
-final sortStateProvider = StateProvider<SortState>((ref) => 
-  const SortState(
-    option: SortOption.newest,
-    ascending: false,
-  )
-);
-
 // Group by option
 enum GroupByOption {
   none,

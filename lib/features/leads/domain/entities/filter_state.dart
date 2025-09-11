@@ -291,7 +291,7 @@ class LeadsUIState extends Equatable {
     this.isSelectionMode = false,
     this.groupByOption = GroupByOption.none,
     this.expandedGroups = const {},
-    this.pageSize = 25,
+    this.pageSize = 500,
   });
 
   LeadsUIState copyWith({
@@ -334,7 +334,7 @@ class LeadsUIState extends Equatable {
       isSelectionMode: map['isSelectionMode'] as bool? ?? false,
       groupByOption: groupByOption,
       expandedGroups: Set<String>.from(map['expandedGroups'] as List? ?? []),
-      pageSize: map['pageSize'] as int? ?? 25,
+      pageSize: map['pageSize'] as int? ?? 500,
     );
   }
 

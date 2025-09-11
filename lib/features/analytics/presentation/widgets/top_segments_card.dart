@@ -17,7 +17,7 @@ class TopSegmentsCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.pie_chart),
                 const SizedBox(width: 8),
                 Text(
                   'Top Converting Segments',

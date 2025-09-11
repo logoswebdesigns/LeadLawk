@@ -468,6 +468,7 @@ async def get_leads(
     page: int = 1,
     per_page: int = 20,
     status: Optional[str] = None,
+    statuses: Optional[str] = None,  # Comma-separated list of statuses
     industry: Optional[str] = None,
     location: Optional[str] = None,
     has_website: Optional[bool] = None,
@@ -484,12 +485,12 @@ async def get_leads(
     """Get paginated leads with optional filtering and sorting"""
     # Log sorting parameters
     logger.info(f"🔄 BACKEND SORT: sort_by={sort_by}, ascending={sort_ascending}")
-    logger.info(f"📊 BACKEND FILTERS: status={status}, search={search}, candidates_only={candidates_only}")
+    logger.info(f"📊 BACKEND FILTERS: status={status}, statuses={statuses}, search={search}, candidates_only={candidates_only}")
     
     db = SessionLocal()
     try:
         # Limit per_page to prevent abuse
-        per_page = min(per_page, 100)
+        per_page = min(per_page, 500)
         page = max(page, 1)
         
         query = db.query(Lead).options(
@@ -498,7 +499,18 @@ async def get_leads(
         )
         
         # Apply filters
-        if status:
+        # Handle multiple statuses if provided
+        if statuses:
+            # Split comma-separated statuses and map Flutter's 'new_' to database 'new'
+            status_list = []
+            for s in statuses.split(','):
+                s = s.strip()
+                db_status = 'new' if s == 'new_' else s
+                status_list.append(db_status)
+            query = query.filter(Lead.status.in_(status_list))
+            logger.info(f"📊 BACKEND: Filtering by multiple statuses: {status_list}")
+        elif status:
+            # Single status for backward compatibility
             # Map Flutter's 'new_' to database 'new' (new is reserved in Dart)
             db_status = 'new' if status == 'new_' else status
             query = query.filter(Lead.status == db_status)

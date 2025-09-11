@@ -17,7 +17,7 @@ class InsightsCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.lightbulb_outline),
                 const SizedBox(width: 8),
                 Text(
                   'Actionable Insights',
@@ -176,7 +176,7 @@ class _InsightTile extends StatelessWidget {
           ],
         ),
         trailing: insight.impact == 'high'
-            ? Icon(Icons.refresh)
+            ? Icon(Icons.priority_high)
             : null,
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../entities/filter_state.dart';
@@ -5,6 +6,7 @@ import '../repositories/filter_repository.dart';
 import '../usecases/manage_filter_state.dart';
 import '../../data/repositories/filter_repository_impl.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/utils/debug_logger.dart';
 
 // Provider for SharedPreferences (future)
 final sharedPreferencesFutureProvider = FutureProvider<SharedPreferences>((ref) {
@@ -216,7 +218,20 @@ class FilterStateNotifier extends StateNotifier<AsyncValue<LeadsFilterState>> {
       final result = await getFilterState(NoParams());
       result.fold(
         (failure) => state = AsyncValue.error(failure, StackTrace.current),
-        (filterState) => state = AsyncValue.data(filterState),
+        (filterState) {
+          // Clear the status filter on load to prevent stale "interested" filter from persisting
+          final cleanFilterState = filterState.copyWith(
+            statusFilter: null,  // Always start with no status filter
+            hiddenStatuses: const {},  // Clear hidden statuses too
+          );
+          state = AsyncValue.data(cleanFilterState);
+          
+          // Also update the persisted state to remove the stale filter
+          if (filterState.statusFilter != null || filterState.hiddenStatuses.isNotEmpty) {
+            // Save the clean state back to persistence
+            updateFilterState(cleanFilterState);
+          }
+        },
       );
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -340,6 +355,35 @@ class FilterStateNotifier extends StateNotifier<AsyncValue<LeadsFilterState>> {
     });
   }
 
+  Future<void> clearHiddenStatuses() async {
+    state.whenData((currentState) async {
+      final updatedState = currentState.copyWith(hiddenStatuses: <String>{});
+      await updateFilterState(updatedState);
+    });
+  }
+
+  Future<void> resetAllFilters() async {
+    // Reset to completely clean state - no filters applied
+    const cleanState = LeadsFilterState(
+      statusFilter: null,
+      hiddenStatuses: {},
+      locationFilter: null,
+      industryFilter: null,
+      sourceFilter: null,
+      searchFilter: '',
+      candidatesOnly: false,
+      calledToday: false,
+      followUpFilter: null,
+      hasWebsiteFilter: null,
+      meetsRatingFilter: null,
+      hasRecentReviewsFilter: null,
+      ratingRangeFilter: null,
+      reviewCountRangeFilter: null,
+      pageSpeedFilter: null,
+    );
+    await updateFilterState(cleanState);
+  }
+
 }
 
 class SortStateNotifier extends StateNotifier<AsyncValue<SortState>> {
@@ -351,28 +395,33 @@ class SortStateNotifier extends StateNotifier<AsyncValue<SortState>> {
 
   void _loadInitialState() async {
     try {
-      final getSortState = await _ref.read(getSortStateProvider.future);
-      final result = await getSortState(NoParams());
-      result.fold(
-        (failure) => state = AsyncValue.error(failure, StackTrace.current),
-        (sortState) => state = AsyncValue.data(sortState),
-      );
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+      // Check if user has saved a default sort preference
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('default_sort_settings');
+      
+      if (settingsJson != null) {
+        // User has set a default - use it
+        final settings = json.decode(settingsJson);
+        final sortOption = SortOption.values[settings['sortOption'] ?? 0];
+        final sortAscending = settings['sortAscending'] ?? false;
+        state = AsyncValue.data(SortState(option: sortOption, ascending: sortAscending));
+        DebugLogger.log('🔄 Loaded user default sort: ${sortOption.name} (${sortAscending ? "asc" : "desc"})');
+      } else {
+        // No user default - use app default (Newest first, descending)
+        state = AsyncValue.data(const SortState());
+        DebugLogger.log('🔄 Using app default sort: newest (desc)');
+      }
+    } catch (e) {
+      // If anything goes wrong, fall back to default
+      state = AsyncValue.data(const SortState());
+      DebugLogger.log('🔄 Error loading sort preference, using default: $e');
     }
   }
 
   Future<void> updateSortState(SortState sortState) async {
-    try {
-      final updateSortState = await _ref.read(updateSortStateProvider.future);
-      final result = await updateSortState(UpdateSortStateParams(sortState: sortState));
-      result.fold(
-        (failure) => state = AsyncValue.error(failure, StackTrace.current),
-        (_) => state = AsyncValue.data(sortState),
-      );
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
-    }
+    // Just update the state in memory - don't persist to SharedPreferences
+    // Sort state should be session-only
+    state = AsyncValue.data(sortState);
   }
 
   Future<void> updateSort(SortOption option, bool ascending) async {

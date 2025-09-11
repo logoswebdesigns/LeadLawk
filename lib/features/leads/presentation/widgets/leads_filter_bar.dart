@@ -626,7 +626,7 @@ class _LeadsFilterBarState extends ConsumerState<LeadsFilterBar> {
               ),
             ),
             const SizedBox(height: 8),
-            _buildFilterRow([aude
+            _buildFilterRow([
               _buildFilterButton(
                 label: 'Good (90+)',
                 icon: Icons.speed,

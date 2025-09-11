@@ -17,7 +17,7 @@ class TimelineChart extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.refresh),
+                Icon(Icons.show_chart),
                 const SizedBox(width: 8),
                 Text(
                   'Conversion Timeline (30 Days)',

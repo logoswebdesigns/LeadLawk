@@ -149,7 +149,7 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       leading: IconButton(
-        icon: Icon(Icons.refresh),
+        icon: Icon(Icons.arrow_back),
         onPressed: () => _navigateBack(),
       ),
       title: const Text('Lead Details'),
@@ -493,15 +493,40 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.refresh),
-                          const SizedBox(width: 4),
+                          // Star rating display
+                          ...List.generate(5, (index) {
+                            final fillAmount = (lead.rating! - index).clamp(0.0, 1.0);
+                            if (fillAmount >= 1) {
+                              return Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Colors.amber,
+                              );
+                            } else if (fillAmount > 0) {
+                              return Icon(
+                                Icons.star_half,
+                                size: 14,
+                                color: Colors.amber,
+                              );
+                            } else {
+                              return Icon(
+                                Icons.star_border,
+                                size: 14,
+                                color: Colors.amber.withValues(alpha: 0.5),
+                              );
+                            }
+                          }),
+                          const SizedBox(width: 6),
                           Text(
-                            '${lead.rating!.toStringAsFixed(1)} (${lead.reviewCount ?? 0} reviews)',
+                            '${lead.rating!.toStringAsFixed(1)}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const SizedBox(width: 4),
+                          _buildReviewCountIndicator(lead.reviewCount ?? 0),
                         ],
                       ),
                     ],
@@ -628,6 +653,87 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+  
+  Widget _buildReviewCountIndicator(int reviewCount) {
+    // Define thresholds and styling based on review count
+    final Color indicatorColor;
+    final IconData? icon;
+    final String tooltip;
+    final double opacity;
+    
+    if (reviewCount == 0) {
+      indicatorColor = Colors.grey;
+      icon = Icons.visibility_off;
+      tooltip = 'No reviews yet';
+      opacity = 0.5;
+    } else if (reviewCount < 10) {
+      // Low: Cool blue - limited social proof
+      indicatorColor = Colors.lightBlue;
+      icon = Icons.ac_unit; // Snowflake for "cold"
+      tooltip = 'Low review count - limited social proof';
+      opacity = 0.7;
+    } else if (reviewCount < 50) {
+      // Medium: Teal - moderate credibility
+      indicatorColor = Colors.teal;
+      icon = null;
+      tooltip = 'Moderate review count';
+      opacity = 0.8;
+    } else if (reviewCount < 100) {
+      // Good: Green - solid credibility
+      indicatorColor = Colors.green;
+      icon = Icons.trending_up;
+      tooltip = 'Good review count - strong credibility';
+      opacity = 0.9;
+    } else if (reviewCount < 500) {
+      // High: Orange - very credible
+      indicatorColor = Colors.orange;
+      icon = Icons.local_fire_department;
+      tooltip = 'High review count - excellent credibility';
+      opacity = 1.0;
+    } else {
+      // Very High: Red hot - exceptional social proof
+      indicatorColor = Colors.deepOrange;
+      icon = Icons.whatshot; // Fire icon for "hot"
+      tooltip = 'Exceptional review count - top tier credibility';
+      opacity = 1.0;
+    }
+    
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: indicatorColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: indicatorColor.withValues(alpha: opacity * 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 12,
+                color: indicatorColor.withValues(alpha: opacity),
+              ),
+              const SizedBox(width: 3),
+            ],
+            Text(
+              '${reviewCount.toString()}${reviewCount >= 1000 ? '+' : ''} reviews',
+              style: TextStyle(
+                color: indicatorColor.withValues(alpha: opacity),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
