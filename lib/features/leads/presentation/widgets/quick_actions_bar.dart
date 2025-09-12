@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
@@ -155,10 +156,35 @@ class QuickActionsBar extends ConsumerWidget {
   Future<void> _handleDidNotConvert(BuildContext context, WidgetRef ref) async {
     ConversionFailureReason? selectedReason;
     String additionalNotes = '';
+    final dropdownKey = GlobalKey<FormFieldState>();
     
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) {
+        // Schedule the dropdown to open after the dialog is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Simulate a tap on the dropdown to open it
+          final RenderBox? dropdown = dropdownKey.currentContext?.findRenderObject() as RenderBox?;
+          if (dropdown != null) {
+            final Offset localPosition = Offset(dropdown.size.width / 2, dropdown.size.height / 2);
+            final Offset globalPosition = dropdown.localToGlobal(localPosition);
+            
+            GestureBinding.instance.handlePointerEvent(
+              PointerDownEvent(
+                position: globalPosition,
+                kind: PointerDeviceKind.touch,
+              ),
+            );
+            GestureBinding.instance.handlePointerEvent(
+              PointerUpEvent(
+                position: globalPosition,
+                kind: PointerDeviceKind.touch,
+              ),
+            );
+          }
+        });
+        
+        return StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.elevatedSurface,
           title: const Text(
@@ -176,6 +202,8 @@ class QuickActionsBar extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<ConversionFailureReason>(
+                  key: dropdownKey,
+                  autofocus: true,
                   value: selectedReason,
                   decoration: InputDecoration(
                     labelText: 'Reason Code *',
@@ -234,7 +262,8 @@ class QuickActionsBar extends ConsumerWidget {
             ),
           ],
         ),
-      ),
+      );
+      },
     );
     
     if (result != null && result['reason'] != null) {

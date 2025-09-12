@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/lead.dart';
@@ -243,10 +244,35 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
   Future<void> _showDidNotConvertDialog() async {
     ConversionFailureReason? selectedReason;
     final reasonController = TextEditingController();
+    final dropdownKey = GlobalKey<FormFieldState>();
     
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) {
+        // Schedule the dropdown to open after the dialog is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Simulate a tap on the dropdown to open it
+          final RenderBox? dropdown = dropdownKey.currentContext?.findRenderObject() as RenderBox?;
+          if (dropdown != null) {
+            final Offset localPosition = Offset(dropdown.size.width / 2, dropdown.size.height / 2);
+            final Offset globalPosition = dropdown.localToGlobal(localPosition);
+            
+            GestureBinding.instance.handlePointerEvent(
+              PointerDownEvent(
+                position: globalPosition,
+                kind: PointerDeviceKind.touch,
+              ),
+            );
+            GestureBinding.instance.handlePointerEvent(
+              PointerUpEvent(
+                position: globalPosition,
+                kind: PointerDeviceKind.touch,
+              ),
+            );
+          }
+        });
+        
+        return StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppTheme.elevatedSurface,
           title: const Text(
@@ -263,6 +289,8 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ConversionFailureReason>(
+                key: dropdownKey,
+                autofocus: true,
                 value: selectedReason,
                 decoration: const InputDecoration(
                   labelText: 'Reason Code',
@@ -332,7 +360,8 @@ class _LeadStatusActionsState extends ConsumerState<LeadStatusActions> {
             ),
           ],
         ),
-      ),
+      );
+      },
     );
   }
 

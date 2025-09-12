@@ -137,17 +137,17 @@ class PageSpeedScoreCard extends ConsumerWidget {
                       ),
                       _buildScoreCircle(
                         'Accessibility',
-                        79,  // Placeholder - you can add these fields to Lead entity
+                        lead.pagespeedAccessibilityScore ?? 0,
                         isMain: false,
                       ),
                       _buildScoreCircle(
                         'Best Practices',
-                        100,  // Placeholder
+                        lead.pagespeedBestPracticesScore ?? 0,
                         isMain: false,
                       ),
                       _buildScoreCircle(
                         'SEO',
-                        lead.pagespeedDesktopScore ?? 85,  // Using desktop as SEO proxy
+                        lead.pagespeedSeoScore ?? 0,
                         isMain: false,
                       ),
                     ],

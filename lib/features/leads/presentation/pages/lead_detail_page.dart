@@ -25,6 +25,7 @@ import '../../data/datasources/pagespeed_datasource.dart';
 import '../../../../core/utils/debug_logger.dart';
 import '../providers/command_provider.dart';
 import '../widgets/blacklist_badge.dart';
+import '../widgets/embedded_website_viewer.dart';
 
 class LeadDetailPage extends ConsumerStatefulWidget {
   final String leadId;
@@ -43,8 +44,9 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _pageSpeedKey = GlobalKey();
   
-  // Track expansion state for collapsible sections - all collapsed by default
+  // Track expansion state for collapsible sections - all collapsed by default except website
   final Map<String, bool> _sectionExpanded = {
+    'website': true,  // Default open for immediate access
     'notes': false,
     'status': false,
     'pitch': false,
@@ -315,6 +317,34 @@ class _LeadDetailPageState extends ConsumerState<LeadDetailPage> {
             },
           ),
           const SizedBox(height: 16),
+          
+          // Embedded Website Viewer - placed prominently after quick actions
+          if (lead.hasWebsite) ...[
+            _buildCollapsibleSection(
+              key: 'website',
+              title: 'Website Preview',
+              icon: Icons.language,
+              child: EmbeddedWebsiteViewer(
+                lead: lead,
+                height: MediaQuery.of(context).size.height * 0.6,
+              ),
+              trailing: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Mobile View',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
           
           // Notes Section
           _buildCollapsibleSection(
